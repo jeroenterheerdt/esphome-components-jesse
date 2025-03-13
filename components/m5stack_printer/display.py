@@ -143,7 +143,7 @@ async def m5stack_printer_print_qr_code_action_to_code(
             {
                 cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
                 cv.Required(CONF_BARCODE): cv.templatable(cg.std_string),
-                cv.Required(CONF_BARCODE_TYPE): cv.templatable(cg.string),
+                cv.Required(CONF_BARCODE_TYPE): cv.templatable(cg.std_string),
             }
         ), key=CONF_BARCODE,
     ),
