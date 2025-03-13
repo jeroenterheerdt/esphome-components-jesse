@@ -77,9 +77,9 @@ async def to_code(config):
                 cv.Optional(CONF_FONT_SIZE, default=1): cv.templatable(
                     cv.int_range(min=0, max=7)
                 ),
-                cv.Optional(CONF_FONT_SIZE_FACTOR, default=1): cv.template(
-                    cv.float
-                )
+                cv.Optional(CONF_FONT_SIZE_FACTOR, default=1): cv.templatable(
+                    cv.double
+                ),
             }
         ),
         key=CONF_TEXT,
@@ -94,9 +94,10 @@ async def m5stack_printer_print_text_action_to_code(
     cg.add(var.set_text(templ))
     templ = await cg.templatable(config[CONF_FONT_SIZE], args, cg.uint8)
     cg.add(var.set_font_size(templ))
-    templ = await cg.templatable(config[CONF_FONT_SIZE_FACTOR], args, cg.float)
+    templ = await cg.templatable(config[CONF_FONT_SIZE_FACTOR], args, cg.double)
     cg.add(var.set_font_size_factor(templ))
     return var
+
 
 @automation.register_action(
     "m5stack_printer.new_line",
@@ -107,7 +108,8 @@ async def m5stack_printer_print_text_action_to_code(
                 cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
                 cv.Required(CONF_LINES): cv.templatable(cg.uint8),
             }
-        ), key=CONF_LINES,
+        ),
+        key=CONF_LINES,
     ),
 )
 async def m5stack_printer_new_line_action_to_code(
@@ -117,7 +119,7 @@ async def m5stack_printer_new_line_action_to_code(
     await cg.register_parented(var, config[CONF_ID])
     templ = await cg.templatable(config[CONF_LINES], args, cg.uint8)
     cg.add(var.set_lines(templ))
-    return 
+    return
 
 
 @automation.register_action(
@@ -129,7 +131,8 @@ async def m5stack_printer_new_line_action_to_code(
                 cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
                 cv.Required(CONF_DATA): cv.templatable(cg.std_string),
             }
-        ), key=CONF_DATA,
+        ),
+        key=CONF_DATA,
     ),
 )
 async def m5stack_printer_print_qr_code_action_to_code(
@@ -152,7 +155,8 @@ async def m5stack_printer_print_qr_code_action_to_code(
                 cv.Required(CONF_BARCODE): cv.templatable(cg.std_string),
                 cv.Required(CONF_BARCODE_TYPE): cv.templatable(cg.std_string),
             }
-        ), key=CONF_BARCODE,
+        ),
+        key=CONF_BARCODE,
     ),
 )
 async def m5stack_printer_print_bar_code_action_to_code(
@@ -162,9 +166,6 @@ async def m5stack_printer_print_bar_code_action_to_code(
     await cg.register_parented(var, config[CONF_ID])
     templ = await cg.templatable(config[CONF_BARCODE], args, cg.std_string)
     cg.add(var.set_barcode(templ))
-    templ = await cg.templatable(
-        config[CONF_BARCODE_TYPE], args, cg.std_string
-    )
+    templ = await cg.templatable(config[CONF_BARCODE_TYPE], args, cg.std_string)
     cg.add(var.set_type(templ))
     return var
-
