@@ -78,7 +78,7 @@ async def to_code(config):
                     cv.int_range(min=0, max=7)
                 ),
                 cv.Optional(CONF_FONT_SIZE_FACTOR, default=1): cv.templatable(
-                    cv.double
+                    cv.float_range(min=0.01)
                 ),
             }
         ),
