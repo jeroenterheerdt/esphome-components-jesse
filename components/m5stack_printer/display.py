@@ -121,7 +121,7 @@ async def m5stack_printer_new_line_action_to_code(
         cv.Schema(
             {
                 cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
-                cv.Required(CONF_DATA): cv.templatable(cv.std_string),
+                cv.Required(CONF_DATA): cv.templatable(cg.std_string),
             }
         ), key=CONF_DATA,
     ),
@@ -142,8 +142,8 @@ async def m5stack_printer_print_qr_code_action_to_code(
         cv.Schema(
             {
                 cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
-                cv.Required(CONF_BARCODE): cv.templatable(cv.std_string),
-                cv.Required(CONF_BARCODE_TYPE): cv.templatable(cv.string),
+                cv.Required(CONF_BARCODE): cv.templatable(cg.std_string),
+                cv.Required(CONF_BARCODE_TYPE): cv.templatable(gv.string),
             }
         ), key=CONF_BARCODE,
     ),
