@@ -31,7 +31,7 @@ CONF_FONT_SIZE = "font_size"
 CONF_TEXT = "text"
 CONF_SEND_WAKEUP = "send_wakeup"
 CONF_LINES = "lines"
-CONF_DATA = "data"
+CONF_DATA = "qrcode"
 CONF_BARCODE = "barcode"
 CONF_BARCODE_TYPE = "type"
 
