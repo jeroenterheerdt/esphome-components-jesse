@@ -16,9 +16,24 @@ M5StackPrinterPrintTextAction = m5stack_printer_ns.class_(
     "M5StackPrinterPrintTextAction", automation.Action
 )
 
+M5StackPrinterNewLineAction = m5stack_printer_ns.class_(
+    "M5StackPrinterNewLineAction", automation.Action
+)
+
+M5StackPrinterPrintQRCodeAction = m5stack_printer_ns.class_(
+    "M5StackPrinterPrintQRCodeAction", automation.Action
+)
+M5StackPrinterPrintBarCodeAction = m5stack_printer_ns.class_(
+    "M5StackPrinterPrintBarCodeAction", automation.Action
+)
+
 CONF_FONT_SIZE = "font_size"
 CONF_TEXT = "text"
 CONF_SEND_WAKEUP = "send_wakeup"
+CONF_LINES = "lines"
+CONF_DATA = "data"
+CONF_BARCODE = "barcode"
+CONF_BARCODE_TYPE = "type"
 
 CONFIG_SCHEMA = (
     display.FULL_DISPLAY_SCHEMA.extend(
@@ -76,3 +91,73 @@ async def m5stack_printer_print_text_action_to_code(
     templ = await cg.templatable(config[CONF_FONT_SIZE], args, cg.uint8)
     cg.add(var.set_font_size(templ))
     return var
+
+@automation.register_action(
+    "m5stack_printer.new_line",
+    M5StackPrinterNewLineAction,
+    cv.maybe_simple_value(
+        cv.Schema(
+            {
+                cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
+                cv.Required(CONF_LINES): cv.templatable(cv.uint8),
+            }
+        ), key=CONF_LINES,
+    ),
+)
+async def m5stack_printer_new_line_action_to_code(
+    config, action_id, template_arg, args
+):
+    var = cg.new_Pvariable(action_id, template_arg)
+    await cg.register_parented(var, config[CONF_ID])
+    templ = await cg.templatable(config[CONF_LINES], args, cg.uint8)
+    cg.add(var.set_lines(templ))
+    return 
+
+
+@automation.register_action(
+    "m5stack_printer.print_qr_code",
+    M5StackPrinterPrintQRCodeAction,
+    cv.maybe_simple_value(
+        cv.Schema(
+            {
+                cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
+                cv.Required(CONF_DATA): cv.templatable(cv.std_string),
+            }
+        ), key=CONF_DATA,
+    ),
+)
+async def m5stack_printer_print_qr_code_action_to_code(
+    config, action_id, template_arg, args
+):
+    var = cg.new_Pvariable(action_id, template_arg)
+    await cg.register_parented(var, config[CONF_ID])
+    templ = await cg.templatable(config[CONF_DATA], args, cg.std_string)
+    cg.add(var.set_data(templ))
+    return var
+
+@automation.register_action(
+    "m5stack_printer.print_bar_code",
+    M5StackPrinterPrintBarCodeAction,
+    cv.maybe_simple_value(
+        cv.Schema(
+            {
+                cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
+                cv.Required(CONF_BARCODE): cv.templatable(cv.std_string),
+                cv.Required(CONF_BARCODE_TYPE): cv.templatable(cv.string),
+            }
+        ), key=CONF_BARCODE,
+    ),
+)
+async def m5stack_printer_print_bar_code_action_to_code(
+    config, action_id, template_arg, args
+):
+    var = cg.new_Pvariable(action_id, template_arg)
+    await cg.register_parented(var, config[CONF_ID])
+    templ = await cg.templatable(config[CONF_BARCODE], args, cg.std_string)
+    cg.add(var.set_barcode(templ))
+    templ = await cg.templatable(
+        config[CONF_BARCODE_TYPE], args, cg.std_string
+    )
+    cg.add(var.set_type(templ))
+    return var
+

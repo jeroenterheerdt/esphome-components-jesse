@@ -71,5 +71,31 @@ class M5StackPrinterPrintTextAction : public Action<Ts...>, public Parented<M5St
   void play(Ts... x) override { this->parent_->print_text(this->text_.value(x...), this->font_size_.value(x...)); }
 };
 
+template<typename... Ts>
+class M5StackPrinterNewLineAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+ public:
+  TEMPLATABLE_VALUE(uint8_t, lines)
+
+  void play(Ts... x) override { this->parent_->new_line(this->lines_.value(x...)); }
+};
+
+template<typename... Ts>
+class M5StackPrinterPrintQRCodeAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+ public:
+  TEMPLATABLE_VALUE(std::string, data)
+
+  void play(Ts... x) override { this->parent_->print_qrcode(this->data_.value(x...)); }
+};
+
+template<typename... Ts>
+class M5StackPrinterPrintBarCodeAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+ public:
+  TEMPLATABLE_VALUE(std::string, barcode)
+  TEMPLATABLE_VALUE(std::string, type)
+
+  void play(Ts... x) override { this->parent_->print_barcode(this->barcode_.value(x...), this->type_.value(x...)); }
+};
+
+
 }  // namespace m5stack_printer
 }  // namespace esphome
