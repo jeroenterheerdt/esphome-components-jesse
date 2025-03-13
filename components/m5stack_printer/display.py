@@ -28,6 +28,7 @@ M5StackPrinterPrintBarCodeAction = m5stack_printer_ns.class_(
 )
 
 CONF_FONT_SIZE = "font_size"
+CONF_FONT_SIZE_FACTOR = "font_size_factor"
 CONF_TEXT = "text"
 CONF_SEND_WAKEUP = "send_wakeup"
 CONF_LINES = "lines"
@@ -76,6 +77,9 @@ async def to_code(config):
                 cv.Optional(CONF_FONT_SIZE, default=1): cv.templatable(
                     cv.int_range(min=0, max=7)
                 ),
+                cv.Optional(CONF_FONT_SIZE_FACTOR, default=1): cv.template(
+                    cv.float
+                )
             }
         ),
         key=CONF_TEXT,
@@ -90,6 +94,8 @@ async def m5stack_printer_print_text_action_to_code(
     cg.add(var.set_text(templ))
     templ = await cg.templatable(config[CONF_FONT_SIZE], args, cg.uint8)
     cg.add(var.set_font_size(templ))
+    templ = await cg.templatable(config[CONF_FONT_SIZE_FACTOR], args, cg.float)
+    cg.add(var.set_font_size_factor(templ))
     return var
 
 @automation.register_action(

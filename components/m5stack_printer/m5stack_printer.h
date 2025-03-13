@@ -67,8 +67,9 @@ class M5StackPrinterPrintTextAction : public Action<Ts...>, public Parented<M5St
  public:
   TEMPLATABLE_VALUE(std::string, text)
   TEMPLATABLE_VALUE(uint8_t, font_size)
+  TEMPLATABLE_VALUE(float, font_size_factor)
 
-  void play(Ts... x) override { this->parent_->print_text(this->text_.value(x...), this->font_size_.value(x...)); }
+  void play(Ts... x) override { this->parent_->print_text(this->text_.value(x...), this->font_size_.value(x...)*this->font_size_factor_.value(x...)); }
 };
 
 template<typename... Ts>
