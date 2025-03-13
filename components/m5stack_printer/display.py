@@ -135,6 +135,7 @@ async def m5stack_printer_print_qr_code_action_to_code(
     cg.add(var.set_data(templ))
     return var
 
+
 @automation.register_action(
     "m5stack_printer.print_bar_code",
     M5StackPrinterPrintBarCodeAction,
