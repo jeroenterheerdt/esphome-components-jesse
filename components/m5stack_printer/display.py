@@ -99,7 +99,7 @@ async def m5stack_printer_print_text_action_to_code(
         cv.Schema(
             {
                 cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
-                cv.Required(CONF_LINES): cv.templatable(cv.uint8),
+                cv.Required(CONF_LINES): cv.templatable(cg.uint8),
             }
         ), key=CONF_LINES,
     ),
