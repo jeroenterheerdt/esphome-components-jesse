@@ -82,9 +82,9 @@ class M5StackPrinterNewLineAction : public Action<Ts...>, public Parented<M5Stac
 template<typename... Ts>
 class M5StackPrinterPrintQRCodeAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
  public:
-  TEMPLATABLE_VALUE(std::string, data)
+  TEMPLATABLE_VALUE(std::string, qrcode)
 
-  void play(Ts... x) override { this->parent_->print_qrcode(this->data_.value(x...)); }
+  void play(Ts... x) override { this->parent_->print_qrcode(this->qrcode_.value(x...)); }
 };
 
 template<typename... Ts>
