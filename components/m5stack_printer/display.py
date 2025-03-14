@@ -42,6 +42,7 @@ CONFIG_SCHEMA = (
             cv.GenerateID(): cv.declare_id(M5StackPrinterDisplay),
             cv.Required(CONF_HEIGHT): cv.uint16_t,
             cv.Optional(CONF_SEND_WAKEUP, default=False): cv.boolean,
+            cv.Optional(CONF_FONT_SIZE_FACTOR, default=1.0): cv.float_,
         }
     )
     .extend(
@@ -58,6 +59,7 @@ async def to_code(config):
 
     cg.add(var.set_height(config[CONF_HEIGHT]))
     cg.add(var.set_send_wakeup(config[CONF_SEND_WAKEUP]))
+    cg.add(var.set_font_size_factor(config[CONF_FONT_SIZE_FACTOR]))
 
     if lambda_config := config.get(CONF_LAMBDA):
         lambda_ = await cg.process_lambda(
