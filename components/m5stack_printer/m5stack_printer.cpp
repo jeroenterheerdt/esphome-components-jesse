@@ -55,6 +55,7 @@ void M5StackPrinterDisplay::init_() {
 void M5StackPrinterDisplay::print_text(std::string text, uint8_t font_size) {
   this->init_();
   font_size = clamp<uint8_t>(font_size, 0, 7);
+  font_size = font_size * this->font_size_factor_;
   this->write_array(FONT_SIZE_CMD, sizeof(FONT_SIZE_CMD));
   this->write_byte(font_size | (font_size << 4));
 

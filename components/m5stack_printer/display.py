@@ -77,9 +77,6 @@ async def to_code(config):
                 cv.Optional(CONF_FONT_SIZE, default=1): cv.templatable(
                     cv.int_range(min=0, max=7)
                 ),
-                cv.Optional(CONF_FONT_SIZE_FACTOR, default=1): cv.templatable(
-                    cv.float_range(min=0.01)
-                ),
             }
         ),
         key=CONF_TEXT,
@@ -94,8 +91,6 @@ async def m5stack_printer_print_text_action_to_code(
     cg.add(var.set_text(templ))
     templ = await cg.templatable(config[CONF_FONT_SIZE], args, cg.uint8)
     cg.add(var.set_font_size(templ))
-    templ = await cg.templatable(config[CONF_FONT_SIZE_FACTOR], args, cg.double)
-    cg.add(var.set_font_size_factor(templ))
     return var
 
 
@@ -106,7 +101,7 @@ async def m5stack_printer_print_text_action_to_code(
         cv.Schema(
             {
                 cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
-                cv.Required(CONF_LINES): cv.templatable(cg.uint8),
+                cv.Required(CONF_LINES): cv.templatable(cv.int_),
             }
         ),
         key=CONF_LINES,
@@ -141,7 +136,7 @@ async def m5stack_printer_print_qr_code_action_to_code(
     var = cg.new_Pvariable(action_id, template_arg)
     await cg.register_parented(var, config[CONF_ID])
     templ = await cg.templatable(config[CONF_DATA], args, cg.std_string)
-    cg.add(var.set_data(templ))
+    cg.add(var.set_qrcode(templ))
     return var
 
 
