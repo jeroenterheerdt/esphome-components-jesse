@@ -180,6 +180,7 @@ async def m5stack_printer_print_bar_code_action_to_code(
     await cg.register_parented(var, config[CONF_ID])
     templ = await cg.templatable(config[CONF_BARCODE], args, cg.std_string)
     cg.add(var.set_barcode(templ))
-    templ = await cg.templatable(config[CONF_BARCODE_TYPE], args, cg.std_string)
-    cg.add(var.set_type(templ))
+    # templ = await cg.templatable(config[CONF_BARCODE_TYPE], args, cg.std_string)
+    # cg.add(var.set_equation(config[CONF_EQUATION]))
+    cg.add(var.set_type(config[CONF_BARCODE_TYPE]))
     return var
