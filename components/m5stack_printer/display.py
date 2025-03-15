@@ -27,6 +27,19 @@ M5StackPrinterPrintBarCodeAction = m5stack_printer_ns.class_(
     "M5StackPrinterPrintBarCodeAction", automation.Action
 )
 
+
+BARCODETYPE = {
+    "UPC_A": 0x41,
+    "UPC_E": "UPC_E",
+    "EAN13": "EAN13",
+    "EAN8": "EAN8",
+    "CODE39": "CODE39",
+    "ITF": "ITF",
+    "CODABAR": "CODABAR",
+    "CODE93": "CODE93",
+    "CODE128": "CODE128",
+}
+
 CONF_FONT_SIZE = "font_size"
 CONF_FONT_SIZE_FACTOR = "font_size_factor"
 CONF_TEXT = "text"
@@ -154,7 +167,7 @@ async def m5stack_printer_print_qr_code_action_to_code(
             {
                 cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
                 cv.Required(CONF_BARCODE): cv.templatable(cg.std_string),
-                cv.Required(CONF_BARCODE_TYPE): cv.templatable(cg.std_string),
+                cv.Required(CONF_BARCODE_TYPE): cv.enum(BARCODETYPE),
             }
         ),
         key=CONF_BARCODE,

@@ -97,7 +97,7 @@ template<typename... Ts>
 class M5StackPrinterPrintBarCodeAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
  public:
   TEMPLATABLE_VALUE(std::string, barcode)
-  TEMPLATABLE_VALUE(std::string, type)
+  TEMPLATABLE_VALUE(BarcodeType, type)
 
   void play(Ts... x) override { this->parent_->print_barcode(this->barcode_.value(x...), this->type_.value(x...)); }
 };
