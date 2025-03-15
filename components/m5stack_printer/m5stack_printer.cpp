@@ -90,12 +90,13 @@ void M5StackPrinterDisplay::print_qrcode(std::string data) {
   this->write_array(QR_CODE_PRINT_CMD, sizeof(QR_CODE_PRINT_CMD));
 }
 
-void M5StackPrinterDisplay::print_barcode(std::string barcode, BarcodeType type) {
+void M5StackPrinterDisplay::print_barcode(std::string barcode, std::string type) {
   this->init_();
 
   this->write_array(BARCODE_ENABLE_CMD, sizeof(BARCODE_ENABLE_CMD));
 
   this->write_array(BARCODE_PRINT_CMD, sizeof(BARCODE_PRINT_CMD));
+  // todo: check against valid values!
   this->write_byte(type);
   this->write_byte(barcode.length());
   this->write_str(barcode.c_str());
