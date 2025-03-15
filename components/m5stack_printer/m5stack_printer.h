@@ -45,7 +45,7 @@ class M5StackPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
   void new_line(uint8_t lines);
   void print_qrcode(std::string data);
 
-  void print_barcode(std::string barcode, BarcodeType type);
+  void print_barcode(std::string barcode, std::string type);
 
   void set_send_wakeup(bool send_wakeup) { this->send_wakeup_ = send_wakeup; }
   void set_font_size_factor(double font_size_factor) { this->font_size_factor_ = font_size_factor; }
