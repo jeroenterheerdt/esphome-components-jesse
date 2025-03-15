@@ -169,5 +169,5 @@ async def m5stack_printer_print_bar_code_action_to_code(
     templ = await cg.templatable(config[CONF_BARCODE], args, cg.std_string)
     cg.add(var.set_barcode(templ))
     templ = await cg.templatable(config[CONF_BARCODE_TYPE], args, cg.std_string)
-    cg.add(var.set_type(templ)
+    cg.add(var.set_type(templ))
     return var
