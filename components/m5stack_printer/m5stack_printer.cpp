@@ -118,10 +118,9 @@ void M5StackPrinterDisplay::print_barcode(std::string barcode, std::string type)
   this->write_array(BARCODE_ENABLE_CMD, sizeof(BARCODE_ENABLE_CMD));
 
   this->write_array(BARCODE_PRINT_CMD, sizeof(BARCODE_PRINT_CMD));
-  // todo: check against valid values!
   BarcodeType barcode_type = stringToBarcodeType(type);
   if (barcode_type == BarcodeType::UNKNOWN) {
-    // error
+    ESP_LOGE("Unable to print barcode", "Unknown barcode type: %s", type.c_str());
   } else {
     this->write_byte(barcode_type);
     this->write_byte(barcode.length());
