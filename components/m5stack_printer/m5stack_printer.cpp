@@ -90,6 +90,28 @@ void M5StackPrinterDisplay::print_qrcode(std::string data) {
   this->write_array(QR_CODE_PRINT_CMD, sizeof(QR_CODE_PRINT_CMD));
 }
 
+BarcodeType stringToBarcodeType(const std::string &typeStr) {
+  if (colorStr == "UPC_A") {
+    return BarcodeType::UPC_A;
+  } else if (colorStr == "UPC_E") {
+    return BarcodeType::UPC_E;
+  } else if (colorStr == "EAN13") {
+    return BarcodeType::EAN13;
+  } else if (colorStr == "EAN8") {
+    return BarcodeType::EAN8;
+  } else if (colorStr == "CODE39") {
+    return BarcodeType::CODE39;
+  } else if (colorStr == "ITF") {
+    return BarcodeType::ITF;
+  } else if (colorStr == "CODABAR") {
+    return BarcodeType::CODABAR;
+  } else if (colorStr == "CODE93") {
+    return BarcodeType::CODE93;
+  } else if (colorStr == "CODE128") {
+    return BarcodeType::CODE128;
+  }
+  return BarcodeType::UNKNOWN;
+}
 void M5StackPrinterDisplay::print_barcode(std::string barcode, std::string type) {
   this->init_();
 
@@ -97,12 +119,15 @@ void M5StackPrinterDisplay::print_barcode(std::string barcode, std::string type)
 
   this->write_array(BARCODE_PRINT_CMD, sizeof(BARCODE_PRINT_CMD));
   // todo: check against valid values!
-  // this->write_byte(type);
-  this->write_str(type.c_str());
-  this->write_byte(barcode.length());
-  this->write_str(barcode.c_str());
-  this->write_byte(0x00);
-
+  BarcodeType barcode_type = stringToBarcodeType(type);
+  if (barcode_type == BarcodeType::UNKNOWN) {
+    // error
+  } else {
+    this->write_byte(barcode_type);
+    this->write_byte(barcode.length());
+    this->write_str(barcode.c_str());
+    this->write_byte(0x00);
+  }
   this->write_array(BARCODE_DISABLE_CMD, sizeof(BARCODE_DISABLE_CMD));
 }
 

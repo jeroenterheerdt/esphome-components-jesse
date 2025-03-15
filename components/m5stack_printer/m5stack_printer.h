@@ -12,17 +12,7 @@
 namespace esphome {
 namespace m5stack_printer {
 
-enum BarcodeType {
-  UPC_A = 0x41,
-  UPC_E,
-  EAN13,
-  EAN8,
-  CODE39,
-  ITF,
-  CODABAR,
-  CODE93,
-  CODE128,
-};
+enum BarcodeType { UPC_A = 0x41, UPC_E, EAN13, EAN8, CODE39, ITF, CODABAR, CODE93, CODE128, UNKNOWN };
 
 class M5StackPrinterDisplay : public display::DisplayBuffer, public uart::UARTDevice {
  public:
