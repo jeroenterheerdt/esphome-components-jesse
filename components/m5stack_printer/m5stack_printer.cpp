@@ -97,7 +97,8 @@ void M5StackPrinterDisplay::print_barcode(std::string barcode, std::string type)
 
   this->write_array(BARCODE_PRINT_CMD, sizeof(BARCODE_PRINT_CMD));
   // todo: check against valid values!
-  this->write_byte(type);
+  // this->write_byte(type);
+  this->write_str(type.c_str());
   this->write_byte(barcode.length());
   this->write_str(barcode.c_str());
   this->write_byte(0x00);

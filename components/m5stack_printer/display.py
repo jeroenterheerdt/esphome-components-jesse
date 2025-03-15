@@ -6,6 +6,7 @@ from esphome.const import CONF_HEIGHT, CONF_ID, CONF_LAMBDA
 
 DEPENDENCIES = ["uart"]
 
+# todo: add other abilities such as bold etc (see datasheet)
 m5stack_printer_ns = cg.esphome_ns.namespace("m5stack_printer")
 
 M5StackPrinterDisplay = m5stack_printer_ns.class_(
