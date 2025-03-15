@@ -91,23 +91,23 @@ void M5StackPrinterDisplay::print_qrcode(std::string data) {
 }
 
 BarcodeType stringToBarcodeType(const std::string &typeStr) {
-  if (colorStr == "UPC_A") {
+  if (typeStr == "UPC_A") {
     return BarcodeType::UPC_A;
-  } else if (colorStr == "UPC_E") {
+  } else if (typeStr == "UPC_E") {
     return BarcodeType::UPC_E;
-  } else if (colorStr == "EAN13") {
+  } else if (typeStr == "EAN13") {
     return BarcodeType::EAN13;
-  } else if (colorStr == "EAN8") {
+  } else if (typeStr == "EAN8") {
     return BarcodeType::EAN8;
-  } else if (colorStr == "CODE39") {
+  } else if (typeStr == "CODE39") {
     return BarcodeType::CODE39;
-  } else if (colorStr == "ITF") {
+  } else if (typeStr == "ITF") {
     return BarcodeType::ITF;
-  } else if (colorStr == "CODABAR") {
+  } else if (typeStr == "CODABAR") {
     return BarcodeType::CODABAR;
-  } else if (colorStr == "CODE93") {
+  } else if (typeStr == "CODE93") {
     return BarcodeType::CODE93;
-  } else if (colorStr == "CODE128") {
+  } else if (typeStr == "CODE128") {
     return BarcodeType::CODE128;
   }
   return BarcodeType::UNKNOWN;
