@@ -166,7 +166,7 @@ async def m5stack_printer_print_qr_code_action_to_code(
             {
                 cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
                 cv.Required(CONF_BARCODE): cv.templatable(cg.std_string),
-                cv.Optional(CONF_BARCODE_TYPE, default="UPC_A"): cv.templateable(
+                cv.Optional(CONF_BARCODE_TYPE, default="UPC_A"): cv.templatable(
                     cv.enum(BARCODETYPE, upper=True)
                 ),
             }
