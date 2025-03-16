@@ -6,7 +6,7 @@ from esphome.const import CONF_HEIGHT, CONF_ID, CONF_LAMBDA
 
 DEPENDENCIES = ["uart"]
 
-# todo: add other abilities such as bold etc (see datasheet)
+# todo: add other abilities such as doublewidth mode, bold etc (see datasheet)
 m5stack_printer_ns = cg.esphome_ns.namespace("m5stack_printer")
 
 M5StackPrinterDisplay = m5stack_printer_ns.class_(
@@ -124,10 +124,6 @@ async def m5stack_printer_print_text_action_to_code(
 async def m5stack_printer_new_line_action_to_code(
     config, action_id, template_arg, args
 ):
-    print("config: ", config)
-    print("action_id: ", action_id)
-    print("template_args:", template_arg)
-    print("args: ", args)
     var = cg.new_Pvariable(action_id, template_arg)
     await cg.register_parented(var, config[CONF_ID])
     templ = await cg.templatable(config[CONF_LINES], args, cg.uint8)
