@@ -72,20 +72,16 @@ void M5StackPrinterDisplay::reset() {
 
 void M5StackPrinterDisplay::set_firmware(std::string fw) {
   ESP_LOGD("set_firmware", "firmware: %s", fw.c_str());
-  this->firmware_ = convertVersionToNumber(fw);
-}
-
-int convertVersionToNumber(const std::string &version) {
   std::string numericRepresentation;
 
-  for (char ch : version) {
+  for (char ch : fw) {
     if (std::isdigit(ch)) {
       numericRepresentation += ch;
     }
   }
 
   // Convert the concatenated string to an integer
-  return std::stoi(numericRepresentation);
+  this->firmware_ = std::stoi(numericRepresentation);
 }
 
 void M5StackPrinterDisplay::print_text(std::string text, uint8_t font_size, std::string font, bool inverse, bool updown,
