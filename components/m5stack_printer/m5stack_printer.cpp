@@ -75,7 +75,7 @@ void M5StackPrinterDisplay::print_text(std::string text, uint8_t font_size, std:
   this->init_();
   ESP_LOGD("print_text", "text: %s", text.c_str());
   ESP_LOGD("print_text", "font_size: %d", font_size);
-  ESP_LOGD("print_text", "font_size_factor %d", font_size_factor_);
+  ESP_LOGD("print_text", "font_size_factor: %d", font_size_factor_);
   ESP_LOGD("print_text", "font: %s", font.c_str());
   ESP_LOGD("print_text", "inverse: %s", inverse ? "true" : "false");
   ESP_LOGD("print_text", "updown: %s", updown ? "true" : "false");

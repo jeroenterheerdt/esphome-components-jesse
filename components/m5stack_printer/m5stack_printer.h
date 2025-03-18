@@ -41,7 +41,10 @@ class M5StackPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
   void print_barcode(std::string barcode, std::string type);
 
   void set_send_wakeup(bool send_wakeup) { this->send_wakeup_ = send_wakeup; }
-  void set_font_size_factor(double font_size_factor) { this->font_size_factor_ = font_size_factor; }
+  void set_font_size_factor(double font_size_factor) {
+    ESP_LOGD("set_font_size_factor", "font_size_factor: %d", font_size_factor);
+    this->font_size_factor_ = font_size_factor;
+  }
 
  protected:
   void draw_absolute_pixel_internal(int x, int y, Color color) override;
