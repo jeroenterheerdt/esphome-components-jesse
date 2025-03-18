@@ -1,3 +1,4 @@
+import logging
 from esphome import automation
 import esphome.codegen as cg
 from esphome.components import display, uart
