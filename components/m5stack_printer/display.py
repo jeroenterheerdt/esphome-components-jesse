@@ -143,7 +143,7 @@ async def m5stack_printer_print_text_action_to_code(
     templ = await cg.templatable(config[CONF_INVERSE], args, cg.bool_)
     cg.add(var.set_inverse(templ))
     templ = await cg.templatable(config[CONF_UPSIDE_DOWN], args, cg.bool_)
-    cg.add(var.set_upside_down(templ))
+    cg.add(var.set_updown(templ))
     templ = await cg.templatable(config[CONF_BOLD], args, cg.bool_)
     cg.add(var.set_bold(templ))
     templ = await cg.templatable(config[CONF_DOUBLE_HEIGHT], args, cg.bool_)
@@ -151,7 +151,7 @@ async def m5stack_printer_print_text_action_to_code(
     templ = await cg.templatable(config[CONF_DOUBLE_WIDTH], args, cg.bool_)
     cg.add(var.set_double_width(templ))
     templ = await cg.templatable(config[CONF_STRIKETHROUGH], args, cg.bool_)
-    cg.add(var.set_strikethrough(templ))
+    cg.add(var.set_strike(templ))
     return var
 
 
