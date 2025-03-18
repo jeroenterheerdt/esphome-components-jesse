@@ -70,6 +70,19 @@ void M5StackPrinterDisplay::reset() {
   maxColumn = 32;
 }
 
+int convertVersionToNumber(const std::string &version) {
+  std::string numericRepresentation;
+
+  for (char ch : version) {
+    if (std::isdigit(ch)) {
+      numericRepresentation += ch;
+    }
+  }
+
+  // Convert the concatenated string to an integer
+  return std::stoi(numericRepresentation);
+}
+
 void M5StackPrinterDisplay::print_text(std::string text, uint8_t font_size, std::string font, bool inverse, bool updown,
                                        bool bold, bool double_height, bool double_width, bool strike) {
   this->init_();
@@ -90,27 +103,35 @@ void M5StackPrinterDisplay::print_text(std::string text, uint8_t font_size, std:
     this->unsetPrintMode(FONT_MASK);
   }
   if (inverse) {
-    // command for firmware < 2.6.8
-    // this->setPrintMode(INVERSE_MASK);
-    const uint8_t inverseOnCMD[] = {GS, 'B', 0x01};
-    this->write_array(inverseOnCMD, sizeof(inverseOnCMD));
+    if (this->firmware_ < 268) {
+      this->setPrintMode(INVERSE_MASK);
+    } else {
+      const uint8_t inverseOnCMD[] = {GS, 'B', 0x01};
+      this->write_array(inverseOnCMD, sizeof(inverseOnCMD));
+    }
 
   } else {
-    // command for firmwarm < 2.6.8.
-    // this->unsetPrintMode(INVERSE_MASK);
-    const uint8_t inverseOffCMD[] = {GS, 'B', 0x00};
-    this->write_array(inverseOffCMD, sizeof(inverseOffCMD));
+    if (this->firmware_ < 268) {
+      this->unsetPrintMode(INVERSE_MASK);
+    } else {
+      const uint8_t inverseOffCMD[] = {GS, 'B', 0x00};
+      this->write_array(inverseOffCMD, sizeof(inverseOffCMD));
+    }
   }
   if (updown) {
-    // command for firmware < 2.6.8
-    // this->setPrintMode(UPDOWN_MASK);
-    const uint8_t updownOnCMD[] = {ESC, '{', 0x01};
-    this->write_array(updownOnCMD, sizeof(updownOnCMD));
+    if (this->firmware_ < 268) {
+      this->setPrintMode(UPDOWN_MASK);
+    } else {
+      const uint8_t updownOnCMD[] = {ESC, '{', 0x01};
+      this->write_array(updownOnCMD, sizeof(updownOnCMD));
+    }
   } else {
-    // command for firmware < 2.6.8
-    // this->unsetPrintMode(UPDOWN_MASK);
-    const uint8_t updownOffCMD[] = {ESC, '{', 0x00};
-    this->write_array(updownOffCMD, sizeof(updownOffCMD));
+    if (this->firmware_ < 268) {
+      this->unsetPrintMode(UPDOWN_MASK);
+    } else {
+      const uint8_t updownOffCMD[] = {ESC, '{', 0x00};
+      this->write_array(updownOffCMD, sizeof(updownOffCMD));
+    }
   }
   if (bold) {
     this->setPrintMode(BOLD_MASK);

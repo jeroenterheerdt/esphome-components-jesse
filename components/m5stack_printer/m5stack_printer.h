@@ -50,6 +50,11 @@ class M5StackPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
     this->font_size_factor_ = font_size_factor;
   }
 
+  void set_firmware(std::string fw) {
+    ESP_LOGD("set_firmware", "firmware: %s", fw.c_str());
+    this->firmware_ = convertVersionToNumber(fw);
+  }
+
  protected:
   void draw_absolute_pixel_internal(int x, int y, Color color) override;
   size_t get_buffer_length_() { return size_t(this->get_width_internal()) * size_t(this->get_height_internal()) / 8; }
@@ -62,6 +67,7 @@ class M5StackPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
   bool ready_{false};
   bool send_wakeup_{false};
   double font_size_factor_{1.0};
+  int firmware_{268};
 
  private:
   uint8_t printMode, charHeight, maxColumn;
