@@ -51,6 +51,13 @@ BARCODETYPE = {
 }
 CONF_FONT_SIZE = "font_size"
 CONF_FONT_SIZE_FACTOR = "font_size_factor"
+CONF_FONT = "font"
+CONF_INVERSE = "inverse"
+CONF_UPSIDE_DOWN = "upside_down"
+CONF_BOLD = "bold"
+CONF_DOUBLE_HEIGHT = "double_height"
+CONF_DOUBLE_WIDTH = "double_width"
+CONF_STRIKETHROUGH = "strikethrough"
 CONF_TEXT = "text"
 CONF_SEND_WAKEUP = "send_wakeup"
 CONF_LINES = "lines"
@@ -101,6 +108,22 @@ async def to_code(config):
                 cv.Optional(CONF_FONT_SIZE, default=1): cv.templatable(
                     cv.int_range(min=0, max=7)
                 ),
+                cv.Optional(CONF_FONT_SIZE_FACTOR): cv.templatable(cv.float_),
+                cv.Optional(CONF_FONT, default="A"): cv.templatable(cv.string),
+                cv.Optional(CONF_INVERSE, default=False): cv.templatable(cv.boolean),
+                cv.Optional(CONF_UPSIDE_DOWN, default=False): cv.templatable(
+                    cv.boolean
+                ),
+                cv.Optional(CONF_BOLD, default=False): cv.templatable(cv.boolean),
+                cv.Optional(CONF_DOUBLE_HEIGHT, default=False): cv.templatable(
+                    cv.boolean
+                ),
+                cv.Optional(CONF_DOUBLE_WIDTH, default=False): cv.templatable(
+                    cv.boolean
+                ),
+                cv.Optional(CONF_STRIKETHROUGH, default=False): cv.templatable(
+                    cv.boolean
+                ),
             }
         ),
         key=CONF_TEXT,
@@ -115,6 +138,20 @@ async def m5stack_printer_print_text_action_to_code(
     cg.add(var.set_text(templ))
     templ = await cg.templatable(config[CONF_FONT_SIZE], args, cg.uint8)
     cg.add(var.set_font_size(templ))
+    templ = await cg.templatable(config[CONF_FONT], args, cg.std_string)
+    cg.add(var.set_font(templ))
+    templ = await cg.templatable(config[CONF_INVERSE], args, cg.bool_)
+    cg.add(var.set_inverse(templ))
+    templ = await cg.templatable(config[CONF_UPSIDE_DOWN], args, cg.bool_)
+    cg.add(var.set_upside_down(templ))
+    templ = await cg.templatable(config[CONF_BOLD], args, cg.bool_)
+    cg.add(var.set_bold(templ))
+    templ = await cg.templatable(config[CONF_DOUBLE_HEIGHT], args, cg.bool_)
+    cg.add(var.set_double_height(templ))
+    templ = await cg.templatable(config[CONF_DOUBLE_WIDTH], args, cg.bool_)
+    cg.add(var.set_double_width(templ))
+    templ = await cg.templatable(config[CONF_STRIKETHROUGH], args, cg.bool_)
+    cg.add(var.set_strikethrough(templ))
     return var
 
 
@@ -189,38 +226,4 @@ async def m5stack_printer_print_bar_code_action_to_code(
     cg.add(var.set_barcode(templ))
     templ = await cg.templatable(config[CONF_BARCODE_TYPE], args, cg.std_string)
     cg.add(var.set_type(templ))
-    return var
-
-
-@automation.register_action(
-    "m5stack_printer.bold_off",
-    M5StackPrinterBoldOffAction,
-    cv.maybe_simple_value(
-        cv.Schema(
-            {
-                cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
-            }
-        ),
-    ),
-)
-async def m5stack_printer_bold_off(config, action_id, template_arg, args):
-    var = cg.new_Pvariable(action_id, template_arg)
-    await cg.register_parented(var, config[CONF_ID])
-    return var
-
-
-@automation.register_action(
-    "m5stack_printer.bold_on",
-    M5StackPrinterBoldOnAction,
-    cv.maybe_simple_value(
-        cv.Schema(
-            {
-                cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
-            }
-        ),
-    ),
-)
-async def m5stack_printer_bold_on(config, action_id, template_arg, args):
-    var = cg.new_Pvariable(action_id, template_arg)
-    await cg.register_parented(var, config[CONF_ID])
     return var

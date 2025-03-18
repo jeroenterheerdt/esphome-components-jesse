@@ -70,16 +70,101 @@ void M5StackPrinterDisplay::reset() {
   maxColumn = 32;
 }
 
-void M5StackPrinterDisplay::print_text(std::string text, uint8_t font_size) {
+void M5StackPrinterDisplay::print_text(std::string text, uint8_t font_size, std::string font, bool inverse, bool updown,
+                                       bool bold, bool double_height, bool double_width, bool strike) {
   this->init_();
+  ESP_LOGD("print_text", "text: %s", text.c_str());
+  ESP_LOGD("print_text", "font_size: %d", font_size);
+  ESP_LOGD("print_text", "font_size_factor %d", font_size_factor_);
+  ESP_LOGD("print_text", "font: %s", font.c_str());
+  ESP_LOGD("print_text", "inverse: %s", inverse ? "true" : "false");
+  ESP_LOGD("print_text", "updown: %s", updown ? "true" : "false");
+  ESP_LOGD("print_text", "bold: %s", bold ? "true" : "false");
+  ESP_LOGD("print_text", "double_height: %s", double_height ? "true" : "false");
+  ESP_LOGD("print_text", "double_width: %s", double_width ? "true" : "false");
+  ESP_LOGD("print_text", "strike: %s", strike ? "true" : "false");
+
+  if (font == "B") {
+    this->setPrintMode(FONT_MASK);
+  } else {
+    this->unsetPrintMode(FONT_MASK);
+  }
+  if (inverse) {
+    this->setPrintMode(INVERSE_MASK);
+  } else {
+    this->unsetPrintMode(INVERSE_MASK);
+  }
+  if (updown) {
+    this->setPrintMode(UPDOWN_MASK);
+  } else {
+    this->unsetPrintMode(UPDOWN_MASK);
+  }
+  if (bold) {
+    this->setPrintMode(BOLD_MASK);
+  } else {
+    this->unsetPrintMode(BOLD_MASK);
+  }
+  if (double_height) {
+    this->setPrintMode(DOUBLE_HEIGHT_MASK);
+  } else {
+    this->unsetPrintMode(DOUBLE_HEIGHT_MASK);
+  }
+  if (double_width) {
+    this->setPrintMode(DOUBLE_WIDTH_MASK);
+  } else {
+    this->unsetPrintMode(DOUBLE_WIDTH_MASK);
+  }
+  if (strike) {
+    this->setPrintMode(STRIKE_MASK);
+  } else {
+    this->unsetPrintMode(STRIKE_MASK);
+  }
+
   font_size = clamp<uint8_t>(font_size, 0, 7);
   font_size = font_size * this->font_size_factor_;
+  ESP_LOGD("print_text", "font_size after applying font_size_factor: %d", font_size);
   this->write_array(FONT_SIZE_CMD, sizeof(FONT_SIZE_CMD));
   this->write_byte(font_size | (font_size << 4));
 
   this->write_str(text.c_str());
 
   this->write_array(FONT_SIZE_RESET_CMD, sizeof(FONT_SIZE_RESET_CMD));
+
+  if (font != "B") {
+    this->setPrintMode(FONT_MASK);
+  } else {
+    this->unsetPrintMode(FONT_MASK);
+  }
+  if (!inverse) {
+    this->setPrintMode(INVERSE_MASK);
+  } else {
+    this->unsetPrintMode(INVERSE_MASK);
+  }
+  if (!updown) {
+    this->setPrintMode(UPDOWN_MASK);
+  } else {
+    this->unsetPrintMode(UPDOWN_MASK);
+  }
+  if (!bold) {
+    this->setPrintMode(BOLD_MASK);
+  } else {
+    this->unsetPrintMode(BOLD_MASK);
+  }
+  if (!double_height) {
+    this->setPrintMode(DOUBLE_HEIGHT_MASK);
+  } else {
+    this->unsetPrintMode(DOUBLE_HEIGHT_MASK);
+  }
+  if (!double_width) {
+    this->setPrintMode(DOUBLE_WIDTH_MASK);
+  } else {
+    this->unsetPrintMode(DOUBLE_WIDTH_MASK);
+  }
+  if (!strike) {
+    this->setPrintMode(STRIKE_MASK);
+  } else {
+    this->unsetPrintMode(STRIKE_MASK);
+  }
 }
 
 void M5StackPrinterDisplay::new_line(uint8_t lines) {

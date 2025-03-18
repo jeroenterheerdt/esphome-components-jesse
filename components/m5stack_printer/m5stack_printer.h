@@ -32,14 +32,14 @@ class M5StackPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
   display::DisplayType get_display_type() override { return display::DisplayType::DISPLAY_TYPE_BINARY; }
 
   void reset();
-  void print_text(std::string text, uint8_t font_size = 0);
+  void M5StackPrinterDisplay::print_text(std::string text, uint8_t font_size = 0, std::string font = "A",
+                                         bool inverse = false, bool updown = false, bool bold = false,
+                                         bool double_height = false, bool double_width = false, bool strike = false);
   void new_line(uint8_t lines);
   void print_qrcode(std::string data);
 
   void print_barcode(std::string barcode, std::string type);
 
-  void bold_off();
-  void bold_on();
   void set_send_wakeup(bool send_wakeup) { this->send_wakeup_ = send_wakeup; }
   void set_font_size_factor(double font_size_factor) { this->font_size_factor_ = font_size_factor; }
 
@@ -59,6 +59,7 @@ class M5StackPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
  private:
   uint8_t printMode, charHeight, maxColumn;
   void unsetPrintMode(uint8_t mask), setPrintMode(uint8_t mask), writePrintMode(), adjustCharValues(uint8_t mask);
+  void bold_off(), bold_on();
 };
 
 template<typename... Ts>
