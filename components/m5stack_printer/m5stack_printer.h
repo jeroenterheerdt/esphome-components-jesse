@@ -59,7 +59,6 @@ class M5StackPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
  private:
   uint8_t printMode, charHeight, maxColumn;
   void unsetPrintMode(uint8_t mask), setPrintMode(uint8_t mask), writePrintMode(), adjustCharValues(uint8_t mask);
-  void bold_off(), bold_on();
 };
 
 template<typename... Ts>

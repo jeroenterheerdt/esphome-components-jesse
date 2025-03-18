@@ -345,9 +345,5 @@ void M5StackPrinterDisplay::setPrintMode(uint8_t mask) {
   adjustCharValues(printMode);
 }
 
-void M5StackPrinterDisplay::bold_off() { unsetPrintMode(BOLD_MASK); }
-
-void M5StackPrinterDisplay::bold_on() { setPrintMode(BOLD_MASK); }
-
 }  // namespace m5stack_printer
 }  // namespace esphome
