@@ -67,11 +67,19 @@ class M5StackPrinterPrintTextAction : public Action<Ts...>, public Parented<M5St
  public:
   TEMPLATABLE_VALUE(std::string, text)
   TEMPLATABLE_VALUE(uint8_t, font_size)
-  TEMPLATABLE_VALUE(double, font_size_factor)
+  TEMPLATABLE_VALUE(std::string, font)
+  TEMPLATABLE_VALUE(bool, inverse)
+  TEMPLATABLE_VALUE(bool, updown)
+  TEMPLATABLE_VALUE(bool, bold)
+  TEMPLATABLE_VALUE(bool, double_height)
+  TEMPLATABLE_VALUE(bool, double_width)
+  TEMPLATABLE_VALUE(bool, strike)
 
   void play(Ts... x) override {
-    this->parent_->print_text(this->text_.value(x...),
-                              this->font_size_.value(x...) * this->font_size_factor_.value(x...));
+    this->parent_->print_text(this->text_.value(x...), this->font_size_.value(x...), this->font_.value(x...),
+                              this->inverse_.value(x...), this->updown_.value(x...), this->bold_.value(x...),
+                              this->double_height_.value(x...), this->double_width_.value(x...),
+                              this->strike_.value(x...));
   }
 };
 
