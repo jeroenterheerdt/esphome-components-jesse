@@ -25,6 +25,15 @@ static const uint8_t BARCODE_ENABLE_CMD[] = {GS, 0x45, 0x43, 0x01};
 static const uint8_t BARCODE_DISABLE_CMD[] = {GS, 0x45, 0x43, 0x00};
 static const uint8_t BARCODE_PRINT_CMD[] = {GS, 0x6B};
 
+static const uint8_t INVERSE_ON_CMD[] = {GS, 'B', 0x01};
+static const uint8_t INVERSE_OFF_CMD[] = {GS, 'B', 0x00};
+
+static const uint8_t UPDOWN_ON_CMD[] = {ESC, '{', 0x01};
+static const uint8_t UPDOWN_OFF_CMD[] = {ESC, '{', 0x00};
+
+static const uint8_t BOLD_ON_CMD[] = {ESC, 'E', 0x01};
+static const uint8_t BOLD_OFF_CMD[] = {ESC, 'E', 0x00};
+
 // === Character commands ===
 #define FONT_MASK (1 << 0)  //!< Select character font A or B
 #define INVERSE_MASK \
@@ -107,37 +116,41 @@ void M5StackPrinterDisplay::print_text(std::string text, uint8_t font_size, std:
     if (this->firmware_ < 268) {
       this->setPrintMode(INVERSE_MASK);
     } else {
-      const uint8_t inverseOnCMD[] = {GS, 'B', 0x01};
-      this->write_array(inverseOnCMD, sizeof(inverseOnCMD));
+      this->write_array(INVERSE_ON_CMD, sizeof(INVERSE_ON_CMD));
     }
 
   } else {
     if (this->firmware_ < 268) {
       this->unsetPrintMode(INVERSE_MASK);
     } else {
-      const uint8_t inverseOffCMD[] = {GS, 'B', 0x00};
-      this->write_array(inverseOffCMD, sizeof(inverseOffCMD));
+      this->write_array(INVERSE_OFF_CMD, sizeof(INVERSE_OFF_CMD));
     }
   }
   if (updown) {
     if (this->firmware_ < 268) {
       this->setPrintMode(UPDOWN_MASK);
     } else {
-      const uint8_t updownOnCMD[] = {ESC, '{', 0x01};
-      this->write_array(updownOnCMD, sizeof(updownOnCMD));
+      this->write_array(UPDOWN_ON_CMD, sizeof(UPDOWN_ON_CMD));
     }
   } else {
     if (this->firmware_ < 268) {
       this->unsetPrintMode(UPDOWN_MASK);
     } else {
-      const uint8_t updownOffCMD[] = {ESC, '{', 0x00};
-      this->write_array(updownOffCMD, sizeof(updownOffCMD));
+      this->write_array(UPDOWN_OFF_CMD, sizeof(UPDOWN_OFF_CMD));
     }
   }
   if (bold) {
-    this->setPrintMode(BOLD_MASK);
+    if (this->firmware_ < 268) {
+      this->setPrintMode(BOLD_MASK);
+    } else {
+      this->write_array(BOLD_ON_CMD, sizeof(BOLD_ON_CMD));
+    }
   } else {
-    this->unsetPrintMode(BOLD_MASK);
+    if (this->firmware_ < 268) {
+      this->unsetPrintMode(BOLD_MASK);
+    } else {
+      this->write_array(BOLD_OFF_CMD, sizeof(BOLD_OFF_CMD));
+    }
   }
   if (double_height) {
     this->setPrintMode(DOUBLE_HEIGHT_MASK);
@@ -164,42 +177,6 @@ void M5StackPrinterDisplay::print_text(std::string text, uint8_t font_size, std:
   this->write_str(text.c_str());
 
   this->write_array(FONT_SIZE_RESET_CMD, sizeof(FONT_SIZE_RESET_CMD));
-
-  if (font != "B") {
-    this->setPrintMode(FONT_MASK);
-  } else {
-    this->unsetPrintMode(FONT_MASK);
-  }
-  if (!inverse) {
-    this->setPrintMode(INVERSE_MASK);
-  } else {
-    this->unsetPrintMode(INVERSE_MASK);
-  }
-  if (!updown) {
-    this->setPrintMode(UPDOWN_MASK);
-  } else {
-    this->unsetPrintMode(UPDOWN_MASK);
-  }
-  if (!bold) {
-    this->setPrintMode(BOLD_MASK);
-  } else {
-    this->unsetPrintMode(BOLD_MASK);
-  }
-  if (!double_height) {
-    this->setPrintMode(DOUBLE_HEIGHT_MASK);
-  } else {
-    this->unsetPrintMode(DOUBLE_HEIGHT_MASK);
-  }
-  if (!double_width) {
-    this->setPrintMode(DOUBLE_WIDTH_MASK);
-  } else {
-    this->unsetPrintMode(DOUBLE_WIDTH_MASK);
-  }
-  if (!strike) {
-    this->setPrintMode(STRIKE_MASK);
-  } else {
-    this->unsetPrintMode(STRIKE_MASK);
-  }
 }
 
 void M5StackPrinterDisplay::new_line(uint8_t lines) {
