@@ -10,8 +10,7 @@ DEPENDENCIES = ["uart"]
 _LOGGER = logging.getLogger(__name__)
 
 # todo:
-# fix font size factor
-# add other abilities such as
+# add other abilities:
 # doublewidth mode, bold etc (https://github.com/adafruit/Adafruit-Thermal-Printer-Library/tree/master)
 # also check what else the printer can do, maybe cut paper as well? (see datasheet linked here: https://wiki.dfrobot.com/Embedded%20Thermal%20Printer%20-%20TTL%20Serial%20SKU%3A%20DFR0503-EN)
 m5stack_printer_ns = cg.esphome_ns.namespace("m5stack_printer")

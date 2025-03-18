@@ -31,7 +31,7 @@ static const uint8_t INVERSE_OFF_CMD[] = {GS, 'B', 0x00};
 static const uint8_t UPDOWN_ON_CMD[] = {ESC, '{', 0x01};
 static const uint8_t UPDOWN_OFF_CMD[] = {ESC, '{', 0x00};
 
-static const uint8_t BOLD_ON_CMD[] = {ESC, 'E', 0x01};
+static const uint8_t BOLD_ON_CMD[] = {ESC, 'E', 0xFF};
 static const uint8_t BOLD_OFF_CMD[] = {ESC, 'E', 0x00};
 
 // === Character commands ===
