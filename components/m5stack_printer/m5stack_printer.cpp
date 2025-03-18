@@ -70,6 +70,11 @@ void M5StackPrinterDisplay::reset() {
   maxColumn = 32;
 }
 
+void M5StackPrinterDisplay::set_firmware(std::string fw) {
+  ESP_LOGD("set_firmware", "firmware: %s", fw.c_str());
+  this->firmware_ = convertVersionToNumber(fw);
+}
+
 int convertVersionToNumber(const std::string &version) {
   std::string numericRepresentation;
 
