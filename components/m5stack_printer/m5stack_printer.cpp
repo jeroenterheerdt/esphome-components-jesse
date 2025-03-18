@@ -307,6 +307,7 @@ void M5StackPrinterDisplay::draw_absolute_pixel_internal(int x, int y, Color col
 }
 
 void M5StackPrinterDisplay::writePrintMode() {
+  ESP_LOGD("writePrintMode", "printMode: %d", printMode);
   static const uint8_t printModeCMD[] = {ESC, 0x21, printMode};
   this->write_array(printModeCMD, sizeof(printModeCMD));
 }
