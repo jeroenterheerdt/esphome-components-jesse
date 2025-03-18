@@ -6,6 +6,8 @@ from esphome.const import CONF_HEIGHT, CONF_ID, CONF_LAMBDA
 
 DEPENDENCIES = ["uart"]
 
+_LOGGER = logging.getLogger(__name__)
+
 # todo:
 # fix font size factor
 # add other abilities such as
@@ -87,7 +89,9 @@ async def to_code(config):
     await uart.register_uart_device(var, config)
 
     cg.add(var.set_height(config[CONF_HEIGHT]))
+    _LOGGER.debug("wakeup: %s", config[CONF_SEND_WAKEUP])
     cg.add(var.set_send_wakeup(config[CONF_SEND_WAKEUP]))
+    _LOGGER.debug("font size factor: %s", config[CONF_FONT_SIZE_FACTOR])
     cg.add(var.set_font_size_factor(config[CONF_FONT_SIZE_FACTOR]))
 
     if lambda_config := config.get(CONF_LAMBDA):

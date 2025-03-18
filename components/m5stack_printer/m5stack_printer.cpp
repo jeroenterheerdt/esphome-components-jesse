@@ -75,7 +75,7 @@ void M5StackPrinterDisplay::print_text(std::string text, uint8_t font_size, std:
   this->init_();
   ESP_LOGD("print_text", "text: %s", text.c_str());
   ESP_LOGD("print_text", "font_size: %d", font_size);
-  ESP_LOGD("print_text", "font_size_factor: %d", this->font_size_factor_);
+  ESP_LOGD("print_text", "font_size_factor: %f", this->font_size_factor_);
   ESP_LOGD("print_text", "font: %s", font.c_str());
   ESP_LOGD("print_text", "inverse: %s", inverse ? "true" : "false");
   ESP_LOGD("print_text", "updown: %s", updown ? "true" : "false");
@@ -122,7 +122,7 @@ void M5StackPrinterDisplay::print_text(std::string text, uint8_t font_size, std:
 
   font_size = clamp<uint8_t>(font_size, 0, 7);
   font_size = font_size * this->font_size_factor_;
-  ESP_LOGD("print_text", "font_size after applying font_size_factor: %d", font_size);
+  ESP_LOGD("print_text", "font_size after applying font_size_factor: %f", font_size);
   this->write_array(FONT_SIZE_CMD, sizeof(FONT_SIZE_CMD));
   this->write_byte(font_size | (font_size << 4));
 
@@ -335,13 +335,19 @@ void M5StackPrinterDisplay::adjustCharValues(uint8_t printMode) {
   maxColumn = (384 / charWidth);
 }
 void M5StackPrinterDisplay::unsetPrintMode(uint8_t mask) {
+  ESP_LOGD("unsetPrintMode", "mask: %d", mask);
+  ESP_LOGD("unsetPrintMode", "printMode before: %d", printMode);
   printMode &= ~mask;
+  ESP_LOGD("unsetPrintMode", "printMode after: %d", printMode);
   writePrintMode();
   adjustCharValues(printMode);
 }
 
 void M5StackPrinterDisplay::setPrintMode(uint8_t mask) {
+  ESP_LOGD("setPrintMode", "mask: %d", mask);
+  ESP_LOGD("setPrintMode", "printMode before: %d", printMode);
   printMode |= mask;
+  ESP_LOGD("setPrintMode", "printMode after: %d", printMode);
   writePrintMode();
   adjustCharValues(printMode);
 }
