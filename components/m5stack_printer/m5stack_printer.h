@@ -72,6 +72,7 @@ class M5StackPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
  private:
   uint8_t printMode, charHeight, maxColumn;
   void unsetPrintMode(uint8_t mask), setPrintMode(uint8_t mask), writePrintMode(), adjustCharValues(uint8_t mask);
+  int convertVersionToNumber(const std::string &version);
 };
 
 template<typename... Ts>
