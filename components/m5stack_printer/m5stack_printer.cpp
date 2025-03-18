@@ -140,12 +140,14 @@ void M5StackPrinterDisplay::print_text(std::string text, uint8_t font_size, std:
     }
   }
   if (bold) {
+    // this doesn't work yet?
     if (this->firmware_ < 268) {
       this->setPrintMode(BOLD_MASK);
     } else {
       this->write_array(BOLD_ON_CMD, sizeof(BOLD_ON_CMD));
     }
   } else {
+    // this doesn't work yet?
     if (this->firmware_ < 268) {
       this->unsetPrintMode(BOLD_MASK);
     } else {
