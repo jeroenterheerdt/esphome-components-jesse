@@ -25,6 +25,17 @@ static const uint8_t BARCODE_ENABLE_CMD[] = {GS, 0x45, 0x43, 0x01};
 static const uint8_t BARCODE_DISABLE_CMD[] = {GS, 0x45, 0x43, 0x00};
 static const uint8_t BARCODE_PRINT_CMD[] = {GS, 0x6B};
 
+// === Character commands ===
+#define FONT_MASK (1 << 0)  //!< Select character font A or B
+#define INVERSE_MASK \
+  (1 << 1)                           //!< Turn on/off white/black reverse printing mode. Not in 2.6.8
+                                     //!< firmware (see inverseOn())
+#define UPDOWN_MASK (1 << 2)         //!< Turn on/off upside-down printing mode
+#define BOLD_MASK (1 << 3)           //!< Turn on/off bold printing mode
+#define DOUBLE_HEIGHT_MASK (1 << 4)  //!< Turn on/off double-height printing mode
+#define DOUBLE_WIDTH_MASK (1 << 5)   //!< Turn on/off double-width printing mode
+#define STRIKE_MASK (1 << 6)         //!< Turn on/off deleteline mode
+
 static const uint8_t BYTES_PER_LOOP = 120;
 
 void M5StackPrinterDisplay::setup() {
@@ -50,6 +61,13 @@ void M5StackPrinterDisplay::init_() {
     this->write_array(WAKEUP_CMD, sizeof(WAKEUP_CMD));
   }
   this->write_array(INIT_PRINTER_CMD, sizeof(INIT_PRINTER_CMD));
+  printMode = 0;
+  this->reset();
+}
+
+void M5StackPrinterDisplay::reset() {
+  charHeight = 24;
+  maxColumn = 32;
 }
 
 void M5StackPrinterDisplay::print_text(std::string text, uint8_t font_size) {
@@ -202,6 +220,49 @@ void M5StackPrinterDisplay::draw_absolute_pixel_internal(int x, int y, Color col
   }
   count++;
 }
+
+void M5StackPrinterDisplay::writePrintMode() {
+  static const uint8_t printModeCMD[] = {ESC, 0x21, printMode};
+  this->write_array(printModeCMD, sizeof(printModeCMD));
+}
+
+void M5StackPrinterDisplay::adjustCharValues(uint8_t printMode) {
+  uint8_t charWidth;
+  if (printMode & FONT_MASK) {
+    // FontB
+    charHeight = 17;
+    charWidth = 9;
+  } else {
+    // FontA
+    charHeight = 24;
+    charWidth = 12;
+  }
+  // Double Width Mode
+  if (printMode & DOUBLE_WIDTH_MASK) {
+    maxColumn /= 2;
+    charWidth *= 2;
+  }
+  // Double Height Mode
+  if (printMode & DOUBLE_HEIGHT_MASK) {
+    charHeight *= 2;
+  }
+  maxColumn = (384 / charWidth);
+}
+void M5StackPrinterDisplay::unsetPrintMode(uint8_t mask) {
+  printMode &= ~mask;
+  writePrintMode();
+  adjustCharValues(printMode);
+}
+
+void M5StackPrinterDisplay::setPrintMode(uint8_t mask) {
+  printMode |= mask;
+  writePrintMode();
+  adjustCharValues(printMode);
+}
+
+void M5StackPrinterDisplay::bold_off() { unsetPrintMode(BOLD_MASK); }
+
+void M5StackPrinterDisplay::bold_on() { setPrintMode(BOLD_MASK); }
 
 }  // namespace m5stack_printer
 }  // namespace esphome

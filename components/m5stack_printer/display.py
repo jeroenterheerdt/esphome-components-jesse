@@ -9,7 +9,8 @@ DEPENDENCIES = ["uart"]
 # todo:
 # fix font size factor
 # add other abilities such as
-# doublewidth mode, bold etc (see datasheet)
+# doublewidth mode, bold etc (https://github.com/adafruit/Adafruit-Thermal-Printer-Library/tree/master)
+# also check what else the printer can do, maybe cut paper as well? (see datasheet linked here: https://wiki.dfrobot.com/Embedded%20Thermal%20Printer%20-%20TTL%20Serial%20SKU%3A%20DFR0503-EN)
 m5stack_printer_ns = cg.esphome_ns.namespace("m5stack_printer")
 
 M5StackPrinterDisplay = m5stack_printer_ns.class_(
@@ -29,6 +30,12 @@ M5StackPrinterPrintQRCodeAction = m5stack_printer_ns.class_(
 )
 M5StackPrinterPrintBarCodeAction = m5stack_printer_ns.class_(
     "M5StackPrinterPrintBarCodeAction", automation.Action
+)
+M5StackPrinterBoldOffAction = m5stack_printer_ns.class_(
+    "M5StackPrinterBoldOffAction", automation.Action
+)
+M5StackPrinterBoldOnAction = m5stack_printer_ns.class_(
+    "M5StackPrinterBoldOnAction", automation.Action
 )
 
 BARCODETYPE = {
@@ -182,4 +189,38 @@ async def m5stack_printer_print_bar_code_action_to_code(
     cg.add(var.set_barcode(templ))
     templ = await cg.templatable(config[CONF_BARCODE_TYPE], args, cg.std_string)
     cg.add(var.set_type(templ))
+    return var
+
+
+@automation.register_action(
+    "m5stack_printer.bold_off",
+    M5StackPrinterBoldOffAction,
+    cv.maybe_simple_value(
+        cv.Schema(
+            {
+                cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
+            }
+        ),
+    ),
+)
+async def m5stack_printer_bold_off(config, action_id, template_arg, args):
+    var = cg.new_Pvariable(action_id, template_arg)
+    await cg.register_parented(var, config[CONF_ID])
+    return var
+
+
+@automation.register_action(
+    "m5stack_printer.bold_on",
+    M5StackPrinterBoldOnAction,
+    cv.maybe_simple_value(
+        cv.Schema(
+            {
+                cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
+            }
+        ),
+    ),
+)
+async def m5stack_printer_bold_on(config, action_id, template_arg, args):
+    var = cg.new_Pvariable(action_id, template_arg)
+    await cg.register_parented(var, config[CONF_ID])
     return var
