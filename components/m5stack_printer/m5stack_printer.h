@@ -32,9 +32,9 @@ class M5StackPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
   display::DisplayType get_display_type() override { return display::DisplayType::DISPLAY_TYPE_BINARY; }
 
   void reset();
-  void M5StackPrinterDisplay::print_text(std::string text, uint8_t font_size = 0, std::string font = "A",
-                                         bool inverse = false, bool updown = false, bool bold = false,
-                                         bool double_height = false, bool double_width = false, bool strike = false);
+  void print_text(std::string text, uint8_t font_size = 0, std::string font = "A", bool inverse = false,
+                  bool updown = false, bool bold = false, bool double_height = false, bool double_width = false,
+                  bool strike = false);
   void new_line(uint8_t lines);
   void print_qrcode(std::string data);
 
