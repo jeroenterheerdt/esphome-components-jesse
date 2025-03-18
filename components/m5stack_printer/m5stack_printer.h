@@ -50,10 +50,7 @@ class M5StackPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
     this->font_size_factor_ = font_size_factor;
   }
 
-  void set_firmware(std::string fw) {
-    ESP_LOGD("set_firmware", "firmware: %s", fw.c_str());
-    this->firmware_ = convertVersionToNumber(fw);
-  }
+  void set_firmware(std::string fw);
 
  protected:
   void draw_absolute_pixel_internal(int x, int y, Color color) override;
