@@ -31,11 +31,14 @@ static const uint8_t INVERSE_OFF_CMD[] = {GS, 'B', 0x00};
 static const uint8_t UPDOWN_ON_CMD[] = {ESC, '{', 0x01};
 static const uint8_t UPDOWN_OFF_CMD[] = {ESC, '{', 0x00};
 
-static const uint8_t BOLD_ON_CMD[] = {ESC, 'V', 0x01};
-static const uint8_t BOLD_OFF_CMD[] = {ESC, 'V', 0x00};
+static const uint8_t BOLD_ON_CMD[] = {ESC, 0x45, 0x01};
+static const uint8_t BOLD_OFF_CMD[] = {ESC, 0x45, 0x00};
 
 static const uint8_t DOUBLE_WIDTH_ON_CMD[] = {ESC, 0x0E, 0x01};
 static const uint8_t DOUBLE_WIDTH_OFF_CMD[] = {ESC, 0x14, 0x01};
+
+static const uint8_t NINETY_DEGREES_ROTATION_ON_CMD[] = {ESC, 0x56, 0x01};
+static const uint8_t NINETY_DEGREES_ROTATION_OFF_CMD[] = {ESC, 0x56, 0x00};
 
 // === Character commands ===
 #define FONT_MASK (1 << 0)  //!< Select character font A or B
@@ -83,7 +86,8 @@ void M5StackPrinterDisplay::reset() {
 }
 
 void M5StackPrinterDisplay::print_text(std::string text, uint8_t font_size, std::string font, bool inverse, bool updown,
-                                       bool bold, bool double_height, bool double_width, bool strike) {
+                                       bool bold, bool double_height, bool double_width, bool strike,
+                                       bool ninety_degrees) {
   this->init_();
   ESP_LOGD("print_text", "text: %s", text.c_str());
   ESP_LOGD("print_text", "font_size: %d", font_size);
@@ -95,17 +99,21 @@ void M5StackPrinterDisplay::print_text(std::string text, uint8_t font_size, std:
   ESP_LOGD("print_text", "double_height: %s", double_height ? "true" : "false");
   ESP_LOGD("print_text", "double_width: %s", double_width ? "true" : "false");
   ESP_LOGD("print_text", "strike: %s", strike ? "true" : "false");
+  ESP_LOGD("print_text", "ninety_degrees: %s", ninety_degrees ? "true" : "false");
 
+  // not sure if this does anything
   if (font == "B") {
     this->setPrintMode(FONT_MASK);
   } else {
     this->unsetPrintMode(FONT_MASK);
   }
+  // works!
   if (inverse) {
     this->write_array(INVERSE_ON_CMD, sizeof(INVERSE_ON_CMD));
   } else {
     this->write_array(INVERSE_OFF_CMD, sizeof(INVERSE_OFF_CMD));
   }
+  // works!
   if (updown) {
     this->write_array(UPDOWN_ON_CMD, sizeof(UPDOWN_ON_CMD));
   } else {
@@ -135,6 +143,12 @@ void M5StackPrinterDisplay::print_text(std::string text, uint8_t font_size, std:
     this->setPrintMode(STRIKE_MASK);
   } else {
     this->unsetPrintMode(STRIKE_MASK);
+  }
+  if (ninety_degrees) {
+    // doesn't work yet
+    this->write_array(NINETY_DEGREES_ROTATION_ON_CMD, sizeof(NINETY_DEGREES_ROTATION_ON_CMD));
+  } else {
+    this->write_array(NINETY_DEGREES_ROTATION_OFF_CMD, sizeof(NINETY_DEGREES_ROTATION_OFF_CMD));
   }
 
   font_size = clamp<uint8_t>(font_size, 0, 7);

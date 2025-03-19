@@ -61,6 +61,7 @@ CONF_BOLD = "bold"
 CONF_DOUBLE_HEIGHT = "double_height"
 CONF_DOUBLE_WIDTH = "double_width"
 CONF_STRIKETHROUGH = "strikethrough"
+CONF_NINETY_DEGREES = "ninety_degrees"
 CONF_TEXT = "text"
 CONF_SEND_WAKEUP = "send_wakeup"
 CONF_LINES = "lines"
@@ -129,6 +130,9 @@ async def to_code(config):
                 cv.Optional(CONF_STRIKETHROUGH, default=False): cv.templatable(
                     cv.boolean
                 ),
+                cv.Optional(CONF_NINETY_DEGREES, default=False): cv.templatable(
+                    cv.boolean
+                ),
             }
         ),
         key=CONF_TEXT,
@@ -157,6 +161,8 @@ async def m5stack_printer_print_text_action_to_code(
     cg.add(var.set_double_width(templ))
     templ = await cg.templatable(config[CONF_STRIKETHROUGH], args, cg.bool_)
     cg.add(var.set_strike(templ))
+    templ = await cg.templatable(config[CONF_NINETY_DEGREES], args, cg.bool_)
+    cg.add(var.set_ninety_degrees(templ))
     return var
 
 

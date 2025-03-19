@@ -34,7 +34,7 @@ class M5StackPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
   void reset();
   void print_text(std::string text, uint8_t font_size = 0, std::string font = "A", bool inverse = false,
                   bool updown = false, bool bold = false, bool double_height = false, bool double_width = false,
-                  bool strike = false);
+                  bool strike = false, bool ninety_degrees = false);
   void new_line(uint8_t lines);
   void print_qrcode(std::string data);
 
@@ -83,12 +83,14 @@ class M5StackPrinterPrintTextAction : public Action<Ts...>, public Parented<M5St
   TEMPLATABLE_VALUE(bool, double_height)
   TEMPLATABLE_VALUE(bool, double_width)
   TEMPLATABLE_VALUE(bool, strike)
+  TEMPLATABLE_VALUE(bool, ninety_degrees)
 
   void play(Ts... x) override {
     this->parent_->print_text(this->text_.value(x...), this->font_size_.value(x...), this->font_.value(x...),
                               this->inverse_.value(x...), this->updown_.value(x...), this->bold_.value(x...),
                               this->double_height_.value(x...), this->double_width_.value(x...),
-                              this->strike_.value(x...));
+                              this->strike_.value(x...)),
+        this->ninety_degrees_.value(x...);
   }
 };
 
