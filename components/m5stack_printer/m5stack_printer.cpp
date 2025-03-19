@@ -31,8 +31,8 @@ static const uint8_t INVERSE_OFF_CMD[] = {GS, 'B', 0x00};
 static const uint8_t UPDOWN_ON_CMD[] = {ESC, '{', 0x01};
 static const uint8_t UPDOWN_OFF_CMD[] = {ESC, '{', 0x00};
 
-static const uint8_t BOLD_ON_CMD[] = {ESC, 'E', 0x01};
-static const uint8_t BOLD_OFF_CMD[] = {ESC, 'E', 0x00};
+static const uint8_t BOLD_ON_CMD[] = {ESC, 'V', 0x01};
+static const uint8_t BOLD_OFF_CMD[] = {ESC, 'V', 0x00};
 
 static const uint8_t DOUBLE_WIDTH_ON_CMD[] = {ESC, 0x0E, 0x01};
 static const uint8_t DOUBLE_WIDTH_OFF_CMD[] = {ESC, 0x14, 0x01};
@@ -102,43 +102,21 @@ void M5StackPrinterDisplay::print_text(std::string text, uint8_t font_size, std:
     this->unsetPrintMode(FONT_MASK);
   }
   if (inverse) {
-    // old firmware (<2.6.8)
-    // this->setPrintMode(INVERSE_MASK);
     this->write_array(INVERSE_ON_CMD, sizeof(INVERSE_ON_CMD));
   } else {
-    /*if (this->firmware_ < 268) {
-      this->unsetPrintMode(INVERSE_MASK);
-    } else {*/
     this->write_array(INVERSE_OFF_CMD, sizeof(INVERSE_OFF_CMD));
-    //}
   }
   if (updown) {
-    /*if (this->firmware_ < 268) {
-      this->setPrintMode(UPDOWN_MASK);
-    } else {*/
     this->write_array(UPDOWN_ON_CMD, sizeof(UPDOWN_ON_CMD));
-    //}
   } else {
-    /*if (this->firmware_ < 268) {
-      this->unsetPrintMode(UPDOWN_MASK);
-    } else {*/
     this->write_array(UPDOWN_OFF_CMD, sizeof(UPDOWN_OFF_CMD));
-    //}
   }
   if (bold) {
     // this doesn't work yet?
-    /*if (this->firmware_ < 268) {
-      this->setPrintMode(BOLD_MASK);
-    } else {*/
     this->write_array(BOLD_ON_CMD, sizeof(BOLD_ON_CMD));
-    //}
   } else {
     // this doesn't work yet?
-    /*if (this->firmware_ < 268) {
-      this->unsetPrintMode(BOLD_MASK);
-    } else {*/
     this->write_array(BOLD_OFF_CMD, sizeof(BOLD_OFF_CMD));
-    //}
   }
   if (double_height) {
     // what is this mode even?
@@ -147,13 +125,13 @@ void M5StackPrinterDisplay::print_text(std::string text, uint8_t font_size, std:
     this->unsetPrintMode(DOUBLE_HEIGHT_MASK);
   }
   if (double_width) {
+    // doesn't seem to do anything
     this->write_array(DOUBLE_WIDTH_ON_CMD, sizeof(DOUBLE_WIDTH_ON_CMD));
-    // this->setPrintMode(DOUBLE_WIDTH_MASK);
   } else {
     this->write_array(DOUBLE_WIDTH_OFF_CMD, sizeof(DOUBLE_WIDTH_OFF_CMD));
-    // this->unsetPrintMode(DOUBLE_WIDTH_MASK);
   }
   if (strike) {
+    // doesn't work yet
     this->setPrintMode(STRIKE_MASK);
   } else {
     this->unsetPrintMode(STRIKE_MASK);
@@ -161,7 +139,6 @@ void M5StackPrinterDisplay::print_text(std::string text, uint8_t font_size, std:
 
   font_size = clamp<uint8_t>(font_size, 0, 7);
   font_size = font_size * this->font_size_factor_;
-  ESP_LOGD("print_text", "font_size after applying font_size_factor: %d", font_size);
   this->write_array(FONT_SIZE_CMD, sizeof(FONT_SIZE_CMD));
   this->write_byte(font_size | (font_size << 4));
 
