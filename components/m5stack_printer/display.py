@@ -75,7 +75,6 @@ CONFIG_SCHEMA = (
             cv.Required(CONF_HEIGHT): cv.uint16_t,
             cv.Optional(CONF_SEND_WAKEUP, default=False): cv.boolean,
             cv.Optional(CONF_FONT_SIZE_FACTOR, default=1.0): cv.float_,
-            cv.Optional(CONF_FIRMWARE, default="2.6.8"): cv.string,
         }
     )
     .extend(
@@ -95,8 +94,6 @@ async def to_code(config):
     cg.add(var.set_send_wakeup(config[CONF_SEND_WAKEUP]))
     _LOGGER.debug("font size factor: %s", config[CONF_FONT_SIZE_FACTOR])
     cg.add(var.set_font_size_factor(config[CONF_FONT_SIZE_FACTOR]))
-    _LOGGER.debug("firmware: %s", config[CONF_FIRMWARE])
-    cg.add(var.set_firmware(config[CONF_FIRMWARE]))
 
     if lambda_config := config.get(CONF_LAMBDA):
         lambda_ = await cg.process_lambda(
