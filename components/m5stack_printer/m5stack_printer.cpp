@@ -31,14 +31,14 @@ static const uint8_t INVERSE_OFF_CMD[] = {GS, 'B', 0x00};
 static const uint8_t UPDOWN_ON_CMD[] = {ESC, '{', 0x01};
 static const uint8_t UPDOWN_OFF_CMD[] = {ESC, '{', 0x00};
 
-static const uint8_t BOLD_ON_CMD[] = {ESC, 0x45, 0x01};
-static const uint8_t BOLD_OFF_CMD[] = {ESC, 0x45, 0x00};
+// static const uint8_t BOLD_ON_CMD[] = {ESC, 'E', 0x01};   // 0x45
+// static const uint8_t BOLD_OFF_CMD[] = {ESC, 'E', 0x00};  // 0x45
 
-static const uint8_t DOUBLE_WIDTH_ON_CMD[] = {ESC, 0x0E, 0x01};
-static const uint8_t DOUBLE_WIDTH_OFF_CMD[] = {ESC, 0x14, 0x01};
+// static const uint8_t DOUBLE_WIDTH_ON_CMD[] = {ESC, 0x0E, 0x01};
+// static const uint8_t DOUBLE_WIDTH_OFF_CMD[] = {ESC, 0x14, 0x01};
 
-static const uint8_t NINETY_DEGREES_ROTATION_ON_CMD[] = {ESC, 0x56, 0x01};
-static const uint8_t NINETY_DEGREES_ROTATION_OFF_CMD[] = {ESC, 0x56, 0x00};
+// static const uint8_t NINETY_DEGREES_ROTATION_ON_CMD[] = {ESC, 0x56, 0x01};
+// static const uint8_t NINETY_DEGREES_ROTATION_OFF_CMD[] = {ESC, 0x56, 0x00};
 
 // === Character commands ===
 #define FONT_MASK (1 << 0)  //!< Select character font A or B
@@ -76,11 +76,12 @@ void M5StackPrinterDisplay::init_() {
     this->write_array(WAKEUP_CMD, sizeof(WAKEUP_CMD));
   }
   this->write_array(INIT_PRINTER_CMD, sizeof(INIT_PRINTER_CMD));
-  printMode = 0;
+
   this->reset();
 }
 
 void M5StackPrinterDisplay::reset() {
+  printMode = 0;
   charHeight = 24;
   maxColumn = 32;
 }
@@ -121,34 +122,34 @@ void M5StackPrinterDisplay::print_text(std::string text, uint8_t font_size, std:
   }
   if (bold) {
     // this doesn't work yet?
-    this->write_array(BOLD_ON_CMD, sizeof(BOLD_ON_CMD));
+    this->setPrintMode(BOLD_MASK);
   } else {
     // this doesn't work yet?
-    this->write_array(BOLD_OFF_CMD, sizeof(BOLD_OFF_CMD));
+    this->unsetPrintMode(BOLD_MASK);
   }
   if (double_height) {
-    // what is this mode even?
+    // doesn't work yet?
     this->setPrintMode(DOUBLE_HEIGHT_MASK);
   } else {
     this->unsetPrintMode(DOUBLE_HEIGHT_MASK);
   }
   if (double_width) {
     // doesn't seem to do anything
-    this->write_array(DOUBLE_WIDTH_ON_CMD, sizeof(DOUBLE_WIDTH_ON_CMD));
+    // this->write_array(DOUBLE_WIDTH_ON_CMD, sizeof(DOUBLE_WIDTH_ON_CMD));
   } else {
-    this->write_array(DOUBLE_WIDTH_OFF_CMD, sizeof(DOUBLE_WIDTH_OFF_CMD));
+    // this->write_array(DOUBLE_WIDTH_OFF_CMD, sizeof(DOUBLE_WIDTH_OFF_CMD));
   }
   if (strike) {
     // doesn't work yet
-    this->setPrintMode(STRIKE_MASK);
+    // this->setPrintMode(STRIKE_MASK);
   } else {
-    this->unsetPrintMode(STRIKE_MASK);
+    // this->unsetPrintMode(STRIKE_MASK);
   }
   if (ninety_degrees) {
     // doesn't work yet
-    this->write_array(NINETY_DEGREES_ROTATION_ON_CMD, sizeof(NINETY_DEGREES_ROTATION_ON_CMD));
+    // this->write_array(NINETY_DEGREES_ROTATION_ON_CMD, sizeof(NINETY_DEGREES_ROTATION_ON_CMD));
   } else {
-    this->write_array(NINETY_DEGREES_ROTATION_OFF_CMD, sizeof(NINETY_DEGREES_ROTATION_OFF_CMD));
+    // this->write_array(NINETY_DEGREES_ROTATION_OFF_CMD, sizeof(NINETY_DEGREES_ROTATION_OFF_CMD));
   }
 
   font_size = clamp<uint8_t>(font_size, 0, 7);
