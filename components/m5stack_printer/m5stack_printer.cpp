@@ -104,9 +104,9 @@ void M5StackPrinterDisplay::print_text(std::string text, uint8_t font_size, std:
 
   // not sure if this does anything
   if (font == "B") {
-    this->setPrintMode(FONT_MASK);
+    // this->setPrintMode(FONT_MASK);
   } else {
-    this->unsetPrintMode(FONT_MASK);
+    // this->unsetPrintMode(FONT_MASK);
   }
   // works!
   if (inverse) {
@@ -149,7 +149,7 @@ void M5StackPrinterDisplay::print_text(std::string text, uint8_t font_size, std:
   font_size = font_size * this->font_size_factor_;
   this->write_array(FONT_SIZE_CMD, sizeof(FONT_SIZE_CMD));
   this->write_byte(font_size | (font_size << 4));
-
+  ESP_LOGD("print_text", "printing now!");
   this->write_str(text.c_str());
 
   this->write_array(FONT_SIZE_RESET_CMD, sizeof(FONT_SIZE_RESET_CMD));
