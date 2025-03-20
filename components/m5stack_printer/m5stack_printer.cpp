@@ -111,31 +111,20 @@ void M5StackPrinterDisplay::print_text(std::string text, uint8_t font_size, std:
   // works!
   if (inverse) {
     this->write_array(INVERSE_ON_CMD, sizeof(INVERSE_ON_CMD));
-  } else {
-    this->write_array(INVERSE_OFF_CMD, sizeof(INVERSE_OFF_CMD));
   }
   // works!
   if (updown) {
     this->write_array(UPDOWN_ON_CMD, sizeof(UPDOWN_ON_CMD));
-  } else {
-    this->write_array(UPDOWN_OFF_CMD, sizeof(UPDOWN_OFF_CMD));
   }
   if (bold) {
     // this doesn't work yet?
     ESP_LOGD("print_text", "turning on bold");
     this->setPrintMode(BOLD_MASK);
-  } else {
-    // this doesn't work yet?
-    ESP_LOGD("print_text", "turning off bold");
-    this->unsetPrintMode(BOLD_MASK);
   }
   if (double_height) {
     // doesn't work yet?
     ESP_LOGD("print_text", "turning on double_height");
     this->setPrintMode(DOUBLE_HEIGHT_MASK);
-  } else {
-    ESP_LOGD("print_text", "turning off double_height");
-    this->unsetPrintMode(DOUBLE_HEIGHT_MASK);
   }
   if (double_width) {
     // doesn't seem to do anything
@@ -164,6 +153,22 @@ void M5StackPrinterDisplay::print_text(std::string text, uint8_t font_size, std:
   this->write_str(text.c_str());
 
   this->write_array(FONT_SIZE_RESET_CMD, sizeof(FONT_SIZE_RESET_CMD));
+
+  // turn settings off if they were on
+  if (inverse) {
+    this->write_array(INVERSE_OFF_CMD, sizeof(INVERSE_OFF_CMD));
+  }
+  if (updown) {
+    this->write_array(UPDOWN_OFF_CMD, sizeof(UPDOWN_OFF_CMD));
+  }
+  if (bold) {
+    ESP_LOGD("print_text", "turning off bold");
+    this->unsetPrintMode(BOLD_MASK);
+  }
+  if (double_height) {
+    ESP_LOGD("print_text", "turning off double_height");
+    this->unsetPrintMode(DOUBLE_HEIGHT_MASK);
+  }
 }
 
 void M5StackPrinterDisplay::new_line(uint8_t lines) {
