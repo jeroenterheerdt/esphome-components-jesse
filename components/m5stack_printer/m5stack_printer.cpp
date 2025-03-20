@@ -34,11 +34,11 @@ static const uint8_t UPDOWN_OFF_CMD[] = {ESC, '{', 0x00};
 // static const uint8_t BOLD_ON_CMD[] = {ESC, 'E', 0x01};   // 0x45
 // static const uint8_t BOLD_OFF_CMD[] = {ESC, 'E', 0x00};  // 0x45
 
-// static const uint8_t DOUBLE_WIDTH_ON_CMD[] = {ESC, 0x0E, 0x01};
-// static const uint8_t DOUBLE_WIDTH_OFF_CMD[] = {ESC, 0x14, 0x01};
+static const uint8_t DOUBLE_WIDTH_ON_CMD[] = {ESC, 0x0E, 0x01};
+static const uint8_t DOUBLE_WIDTH_OFF_CMD[] = {ESC, 0x14, 0x01};
 
-// static const uint8_t NINETY_DEGREES_ROTATION_ON_CMD[] = {ESC, 0x56, 0x01};
-// static const uint8_t NINETY_DEGREES_ROTATION_OFF_CMD[] = {ESC, 0x56, 0x00};
+static const uint8_t NINETY_DEGREES_ROTATION_ON_CMD[] = {ESC, 0x56, 0x01};
+static const uint8_t NINETY_DEGREES_ROTATION_OFF_CMD[] = {ESC, 0x56, 0x00};
 
 // === Character commands ===
 #define FONT_MASK (1 << 0)  //!< Select character font A or B
@@ -128,21 +128,18 @@ void M5StackPrinterDisplay::print_text(std::string text, uint8_t font_size, std:
   }
   if (double_width) {
     // doesn't seem to do anything
-    // this->write_array(DOUBLE_WIDTH_ON_CMD, sizeof(DOUBLE_WIDTH_ON_CMD));
-  } else {
-    // this->write_array(DOUBLE_WIDTH_OFF_CMD, sizeof(DOUBLE_WIDTH_OFF_CMD));
+    ESP_LOGD("print_text", "turning on double_width");
+    this->write_array(DOUBLE_WIDTH_ON_CMD, sizeof(DOUBLE_WIDTH_ON_CMD));
   }
   if (strike) {
     // doesn't work yet
-    // this->setPrintMode(STRIKE_MASK);
-  } else {
-    // this->unsetPrintMode(STRIKE_MASK);
+    ESP_LOGD("print_text", "turning on strike");
+    this->setPrintMode(STRIKE_MASK);
   }
   if (ninety_degrees) {
     // doesn't work yet
-    // this->write_array(NINETY_DEGREES_ROTATION_ON_CMD, sizeof(NINETY_DEGREES_ROTATION_ON_CMD));
-  } else {
-    // this->write_array(NINETY_DEGREES_ROTATION_OFF_CMD, sizeof(NINETY_DEGREES_ROTATION_OFF_CMD));
+    ESP_LOGD("print_text", "turning on ninety_degrees");
+    this->write_array(NINETY_DEGREES_ROTATION_ON_CMD, sizeof(NINETY_DEGREES_ROTATION_ON_CMD));
   }
 
   // disable font size handling for now
@@ -170,6 +167,18 @@ void M5StackPrinterDisplay::print_text(std::string text, uint8_t font_size, std:
   if (double_height) {
     ESP_LOGD("print_text", "turning off double_height");
     this->unsetPrintMode(DOUBLE_HEIGHT_MASK);
+  }
+  if (strike) {
+    ESP_LOGD("print_text", "turning off strike");
+    this->unsetPrintMode(STRIKE_MASK);
+  }
+  if (double_width) {
+    ESP_LOGD("print_text", "turning off double_width");
+    this->write_array(DOUBLE_WIDTH_OFF_CMD, sizeof(DOUBLE_WIDTH_OFF_CMD));
+  }
+  if (ninety_degrees) {
+    ESP_LOGD("print_text", "turning off ninety_degrees");
+    this->write_array(NINETY_DEGREES_ROTATION_OFF_CMD, sizeof(NINETY_DEGREES_ROTATION_OFF_CMD));
   }
 }
 
