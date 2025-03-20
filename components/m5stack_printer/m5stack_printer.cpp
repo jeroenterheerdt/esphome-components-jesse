@@ -122,12 +122,13 @@ void M5StackPrinterDisplay::print_text(std::string text, uint8_t font_size, std:
     this->setPrintMode(BOLD_MASK);
   }
   if (double_height) {
-    // doesn't work yet?
+    // works?!
+    // does this also work with the on_cmd?
     ESP_LOGD("print_text", "turning on double_height");
     this->setPrintMode(DOUBLE_HEIGHT_MASK);
   }
   if (double_width) {
-    // doesn't seem to do anything
+    // works!
     ESP_LOGD("print_text", "turning on double_width");
     this->write_array(DOUBLE_WIDTH_ON_CMD, sizeof(DOUBLE_WIDTH_ON_CMD));
   }
