@@ -145,14 +145,16 @@ void M5StackPrinterDisplay::print_text(std::string text, uint8_t font_size, std:
     // this->write_array(NINETY_DEGREES_ROTATION_OFF_CMD, sizeof(NINETY_DEGREES_ROTATION_OFF_CMD));
   }
 
-  font_size = clamp<uint8_t>(font_size, 0, 7);
+  // disable font size handling for now
+  /*font_size = clamp<uint8_t>(font_size, 0, 7);
   font_size = font_size * this->font_size_factor_;
   this->write_array(FONT_SIZE_CMD, sizeof(FONT_SIZE_CMD));
-  this->write_byte(font_size | (font_size << 4));
+  this->write_byte(font_size | (font_size << 4));*/
   ESP_LOGD("print_text", "printing now!");
   this->write_str(text.c_str());
 
-  this->write_array(FONT_SIZE_RESET_CMD, sizeof(FONT_SIZE_RESET_CMD));
+  // disabling font size handling for now
+  // this->write_array(FONT_SIZE_RESET_CMD, sizeof(FONT_SIZE_RESET_CMD));
 
   // turn settings off if they were on
   if (inverse) {
