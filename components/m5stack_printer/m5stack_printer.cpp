@@ -129,8 +129,10 @@ void M5StackPrinterDisplay::print_text(std::string text, uint8_t font_size, std:
   }
   if (double_height) {
     // doesn't work yet?
+    ESP_LOGD("print_text", "turning on double_height");
     this->setPrintMode(DOUBLE_HEIGHT_MASK);
   } else {
+    ESP_LOGD("print_text", "turning off double_height");
     this->unsetPrintMode(DOUBLE_HEIGHT_MASK);
   }
   if (double_width) {
@@ -334,8 +336,8 @@ void M5StackPrinterDisplay::unsetPrintMode(uint8_t mask) {
   ESP_LOGD("unsetPrintMode", "printMode before: %d", printMode);
   printMode &= ~mask;
   ESP_LOGD("unsetPrintMode", "printMode after: %d", printMode);
-  writePrintMode();
-  adjustCharValues(printMode);
+  this->writePrintMode();
+  this->adjustCharValues(printMode);
 }
 
 void M5StackPrinterDisplay::setPrintMode(uint8_t mask) {
@@ -343,8 +345,8 @@ void M5StackPrinterDisplay::setPrintMode(uint8_t mask) {
   ESP_LOGD("setPrintMode", "printMode before: %d", printMode);
   printMode |= mask;
   ESP_LOGD("setPrintMode", "printMode after: %d", printMode);
-  writePrintMode();
-  adjustCharValues(printMode);
+  this->writePrintMode();
+  this->adjustCharValues(printMode);
 }
 
 }  // namespace m5stack_printer
