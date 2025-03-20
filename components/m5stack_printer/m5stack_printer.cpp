@@ -122,9 +122,11 @@ void M5StackPrinterDisplay::print_text(std::string text, uint8_t font_size, std:
   }
   if (bold) {
     // this doesn't work yet?
+    ESP_LOGD("print_text", "turning on bold");
     this->setPrintMode(BOLD_MASK);
   } else {
     // this doesn't work yet?
+    ESP_LOGD("print_text", "turning off bold");
     this->unsetPrintMode(BOLD_MASK);
   }
   if (double_height) {
@@ -304,7 +306,7 @@ void M5StackPrinterDisplay::draw_absolute_pixel_internal(int x, int y, Color col
 }
 
 void M5StackPrinterDisplay::writePrintMode() {
-  ESP_LOGD("writePrintMode", "printMode: %d", printMode);
+  ESP_LOGD("writePrintMode", "writing printMode: %d", printMode);
   static const uint8_t printModeCMD[] = {ESC, 0x21, printMode};
   this->write_array(printModeCMD, sizeof(printModeCMD));
 }
