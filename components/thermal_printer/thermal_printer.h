@@ -83,7 +83,8 @@ class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
 };
 
 // SET TABS
-template<typename... Ts> class ThermalPrinterSetTabsAction : Action<Ts...>, public Parented<ThermalPrinterDisplay> {
+template<typename... Ts>
+class ThermalPrinterSetTabsAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:
   TEMPLATABLE_VALUE(std::vector<uint8_t>, tabs)
 
@@ -91,20 +92,21 @@ template<typename... Ts> class ThermalPrinterSetTabsAction : Action<Ts...>, publ
 };
 
 // TAB
-template<typename... Ts> class ThermalPrinterTabAction : Action<Ts...>, public Parented<ThermalPrinterDisplay> {
+template<typename... Ts> class ThermalPrinterTabAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:
   void play(Ts... x) override { this->parent_->tab(); }
 };
 
 // CLEAR TABS
-template<typename... Ts> class ThermalPrinterClearTabsAction : Action<Ts...>, public Parented<ThermalPrinterDisplay> {
+template<typename... Ts>
+class ThermalPrinterClearTabsAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:
   void play(Ts... x) override { this->parent_->clearTabs(); }
 };
 
 // SET LINE HEIGHT
 template<typename... Ts>
-class ThermalPrinterSetLineHeightAction : Action<Ts...>, public Parented<ThermalPrinterDisplay> {
+class ThermalPrinterSetLineHeightAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:
   TEMPLATABLE_VALUE(std::uint8_t, height)
 
@@ -112,7 +114,8 @@ class ThermalPrinterSetLineHeightAction : Action<Ts...>, public Parented<Thermal
 };
 
 // JUSTIFY
-template<typename... Ts> class ThermalPrinterJustifyAction : Action<Ts...>, public Parented<ThermalPrinterDisplay> {
+template<typename... Ts>
+class ThermalPrinterJustifyAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:
   TEMPLATABLE_VALUE(std::string, alignment)
 
