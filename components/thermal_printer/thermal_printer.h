@@ -10,7 +10,7 @@
 #include <vector>
 
 namespace esphome {
-namespace m5stack_printer {
+namespace thermal_printer {
 
 enum BarcodeType { UPC_A = 0x41, UPC_E, EAN13, EAN8, CODE39, ITF, CODABAR, CODE93, CODE128, UNKNOWN };
 
@@ -101,31 +101,32 @@ class M5StackPrinterPrintTextAction : public Action<Ts...>, public Parented<M5St
           this->ninety_degrees_.value(x...);
     }
   };*/
+}
 
-  template<typename... Ts>
-  class M5StackPrinterNewLineAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
-   public:
-    TEMPLATABLE_VALUE(uint8_t, lines)
+template<typename... Ts>
+class M5StackPrinterNewLineAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+ public:
+  TEMPLATABLE_VALUE(uint8_t, lines)
 
-    void play(Ts... x) override { this->parent_->new_line(this->lines_.value(x...)); }
-  };
+  void play(Ts... x) override { this->parent_->new_line(this->lines_.value(x...)); }
+};
 
-  template<typename... Ts>
-  class M5StackPrinterPrintQRCodeAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
-   public:
-    TEMPLATABLE_VALUE(std::string, qrcode)
+template<typename... Ts>
+class M5StackPrinterPrintQRCodeAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+ public:
+  TEMPLATABLE_VALUE(std::string, qrcode)
 
-    void play(Ts... x) override { this->parent_->print_qrcode(this->qrcode_.value(x...)); }
-  };
+  void play(Ts... x) override { this->parent_->print_qrcode(this->qrcode_.value(x...)); }
+};
 
-  template<typename... Ts>
-  class M5StackPrinterPrintBarCodeAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
-   public:
-    TEMPLATABLE_VALUE(std::string, barcode)
-    TEMPLATABLE_VALUE(std::string, type)
+template<typename... Ts>
+class M5StackPrinterPrintBarCodeAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+ public:
+  TEMPLATABLE_VALUE(std::string, barcode)
+  TEMPLATABLE_VALUE(std::string, type)
 
-    void play(Ts... x) override { this->parent_->print_barcode(this->barcode_.value(x...), this->type_.value(x...)); }
-  };
+  void play(Ts... x) override { this->parent_->print_barcode(this->barcode_.value(x...), this->type_.value(x...)); }
+};
 
-}  // namespace m5stack_printer
+}  // namespace thermal_printer
 }  // namespace esphome
