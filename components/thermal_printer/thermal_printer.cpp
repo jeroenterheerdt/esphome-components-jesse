@@ -133,6 +133,17 @@ void ThermalPrinterDisplay::setLineHeight(uint8_t height) {
   this->write_array(lineHeightCMD, sizeof(lineHeightCMD));
 }
 
+// default is L
+void ThermalPrinterDisplay::justify(char value) {
+  uint8_t set = 0;
+  if (value == 'C') {
+    set = 1;
+  } else if (value == 'R') {
+    set = 2;
+  }
+  static const uint8_t justifyCMD[] = {ESC, 'a', set};
+  this->write_array(justifyCMD, sizeof(justifyCMD));
+}
 /*void ThermalPrinterDisplay::print_text(std::string text, uint8_t font_size, std::string font, bool inverse, bool
    updown, bool bold, bool double_height, bool double_width, bool strike, bool ninety_degrees) {*/
 void ThermalPrinterDisplay::print_text(std::string text) {

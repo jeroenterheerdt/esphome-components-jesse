@@ -30,6 +30,9 @@ ThermalPrinterClearTabsAction = thermal_printer_ns.class_(
 ThermalPrinterSetLineHeightAction = thermal_printer_ns.class_(
     "ThermalPrinterSetLineHeightAction", automation.Action
 )
+ThermalPrinterJustifyAction = thermal_printer_ns.class_(
+    "ThermalPrinterJustifyAction", automation.Action
+)
 ThermalPrinterPrintTextAction = thermal_printer_ns.class_(
     "ThermalPrinterPrintTextAction", automation.Action
 )
@@ -63,6 +66,7 @@ BARCODETYPE = {
     "CODE128": ThermalPrinterPrintBarCodeAction.CODE128,
 }
 
+CONF_ALIGNMENT = "alignment"
 CONF_TABS = "tabs"
 CONF_LINE_HEIGHT = "line_height"
 CONF_FONT_SIZE = "font_size"
@@ -202,6 +206,28 @@ async def thermal_printer_setlineheight_action_to_code(
     await cg.register_parented(var, config[CONF_ID])
     templ = await cg.templatable(config[CONF_LINE_HEIGHT], args, cg.uint8)
     cg.add(var.set_height(templ))
+    return var
+
+
+# JUSTIFY()
+@automation.register_action(
+    "thermal_printer.justify",
+    ThermalPrinterJustifyAction,
+    cv.maybe_simple_value(
+        cv.Schema(
+            {
+                cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
+                cv.Required(CONF_ALIGNMENT): cv.templatable(cv.string),
+            }
+        ),
+        key=CONF_ALIGNMENT,
+    ),
+)
+async def thermal_printer_justify_action_to_code(config, action_id, template_arg, args):
+    var = cg.new_Pvariable(action_id, template_arg)
+    await cg.register_parented(var, config[CONF_ID])
+    templ = await cg.templatable(config[CONF_ALIGNMENT], args, cg.std_string)
+    cg.add(var.set_alignment(templ))
     return var
 
 
