@@ -40,7 +40,7 @@ class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
   void tab();
   void clearTabs();
   void setLineHeight(uint8_t height);
-  void justify(char value);
+  void justify(std::string value);
   void print_text(std::string text);
   void new_line(uint8_t lines);
   void print_qrcode(std::string data);
@@ -114,7 +114,7 @@ class ThermalPrinterSetLineHeightAction : Action<Ts...>, public Parented<Thermal
 // JUSTIFY
 template<typename... Ts> class ThermalPrinterJustifyAction : Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:
-  TEMPLATABLE_VALUE(char, alignment)
+  TEMPLATABLE_VALUE(std::string, alignment)
 
   void play(Ts... x) override { this->parent_->justify(this->alignment_.value(x...)); }
 };

@@ -134,11 +134,11 @@ void ThermalPrinterDisplay::setLineHeight(uint8_t height) {
 }
 
 // default is L
-void ThermalPrinterDisplay::justify(char value) {
+void ThermalPrinterDisplay::justify(std::string value) {
   uint8_t set = 0;
-  if (value == 'C') {
+  if (value[0] == 'C') {
     set = 1;
-  } else if (value == 'R') {
+  } else if (value[0] == 'R') {
     set = 2;
   }
   static const uint8_t justifyCMD[] = {ESC, 'a', set};
