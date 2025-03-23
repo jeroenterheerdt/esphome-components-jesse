@@ -118,25 +118,25 @@ async def to_code(config):
 
 
 # SETTABS()
-# @automation.register_action(
-#    "thermal_printer.settabs",
-#    ThermalPrinterSetTabsAction,
-#    cv.maybe_simple_value(
-#        cv.Schema(
-#            {
-#                cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
-#                cv.Required(CONF_TABS): cv.templatable(cv.ensure_list(cv.int_)),
-#            }
-#        ),
-#        key=CONF_TABS,
-#    ),
-# )
-# async def thermal_printer_settabs_action_to_code(config, action_id, template_arg, args):
-#    var = cg.new_Pvariable(action_id, template_arg)
-#    await cg.register_parented(var, config[CONF_ID])
-#    templ = await cg.templatable(config[CONF_TABS], args, cg.std_vector(cg.uint8))
-#    cg.add(var.set_tabs(templ))
-#    return var
+@automation.register_action(
+    "thermal_printer.settabs",
+    ThermalPrinterSetTabsAction,
+    cv.maybe_simple_value(
+        cv.Schema(
+            {
+                cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
+                cv.Required(CONF_TABS): cv.templatable(cv.ensure_list(cv.int_)),
+            }
+        ),
+        key=CONF_TABS,
+    ),
+)
+async def thermal_printer_settabs_action_to_code(config, action_id, template_arg, args):
+    var = cg.new_Pvariable(action_id, template_arg)
+    await cg.register_parented(var, config[CONF_ID])
+    templ = await cg.templatable(config[CONF_TABS], args, cg.std_vector(cg.uint8))
+    cg.add(var.set_tabs(templ))
+    return var
 
 
 # TAB()
