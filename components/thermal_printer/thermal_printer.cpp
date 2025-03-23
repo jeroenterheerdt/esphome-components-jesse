@@ -142,7 +142,7 @@ void ThermalPrinterDisplay::justify(std::string value) {
     set = 2;
   }
   ESP_LOGD("justify", "value: %s", value.c_str());
-  ESP_LOGD("justify", "value[0]: %s", value[0].c_str());
+  ESP_LOGD("justify", "value[0]: %s", value[0]);
   ESP_LOGD("justify", "set: %d", set);
   static const uint8_t justifyCMD[] = {ESC, 'a', set};
   this->write_array(justifyCMD, sizeof(justifyCMD));
