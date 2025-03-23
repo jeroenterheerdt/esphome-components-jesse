@@ -74,7 +74,7 @@ class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
 
  private:
   uint16_t widthInDots = {384};  // to calculate aboslute position, when using some functions like setCharSpacing
-  uint8_t printMode, charHeight, maxColumn;
+  uint8_t printMode, maxColumn;
   std::vector<uint8_t> tabs;
   uint8_t tabsAmount{0};
   uint8_t widthMax{32}, cursor{0}, charWidth{12}, charHeight{24};
