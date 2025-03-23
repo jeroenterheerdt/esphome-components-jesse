@@ -90,7 +90,7 @@ void ThermalPrinterDisplay::reset() {
 }
 
 // expects a list of tabs in sequential order, for example: {5, 10, 15, 20, 25}
-void ThermalPrinterDisplay::setTabs(std::vector<unsigned char> tab) {
+void ThermalPrinterDisplay::setTabs(std::vector<uint8_t> tab) {
   this->tabsAmount = 0;
   this->tabs[this->tabsAmount] = 0;
 
