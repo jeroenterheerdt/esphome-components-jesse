@@ -132,7 +132,7 @@ async def thermal_printer_tab_action_to_code(config, action_id, template_arg, ar
 
 # SET_LINE_HEIGHT()
 @automation.register_action(
-    "thermal_printer.set_line_height",
+    "thermal_printer.setlineheight",
     ThermalPrinterSetLineHeightAction,
     cv.maybe_simple_value(
         cv.Schema(
@@ -146,7 +146,7 @@ async def thermal_printer_tab_action_to_code(config, action_id, template_arg, ar
         key=CONF_LINE_HEIGHT,
     ),
 )
-async def thermal_printer_set_line_height_action_to_code(
+async def thermal_printer_setlineheight_action_to_code(
     config, action_id, template_arg, args
 ):
     var = cg.new_Pvariable(action_id, template_arg)
