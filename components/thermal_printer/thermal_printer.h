@@ -73,14 +73,14 @@ class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
 };
 
 template<typename... Ts>
-class M5StackPrinterPrintTextAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+class ThermalPrinterPrintTextAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:
   TEMPLATABLE_VALUE(std::string, text)
 
   void play(Ts... x) override { this->parent_->print_text(this->text_.value(x...)); }
 
   /*template<typename... Ts>
-  class M5StackPrinterPrintTextAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+  class ThermalPrinterPrintTextAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
    public:
     TEMPLATABLE_VALUE(std::string, text)
     TEMPLATABLE_VALUE(uint8_t, font_size)
@@ -104,7 +104,7 @@ class M5StackPrinterPrintTextAction : public Action<Ts...>, public Parented<M5St
 };
 
 template<typename... Ts>
-class M5StackPrinterNewLineAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+class ThermalPrinterNewLineAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:
   TEMPLATABLE_VALUE(uint8_t, lines)
 
@@ -112,7 +112,7 @@ class M5StackPrinterNewLineAction : public Action<Ts...>, public Parented<M5Stac
 };
 
 template<typename... Ts>
-class M5StackPrinterPrintQRCodeAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+class ThermalPrinterPrintQRCodeAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:
   TEMPLATABLE_VALUE(std::string, qrcode)
 
@@ -120,7 +120,7 @@ class M5StackPrinterPrintQRCodeAction : public Action<Ts...>, public Parented<M5
 };
 
 template<typename... Ts>
-class M5StackPrinterPrintBarCodeAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+class ThermalPrinterPrintBarCodeAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:
   TEMPLATABLE_VALUE(std::string, barcode)
   TEMPLATABLE_VALUE(std::string, type)
