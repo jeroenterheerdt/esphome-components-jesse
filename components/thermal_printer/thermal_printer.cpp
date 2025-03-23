@@ -16,6 +16,8 @@ static const uint8_t WAKEUP_CMD[] = {ESC, 0x38, 0, 0};
 static const uint8_t BAUD_RATE_9600_CMD[] = {ESC, '#', '#', 'S', 'B', 'D', 'R', 0x80, 0x25, 0x00, 0x00};
 static const uint8_t BAUD_RATE_115200_CMD[] = {ESC, '#', '#', 'S', 'B', 'D', 'R', 0x00, 0xC2, 0x01, 0x00};
 
+static const uint8_t SET_TABS_CMD[] = {ESC, 'D'};
+static const uint8_t CLEAR_TABS_CMD[] = {ESC, 'D', 0};
 static const uint8_t FONT_SIZE_CMD[] = {GS, '!'};
 static const uint8_t FONT_SIZE_RESET_CMD[] = {ESC, 0x14};
 
@@ -83,12 +85,42 @@ void ThermalPrinterDisplay::init_() {
 
 void ThermalPrinterDisplay::reset() {
   printMode = 0;
-  charHeight = 24;
-  maxColumn = 32;
+  /*charHeight = 24;
+  maxColumn = 32;*/
 }
 
-void ThermalPrinterDisplay::tab() { this->write_byte(TAB); }
+// expects a list of tabs in sequential order, for example: {5, 10, 15, 20, 25}
+void ThermalPrinterDisplay::setTabs(uint8_t tab[]) {
+  this->tabsAmount = 0;
+  this->tabs[this->tabsAmount] = 0;
 
+  this->write_array(SET_TABS_CMD, sizeof(SET_TABS_CMD));  // from datasheet - set tab stops
+  for (uint8_t i = 0; i < sizeof(tab); i++) {
+    if (tab[i] < this->widthMax && tab[i] > (tabs[this->tabsAmount] / this->charWidth) && this->tabsAmount < 32) {
+      this->write_byte(tab[i]);
+      this->tabs[this->tabsAmount++] = tab[i] * this->charWidth;
+    }
+  }
+  this->write_byte(0);  // from datasheet - end of list
+  this->cursor = 0;
+}
+void ThermalPrinterDisplay::tab() {
+  for (uint8_t i = 0; i < this->tabsAmount; i++) {
+    if (this->tabs[i] > this->cursor) {
+      cursor = this->tabs[i];
+      break;
+    }
+  }
+  this->write_byte(TAB);
+  if ((this->widthInDots - this->cursor) < this->charWidth) {
+    this->cursor = 0;  // printer go newline
+  }
+}
+
+void ThermalPrinterDisplay::clearTabs() {
+  this->write_array(CLEAR_TABS_CMD, sizeof(CLEAR_TABS_CMD));  // from datasheet - set tab stops
+  this->tabs[0] = 0;
+}
 // default / min is 24
 void ThermalPrinterDisplay::setLineHeight(uint8_t height) {
   if (height < 0) {

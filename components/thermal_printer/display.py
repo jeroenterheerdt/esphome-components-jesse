@@ -18,9 +18,14 @@ thermal_printer_ns = cg.esphome_ns.namespace("thermal_printer")
 ThermalPrinterDisplay = thermal_printer_ns.class_(
     "ThermalPrinterDisplay", display.DisplayBuffer, uart.UARTDevice
 )
-
+ThermalPrinterSetTabsAction = thermal_printer_ns.class_(
+    "ThermalPrinterSetTabsAction", automation.Action
+)
 ThermalPrinterTabAction = thermal_printer_ns.class_(
     "ThermalPrinterTabAction", automation.Action
+)
+ThermalPrinterClearTabsAction = thermal_printer_ns.class_(
+    "ThermalPrinterClearTabsAction", automation.Action
 )
 ThermalPrinterSetLineHeightAction = thermal_printer_ns.class_(
     "ThermalPrinterSetLineHeightAction", automation.Action
@@ -58,6 +63,7 @@ BARCODETYPE = {
     "CODE128": ThermalPrinterPrintBarCodeAction.CODE128,
 }
 
+CONF_TABS = "tabs"
 CONF_LINE_HEIGHT = "line_height"
 CONF_FONT_SIZE = "font_size"
 CONF_FONT_SIZE_FACTOR = "font_size_factor"
@@ -111,6 +117,28 @@ async def to_code(config):
         cg.add(var.set_writer(lambda_))
 
 
+# SETTABS()
+@automation.register_action(
+    "thermal_printer.settabs",
+    ThermalPrinterSetTabsAction,
+    cv.maybe_simple_value(
+        cv.Schema(
+            {
+                cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
+                cv.Required(CONF_TABS): cv.templatable(cv.ensure_list(cv.int_)),
+            }
+        ),
+        key=CONF_TABS,
+    ),
+)
+async def thermal_printer_settabs_action_to_code(config, action_id, template_arg, args):
+    var = cg.new_Pvariable(action_id, template_arg)
+    await cg.register_parented(var, config[CONF_ID])
+    templ = await cg.templatable(config[CONF_TABS], args, cg.std_vector(cg.uint8))
+    cg.add(var.set_tabs(templ))
+    return var
+
+
 # TAB()
 @automation.register_action(
     "thermal_printer.tab",
@@ -125,6 +153,27 @@ async def to_code(config):
     ),
 )
 async def thermal_printer_tab_action_to_code(config, action_id, template_arg, args):
+    var = cg.new_Pvariable(action_id, template_arg)
+    await cg.register_parented(var, config[CONF_ID])
+    return var
+
+
+# CLEAR_TABS()
+@automation.register_action(
+    "thermal_printer.cleartabs",
+    ThermalPrinterClearTabsAction,
+    cv.maybe_simple_value(
+        cv.Schema(
+            {
+                cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
+            }
+        ),
+        key=cv.GenerateID(),
+    ),
+)
+async def thermal_printer_cleartabs_action_to_code(
+    config, action_id, template_arg, args
+):
     var = cg.new_Pvariable(action_id, template_arg)
     await cg.register_parented(var, config[CONF_ID])
     return var
