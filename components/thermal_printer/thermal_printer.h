@@ -36,7 +36,7 @@ class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
                   bool updown = false, bool bold = false, bool double_height = false, bool double_width = false,
                   bool strike = false, bool ninety_degrees = false);*/
 
-  void setTabs(uint8_t tab[]);
+  void setTabs(std::vector<unsigned char> tab);
   void tab();
   void clearTabs();
   void setLineHeight(uint8_t height);
@@ -75,7 +75,7 @@ class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
  private:
   uint16_t widthInDots = {384};  // to calculate aboslute position, when using some functions like setCharSpacing
   uint8_t printMode, maxColumn;
-  std::vector<uint8_t> tabs;
+  std::vector<unsigned char> tabs;
   uint8_t tabsAmount{0};
   uint8_t widthMax{32}, cursor{0}, charWidth{12}, charHeight{24};
   void unsetPrintMode(uint8_t mask), setPrintMode(uint8_t mask), writePrintMode(), adjustCharValues(uint8_t mask);
@@ -84,7 +84,7 @@ class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
 // SET TABS
 template<typename... Ts> class ThermalPrinterSetTabsAction : Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:
-  TEMPLATABLE_VALUE(std::vector<uint8_t>, tabs)
+  TEMPLATABLE_VALUE(std::vector<unsigned char>, tabs)
 
   void play(Ts... x) override { this->parent_->setTabs(this->tabs_.value(x...)); }
 };
