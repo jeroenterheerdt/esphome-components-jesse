@@ -19,6 +19,9 @@ ThermalPrinterDisplay = thermal_printer_ns.class_(
     "ThermalPrinterDisplay", display.DisplayBuffer, uart.UARTDevice
 )
 
+ThermalPrinterTabAction = thermal_printer_ns.class_(
+    "ThermalPrinterTabAction", automation.Action
+)
 ThermalPrinterPrintTextAction = thermal_printer_ns.class_(
     "ThermalPrinterPrintTextAction", automation.Action
 )
@@ -103,6 +106,26 @@ async def to_code(config):
         cg.add(var.set_writer(lambda_))
 
 
+# TAB()
+@automation.register_action(
+    "thermal_printer.tab",
+    ThermalPrinterTabAction,
+    cv.maybe_simple_value(
+        cv.Schema(
+            {
+                cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
+            }
+        ),
+        key=cv.GenerateID(),
+    ),
+)
+async def thermal_printer_tab_action_to_code(config, action_id, template_arg, args):
+    var = cg.new_Pvariable(action_id, template_arg)
+    await cg.register_parented(var, config[CONF_ID])
+    return var
+
+
+# PRINT_TEXT()
 @automation.register_action(
     "thermal_printer.print_text",
     ThermalPrinterPrintTextAction,
@@ -166,6 +189,7 @@ async def thermal_printer_print_text_action_to_code(
     return var
 
 
+# NEW_LINE()
 @automation.register_action(
     "thermal_printer.new_line",
     ThermalPrinterNewLineAction,
@@ -189,6 +213,7 @@ async def thermal_printer_new_line_action_to_code(
     return var
 
 
+# PRINT_QR_CODE()
 @automation.register_action(
     "thermal_printer.print_qr_code",
     ThermalPrinterPrintQRCodeAction,
@@ -212,6 +237,7 @@ async def thermal_printer_print_qr_code_action_to_code(
     return var
 
 
+# PRINT_BAR_CODE()
 @automation.register_action(
     "thermal_printer.print_bar_code",
     ThermalPrinterPrintBarCodeAction,

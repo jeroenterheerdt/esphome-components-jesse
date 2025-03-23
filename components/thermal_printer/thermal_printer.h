@@ -35,6 +35,8 @@ class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
   /*void print_text(std::string text, uint8_t font_size = 0, std::string font = "A", bool inverse = false,
                   bool updown = false, bool bold = false, bool double_height = false, bool double_width = false,
                   bool strike = false, bool ninety_degrees = false);*/
+
+  void tab();
   void print_text(std::string text);
   void new_line(uint8_t lines);
   void print_qrcode(std::string data);
@@ -70,6 +72,11 @@ class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
  private:
   uint8_t printMode, charHeight, maxColumn;
   void unsetPrintMode(uint8_t mask), setPrintMode(uint8_t mask), writePrintMode(), adjustCharValues(uint8_t mask);
+};
+
+template<typename... Ts> class ThermalPrinterTabAction : Action<Ts...>, public Parented<ThermalPrinterDisplay> {
+ public:
+  void play(Ts... x) override { this->parent_->tab(); }
 };
 
 template<typename... Ts>

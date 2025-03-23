@@ -9,6 +9,7 @@ static const char *const TAG = "thermal_printer";
 
 static const uint8_t ESC = 0x1B;
 static const uint8_t GS = 0x1D;
+static const uint8_t TAB = '\t';  // Horizontal tab
 
 static const uint8_t INIT_PRINTER_CMD[] = {ESC, 0x40};
 static const uint8_t WAKEUP_CMD[] = {ESC, 0x38, 0, 0};
@@ -86,6 +87,7 @@ void ThermalPrinterDisplay::reset() {
   maxColumn = 32;
 }
 
+void ThermalPrinterDisplay::tab() { this->write_byte(TAB); }
 /*void ThermalPrinterDisplay::print_text(std::string text, uint8_t font_size, std::string font, bool inverse, bool
    updown, bool bold, bool double_height, bool double_width, bool strike, bool ninety_degrees) {*/
 void ThermalPrinterDisplay::print_text(std::string text) {
