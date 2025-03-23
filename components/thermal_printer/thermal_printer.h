@@ -37,6 +37,7 @@ class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
                   bool strike = false, bool ninety_degrees = false);*/
 
   void tab();
+  void setLineHeight(uint8_t height);
   void print_text(std::string text);
   void new_line(uint8_t lines);
   void print_qrcode(std::string data);
@@ -77,6 +78,14 @@ class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
 template<typename... Ts> class ThermalPrinterTabAction : Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:
   void play(Ts... x) override { this->parent_->tab(); }
+};
+
+template<typename... Ts>
+class ThermalPrinterSetLineHeightAction : Action<Ts...>, public Parented<ThermalPrinterDisplay> {
+ public:
+  TEMPLATABLE_VALUE(std::uint8_t, height)
+
+  void play(Ts... x) override { this->parent_->setLineHeight(this->height_.value(x...)); }
 };
 
 template<typename... Ts>

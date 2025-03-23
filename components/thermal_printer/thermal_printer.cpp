@@ -88,6 +88,16 @@ void ThermalPrinterDisplay::reset() {
 }
 
 void ThermalPrinterDisplay::tab() { this->write_byte(TAB); }
+
+// max is 24
+void ThermalPrinterDisplay::setLineHeight(uint8_t height) {
+  if (height < 24) {
+    height = 24;
+  }
+  static const uint8_t lineHeightCMD[] = {ESC, 0x33, height};
+  this->write_array(lineHeightCMD, sizeof(lineHeightCMD));
+}
+
 /*void ThermalPrinterDisplay::print_text(std::string text, uint8_t font_size, std::string font, bool inverse, bool
    updown, bool bold, bool double_height, bool double_width, bool strike, bool ninety_degrees) {*/
 void ThermalPrinterDisplay::print_text(std::string text) {

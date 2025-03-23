@@ -22,6 +22,9 @@ ThermalPrinterDisplay = thermal_printer_ns.class_(
 ThermalPrinterTabAction = thermal_printer_ns.class_(
     "ThermalPrinterTabAction", automation.Action
 )
+ThermalPrinterSetLineHeightAction = thermal_printer_ns.class_(
+    "ThermalPrinterSetLineHeightAction", automation.Action
+)
 ThermalPrinterPrintTextAction = thermal_printer_ns.class_(
     "ThermalPrinterPrintTextAction", automation.Action
 )
@@ -54,6 +57,8 @@ BARCODETYPE = {
     "CODE93": ThermalPrinterPrintBarCodeAction.CODE93,
     "CODE128": ThermalPrinterPrintBarCodeAction.CODE128,
 }
+
+CONF_LINE_HEIGHT = "line_height"
 CONF_FONT_SIZE = "font_size"
 CONF_FONT_SIZE_FACTOR = "font_size_factor"
 CONF_FIRMWARE = "firmware"
@@ -122,6 +127,32 @@ async def to_code(config):
 async def thermal_printer_tab_action_to_code(config, action_id, template_arg, args):
     var = cg.new_Pvariable(action_id, template_arg)
     await cg.register_parented(var, config[CONF_ID])
+    return var
+
+
+# SET_LINE_HEIGHT()
+@automation.register_action(
+    "thermal_printer.set_line_height",
+    ThermalPrinterSetLineHeightAction,
+    cv.maybe_simple_value(
+        cv.Schema(
+            {
+                cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
+                cv.Required(CONF_LINE_HEIGHT): cv.templatable(
+                    cv.int_range(min=0, max=24)
+                ),
+            }
+        ),
+        key=CONF_LINE_HEIGHT,
+    ),
+)
+async def thermal_printer_set_line_height_action_to_code(
+    config, action_id, template_arg, args
+):
+    var = cg.new_Pvariable(action_id, template_arg)
+    await cg.register_parented(var, config[CONF_ID])
+    templ = await cg.templatable(config[CONF_LINE_HEIGHT], args, cg.uint8)
+    cg.add(var.set_line_height(templ))
     return var
 
 
