@@ -89,10 +89,13 @@ void ThermalPrinterDisplay::reset() {
 
 void ThermalPrinterDisplay::tab() { this->write_byte(TAB); }
 
-// max is 24
+// default / min is 24
 void ThermalPrinterDisplay::setLineHeight(uint8_t height) {
-  if (height < 24) {
-    height = 24;
+  if (height < 0) {
+    height = 0;
+  }
+  if (height > 255) {
+    height = 255;
   }
   static const uint8_t lineHeightCMD[] = {ESC, 0x33, height};
   this->write_array(lineHeightCMD, sizeof(lineHeightCMD));
