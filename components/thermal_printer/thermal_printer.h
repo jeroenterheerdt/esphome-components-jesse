@@ -14,7 +14,7 @@ namespace thermal_printer {
 
 enum BarcodeType { UPC_A = 0x41, UPC_E, EAN13, EAN8, CODE39, ITF, CODABAR, CODE93, CODE128, UNKNOWN };
 
-class M5StackPrinterDisplay : public display::DisplayBuffer, public uart::UARTDevice {
+class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDevice {
  public:
   void setup() override;
   void loop() override;
@@ -101,7 +101,7 @@ class M5StackPrinterPrintTextAction : public Action<Ts...>, public Parented<M5St
           this->ninety_degrees_.value(x...);
     }
   };*/
-}
+};
 
 template<typename... Ts>
 class M5StackPrinterNewLineAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
