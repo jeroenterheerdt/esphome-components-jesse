@@ -138,7 +138,7 @@ async def thermal_printer_tab_action_to_code(config, action_id, template_arg, ar
         cv.Schema(
             {
                 cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
-                cv.Required(CONF_LINE_HEIGHT, default=24): cv.templatable(
+                cv.Optional(CONF_LINE_HEIGHT, default=24): cv.templatable(
                     cv.int_range(min=0, max=24)
                 ),
             }
