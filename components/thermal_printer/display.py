@@ -152,7 +152,7 @@ async def thermal_printer_set_line_height_action_to_code(
     var = cg.new_Pvariable(action_id, template_arg)
     await cg.register_parented(var, config[CONF_ID])
     templ = await cg.templatable(config[CONF_LINE_HEIGHT], args, cg.uint8)
-    cg.add(var.set_line_height(templ))
+    cg.add(var.set_height(templ))
     return var
 
 
