@@ -158,7 +158,7 @@ void ThermalPrinterDisplay::inverseOff() { this->write_array(INVERSE_OFF_CMD, si
    updown, bool bold, bool double_height, bool double_width, bool strike, bool ninety_degrees) {*/
 void ThermalPrinterDisplay::print_text(std::string text) {
   this->init_();
-  /*ESP_LOGD("print_text", "text: %s", text.c_str());
+  ESP_LOGD("print_text", "text: %s", text.c_str());
   ESP_LOGD("print_text", "font_size: %d", font_size);
   ESP_LOGD("print_text", "font_size_factor: %f", this->font_size_factor_);
   ESP_LOGD("print_text", "font: %s", font.c_str());
@@ -209,7 +209,7 @@ void ThermalPrinterDisplay::print_text(std::string text) {
     // doesn't work yet
     ESP_LOGD("print_text", "turning on ninety_degrees");
     this->write_array(NINETY_DEGREES_ROTATION_ON_CMD, sizeof(NINETY_DEGREES_ROTATION_ON_CMD));
-  }*/
+  }
 
   // disable font size handling for now
   /*font_size = clamp<uint8_t>(font_size, 0, 7);
@@ -223,7 +223,7 @@ void ThermalPrinterDisplay::print_text(std::string text) {
   // this->write_array(FONT_SIZE_RESET_CMD, sizeof(FONT_SIZE_RESET_CMD));
 
   // turn settings off if they were on
-  /*if (inverse) {
+  if (inverse) {
     this->write_array(INVERSE_OFF_CMD, sizeof(INVERSE_OFF_CMD));
   }
   if (updown) {
@@ -248,7 +248,7 @@ void ThermalPrinterDisplay::print_text(std::string text) {
   if (ninety_degrees) {
     ESP_LOGD("print_text", "turning off ninety_degrees");
     this->write_array(NINETY_DEGREES_ROTATION_OFF_CMD, sizeof(NINETY_DEGREES_ROTATION_OFF_CMD));
-  }*/
+  }
 }
 
 void ThermalPrinterDisplay::new_line(uint8_t lines) {

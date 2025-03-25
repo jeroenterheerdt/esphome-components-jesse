@@ -145,7 +145,7 @@ class ThermalPrinterPrintTextAction : public Action<Ts...>, public Parented<Ther
 
   void play(Ts... x) override { this->parent_->print_text(this->text_.value(x...)); }
 
-  /*template<typename... Ts>
+  template<typename... Ts>
   class ThermalPrinterPrintTextAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
    public:
     TEMPLATABLE_VALUE(std::string, text)
@@ -166,7 +166,7 @@ class ThermalPrinterPrintTextAction : public Action<Ts...>, public Parented<Ther
                                 this->strike_.value(x...)),
           this->ninety_degrees_.value(x...);
     }
-  };*/
+  };
 };
 
 template<typename... Ts>

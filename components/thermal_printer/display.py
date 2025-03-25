@@ -264,28 +264,28 @@ async def thermal_printer_inverse_on_action_to_code(
             {
                 cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
                 cv.Required(CONF_TEXT): cv.templatable(cv.string),
-                # cv.Optional(CONF_FONT_SIZE, default=1): cv.templatable(
-                #    cv.int_range(min=0, max=7)
-                # ),
-                # cv.Optional(CONF_FONT_SIZE_FACTOR): cv.templatable(cv.float_),
-                # cv.Optional(CONF_FONT, default="A"): cv.templatable(cv.string),
-                # cv.Optional(CONF_INVERSE, default=False): cv.templatable(cv.boolean),
-                # cv.Optional(CONF_UPSIDE_DOWN, default=False): cv.templatable(
-                #    cv.boolean
-                # ),
-                # cv.Optional(CONF_BOLD, default=False): cv.templatable(cv.boolean),
-                # cv.Optional(CONF_DOUBLE_HEIGHT, default=False): cv.templatable(
-                #    cv.boolean
-                # ),
-                # cv.Optional(CONF_DOUBLE_WIDTH, default=False): cv.templatable(
-                #    cv.boolean
-                # ),
-                # cv.Optional(CONF_STRIKETHROUGH, default=False): cv.templatable(
-                #    cv.boolean
-                # ),
-                # cv.Optional(CONF_NINETY_DEGREES, default=False): cv.templatable(
-                #    cv.boolean
-                # ),
+                cv.Optional(CONF_FONT_SIZE, default=1): cv.templatable(
+                    cv.int_range(min=0, max=7)
+                ),
+                cv.Optional(CONF_FONT_SIZE_FACTOR): cv.templatable(cv.float_),
+                cv.Optional(CONF_FONT, default="A"): cv.templatable(cv.string),
+                cv.Optional(CONF_INVERSE, default=False): cv.templatable(cv.boolean),
+                cv.Optional(CONF_UPSIDE_DOWN, default=False): cv.templatable(
+                    cv.boolean
+                ),
+                cv.Optional(CONF_BOLD, default=False): cv.templatable(cv.boolean),
+                cv.Optional(CONF_DOUBLE_HEIGHT, default=False): cv.templatable(
+                    cv.boolean
+                ),
+                cv.Optional(CONF_DOUBLE_WIDTH, default=False): cv.templatable(
+                    cv.boolean
+                ),
+                cv.Optional(CONF_STRIKETHROUGH, default=False): cv.templatable(
+                    cv.boolean
+                ),
+                cv.Optional(CONF_NINETY_DEGREES, default=False): cv.templatable(
+                    cv.boolean
+                ),
             }
         ),
         key=CONF_TEXT,
@@ -298,24 +298,24 @@ async def thermal_printer_print_text_action_to_code(
     await cg.register_parented(var, config[CONF_ID])
     templ = await cg.templatable(config[CONF_TEXT], args, cg.std_string)
     cg.add(var.set_text(templ))
-    # templ = await cg.templatable(config[CONF_FONT_SIZE], args, cg.uint8)
-    # cg.add(var.set_font_size(templ))
-    # templ = await cg.templatable(config[CONF_FONT], args, cg.std_string)
-    # cg.add(var.set_font(templ))
-    # templ = await cg.templatable(config[CONF_INVERSE], args, cg.bool_)
-    # cg.add(var.set_inverse(templ))
-    # templ = await cg.templatable(config[CONF_UPSIDE_DOWN], args, cg.bool_)
-    # cg.add(var.set_updown(templ))
-    # templ = await cg.templatable(config[CONF_BOLD], args, cg.bool_)
-    # cg.add(var.set_bold(templ))
-    # templ = await cg.templatable(config[CONF_DOUBLE_HEIGHT], args, cg.bool_)
-    # cg.add(var.set_double_height(templ))
-    # templ = await cg.templatable(config[CONF_DOUBLE_WIDTH], args, cg.bool_)
-    # cg.add(var.set_double_width(templ))
-    # templ = await cg.templatable(config[CONF_STRIKETHROUGH], args, cg.bool_)
-    # cg.add(var.set_strike(templ))
-    # templ = await cg.templatable(config[CONF_NINETY_DEGREES], args, cg.bool_)
-    # cg.add(var.set_ninety_degrees(templ))
+    templ = await cg.templatable(config[CONF_FONT_SIZE], args, cg.uint8)
+    cg.add(var.set_font_size(templ))
+    templ = await cg.templatable(config[CONF_FONT], args, cg.std_string)
+    cg.add(var.set_font(templ))
+    templ = await cg.templatable(config[CONF_INVERSE], args, cg.bool_)
+    cg.add(var.set_inverse(templ))
+    templ = await cg.templatable(config[CONF_UPSIDE_DOWN], args, cg.bool_)
+    cg.add(var.set_updown(templ))
+    templ = await cg.templatable(config[CONF_BOLD], args, cg.bool_)
+    cg.add(var.set_bold(templ))
+    templ = await cg.templatable(config[CONF_DOUBLE_HEIGHT], args, cg.bool_)
+    cg.add(var.set_double_height(templ))
+    templ = await cg.templatable(config[CONF_DOUBLE_WIDTH], args, cg.bool_)
+    cg.add(var.set_double_width(templ))
+    templ = await cg.templatable(config[CONF_STRIKETHROUGH], args, cg.bool_)
+    cg.add(var.set_strike(templ))
+    templ = await cg.templatable(config[CONF_NINETY_DEGREES], args, cg.bool_)
+    cg.add(var.set_ninety_degrees(templ))
     return var
 
 
