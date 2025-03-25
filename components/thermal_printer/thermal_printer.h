@@ -167,7 +167,6 @@ class ThermalPrinterPrintTextAction : public Action<Ts...>, public Parented<Ther
         this->ninety_degrees_.value(x...);
   }
 };
-};
 
 template<typename... Ts>
 class ThermalPrinterNewLineAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
