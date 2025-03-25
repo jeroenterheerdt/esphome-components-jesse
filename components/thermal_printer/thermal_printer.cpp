@@ -145,8 +145,11 @@ void ThermalPrinterDisplay::justify(std::string value) {
   // ESP_LOGD("justify", "value: %s", value.c_str());
   // ESP_LOGD("justify", "value[0]: %s", value[0]);
   ESP_LOGD("justify", "set: %d", set);
-  static const uint8_t justifyCMD[] = {ESC, 'a', set};
-  this->write_array(justifyCMD, sizeof(justifyCMD));
+  // static const uint8_t justifyCMD[] = {ESC, 'a', set};
+  // this->write_array(justifyCMD, sizeof(justifyCMD));
+  this->write_byte(ESC);
+  this->write_byte('a');
+  this->write_byte(set);
 }
 /*void ThermalPrinterDisplay::print_text(std::string text, uint8_t font_size, std::string font, bool inverse, bool
    updown, bool bold, bool double_height, bool double_width, bool strike, bool ninety_degrees) {*/
