@@ -32,9 +32,9 @@ class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
   display::DisplayType get_display_type() override { return display::DisplayType::DISPLAY_TYPE_BINARY; }
 
   void reset();
-  /*void print_text(std::string text, uint8_t font_size = 0, std::string font = "A", bool inverse = false,
+  void print_text(std::string text, uint8_t font_size = 0, std::string font = "A", bool inverse = false,
                   bool updown = false, bool bold = false, bool double_height = false, bool double_width = false,
-                  bool strike = false, bool ninety_degrees = false);*/
+                  bool strike = false, bool ninety_degrees = false);
 
   void setTabs(std::vector<uint8_t> tab);
   void tab();
@@ -43,7 +43,7 @@ class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
   void justify(std::string value);
   void inverseOn();
   void inverseOff();
-  void print_text(std::string text);
+  // void print_text(std::string text);
   void new_line(uint8_t lines);
   void print_qrcode(std::string data);
 
