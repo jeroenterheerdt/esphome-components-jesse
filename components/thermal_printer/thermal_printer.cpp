@@ -151,6 +151,9 @@ void ThermalPrinterDisplay::justify(std::string value) {
   this->write_byte('a');
   this->write_byte(set);
 }
+
+void ThermalPrinterDisplay::inverseOn() { this->write_array(INVERSE_ON_CMD, sizeof(INVERSE_ON_CMD)); }
+void ThermalPrinterDisplay::inverseOff() { this->write_array(INVERSE_OFF_CMD, sizeof(INVERSE_OFF_CMD)); }
 /*void ThermalPrinterDisplay::print_text(std::string text, uint8_t font_size, std::string font, bool inverse, bool
    updown, bool bold, bool double_height, bool double_width, bool strike, bool ninety_degrees) {*/
 void ThermalPrinterDisplay::print_text(std::string text) {

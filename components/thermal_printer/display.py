@@ -33,6 +33,9 @@ ThermalPrinterSetLineHeightAction = thermal_printer_ns.class_(
 ThermalPrinterJustifyAction = thermal_printer_ns.class_(
     "ThermalPrinterJustifyAction", automation.Action
 )
+ThermalPrinterInverseOnAction = thermal_printer_ns.class_(
+    "ThermalPrinterInverseOnAction", automation.Action
+)
 ThermalPrinterPrintTextAction = thermal_printer_ns.class_(
     "ThermalPrinterPrintTextAction", automation.Action
 )
@@ -228,6 +231,27 @@ async def thermal_printer_justify_action_to_code(config, action_id, template_arg
     await cg.register_parented(var, config[CONF_ID])
     templ = await cg.templatable(config[CONF_ALIGNMENT], args, cg.std_string)
     cg.add(var.set_alignment(templ))
+    return var
+
+
+# INVERSE ON()
+@automation.register_action(
+    "thermal_printer.inverse_on",
+    ThermalPrinterInverseOnAction,
+    cv.maybe_simple_value(
+        cv.Schema(
+            {
+                cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
+            }
+        ),
+        key=cv.GenerateID(),
+    ),
+)
+async def thermal_printer_inverse_on_action_to_code(
+    config, action_id, template_arg, args
+):
+    var = cg.new_Pvariable(action_id, template_arg)
+    await cg.register_parented(var, config[CONF_ID])
     return var
 
 

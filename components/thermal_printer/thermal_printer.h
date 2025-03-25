@@ -41,6 +41,8 @@ class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
   void clearTabs();
   void setLineHeight(uint8_t height);
   void justify(std::string value);
+  void inverseOn();
+  void inverseOff();
   void print_text(std::string text);
   void new_line(uint8_t lines);
   void print_qrcode(std::string data);
@@ -120,6 +122,20 @@ class ThermalPrinterJustifyAction : public Action<Ts...>, public Parented<Therma
   TEMPLATABLE_VALUE(std::string, alignment)
 
   void play(Ts... x) override { this->parent_->justify(this->alignment_.value(x...)); }
+};
+
+// INVERSE ON
+template<typename... Ts>
+class ThermalPrinterInverseOnAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
+ public:
+  void play(Ts... x) override { this->parent_->inverseOn(); }
+};
+
+// INVERSE OFF
+template<typename... Ts>
+class ThermalPrinterInverseOffAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
+ public:
+  void play(Ts... x) override { this->parent_->inverseOff(); }
 };
 // PRINT TEXT
 template<typename... Ts>
