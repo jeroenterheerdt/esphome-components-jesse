@@ -130,6 +130,7 @@ void ThermalPrinterDisplay::setLineHeight(uint8_t height) {
     height = 255;
   }
   static const uint8_t lineHeightCMD[] = {ESC, 0x33, height};
+  ESP_LOGD("setLineHeight", "height: %d", height);
   this->write_array(lineHeightCMD, sizeof(lineHeightCMD));
 }
 
@@ -141,8 +142,8 @@ void ThermalPrinterDisplay::justify(std::string value) {
   } else if (value[0] == 'R') {
     set = 2;
   }
-  ESP_LOGD("justify", "value: %s", value.c_str());
-  ESP_LOGD("justify", "value[0]: %s", value[0]);
+  // ESP_LOGD("justify", "value: %s", value.c_str());
+  // ESP_LOGD("justify", "value[0]: %s", value[0]);
   ESP_LOGD("justify", "set: %d", set);
   static const uint8_t justifyCMD[] = {ESC, 'a', set};
   this->write_array(justifyCMD, sizeof(justifyCMD));
