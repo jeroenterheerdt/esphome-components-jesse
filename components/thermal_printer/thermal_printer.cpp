@@ -169,7 +169,7 @@ void ThermalPrinterDisplay::print_text(std::string text, uint8_t font_size, std:
                                        bool bold, bool double_height, bool double_width, bool strike,
                                        bool ninety_degrees) {
   // void ThermalPrinterDisplay::print_text(std::string text) {
-  this->init_();
+  // this->init_();
   ESP_LOGD("print_text", "text: %s", text.c_str());
   ESP_LOGD("print_text", "font_size: %d", font_size);
   ESP_LOGD("print_text", "font_size_factor: %f", this->font_size_factor_);
