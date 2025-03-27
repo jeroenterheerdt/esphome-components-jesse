@@ -91,6 +91,7 @@ void ThermalPrinterDisplay::reset() {
 
 // expects a list of tabs in sequential order, for example: {5, 10, 15, 20, 25}
 void ThermalPrinterDisplay::setTabs(std::vector<uint8_t> tab) {
+  this->init_();
   this->tabsAmount = 0;
   this->tabs[this->tabsAmount] = 0;
 
@@ -105,6 +106,7 @@ void ThermalPrinterDisplay::setTabs(std::vector<uint8_t> tab) {
   this->cursor = 0;
 }
 void ThermalPrinterDisplay::tab() {
+  this->init_();
   for (uint8_t i = 0; i < this->tabsAmount; i++) {
     if (this->tabs[i] > this->cursor) {
       cursor = this->tabs[i];
@@ -118,11 +120,13 @@ void ThermalPrinterDisplay::tab() {
 }
 
 void ThermalPrinterDisplay::clearTabs() {
+  this->init_();
   this->write_array(CLEAR_TABS_CMD, sizeof(CLEAR_TABS_CMD));  // from datasheet - set tab stops
   this->tabs[0] = 0;
 }
 // default / min is 24
 void ThermalPrinterDisplay::setLineHeight(uint8_t height) {
+  this->init_();
   if (height < 0) {
     height = 0;
   }
@@ -136,6 +140,7 @@ void ThermalPrinterDisplay::setLineHeight(uint8_t height) {
 
 // default is L
 void ThermalPrinterDisplay::justify(std::string value) {
+  this->init_();
   uint8_t set = 0;
   if (value[0] == 'C') {
     set = 1;
@@ -152,8 +157,14 @@ void ThermalPrinterDisplay::justify(std::string value) {
   this->write_byte(set);
 }
 
-void ThermalPrinterDisplay::inverseOn() { this->write_array(INVERSE_ON_CMD, sizeof(INVERSE_ON_CMD)); }
-void ThermalPrinterDisplay::inverseOff() { this->write_array(INVERSE_OFF_CMD, sizeof(INVERSE_OFF_CMD)); }
+void ThermalPrinterDisplay::inverseOn() {
+  this->init_();
+  this->write_array(INVERSE_ON_CMD, sizeof(INVERSE_ON_CMD));
+}
+void ThermalPrinterDisplay::inverseOff() {
+  this->init_();
+  this->write_array(INVERSE_OFF_CMD, sizeof(INVERSE_OFF_CMD));
+}
 void ThermalPrinterDisplay::print_text(std::string text, uint8_t font_size, std::string font, bool inverse, bool updown,
                                        bool bold, bool double_height, bool double_width, bool strike,
                                        bool ninety_degrees) {
