@@ -287,6 +287,10 @@ async def thermal_printer_print_text_action_to_code(
     cg.add(var.set_strike(templ))
     templ = await cg.templatable(config[CONF_NINETY_DEGREES], args, cg.bool_)
     cg.add(var.set_ninety_degrees(templ))
+    templ = await cg.templatable(config[CONF_UNDERLINE_WEIGHT], args, cg.uint8)
+    cg.add(var.set_underline_weight(templ))
+    templ = await cg.templatable(config[CONF_JUSTIFY], args, cg.uint8)
+    cg.add(var.set_justify(templ))
     return var
 
 
