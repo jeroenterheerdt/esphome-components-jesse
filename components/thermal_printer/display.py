@@ -247,7 +247,7 @@ async def thermal_printer_setlineheight_action_to_code(
                 cv.Optional(CONF_UNDERLINE_WEIGHT, default=0): cv.templatable(
                     cv.int_range(min=0, max=2)
                 ),
-                # cv.Optional(CONF_JUSTIFY, default="L"): cv.templatable(cv.string),
+                cv.Optional(CONF_JUSTIFY, default="L"): cv.templatable(cv.string),
             }
         ),
         key=CONF_TEXT,
@@ -280,7 +280,7 @@ async def thermal_printer_print_text_action_to_code(
     cg.add(var.set_ninety_degrees(templ))
     templ = await cg.templatable(config[CONF_UNDERLINE_WEIGHT], args, cg.uint8)
     cg.add(var.set_underline_weight(templ))
-    templ = await cg.templatable(config[CONF_JUSTIFY], args, cg.uint8)
+    templ = await cg.templatable(config[CONF_JUSTIFY], args, cg.std_string)
     cg.add(var.set_justify(templ))
     return var
 
