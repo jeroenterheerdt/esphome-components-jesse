@@ -16,10 +16,11 @@ static const uint8_t WAKEUP_CMD[] = {ESC, 0x38, 0, 0};
 static const uint8_t BAUD_RATE_9600_CMD[] = {ESC, '#', '#', 'S', 'B', 'D', 'R', 0x80, 0x25, 0x00, 0x00};
 static const uint8_t BAUD_RATE_115200_CMD[] = {ESC, '#', '#', 'S', 'B', 'D', 'R', 0x00, 0xC2, 0x01, 0x00};
 
-static const uint8_t SET_TABS_CMD[] = {ESC, 'D'};
-static const uint8_t CLEAR_TABS_CMD[] = {ESC, 'D', 0};
-static const uint8_t FONT_SIZE_CMD[] = {GS, '!'};
+static const uint8_t SET_TABS_CMD[] = {ESC, 0x44};       //'D'
+static const uint8_t CLEAR_TABS_CMD[] = {ESC, 0x44, 0};  //'D'
+static const uint8_t FONT_SIZE_CMD[] = {GS, 0x21};       //'!'
 static const uint8_t FONT_SIZE_RESET_CMD[] = {ESC, 0x14};
+static const uint8_t UNDERLINE_RESET_CMD[] = {ESC, 0x2D, 0x00};
 
 static const uint8_t QR_CODE_SET_CMD[] = {GS, 0x28, 0x6B, 0x00, 0x00, 0x31, 0x50, 0x30};
 static const uint8_t QR_CODE_PRINT_CMD[] = {GS, 0x28, 0x6B, 0x03, 0x00, 0x31, 0x51, 0x30, 0x00};
@@ -34,21 +35,11 @@ static const uint8_t INVERSE_OFF_CMD[] = {GS, 'B', 0x00};
 static const uint8_t UPDOWN_ON_CMD[] = {ESC, '{', 0x01};
 static const uint8_t UPDOWN_OFF_CMD[] = {ESC, '{', 0x00};
 
-// static const uint8_t BOLD_ON_CMD[] = {ESC, 'E', 0x01};   // 0x45
-// static const uint8_t BOLD_OFF_CMD[] = {ESC, 'E', 0x00};  // 0x45
-
-static const uint8_t DOUBLE_WIDTH_ON_CMD[] = {ESC, 0x0E, 0x01};
-static const uint8_t DOUBLE_WIDTH_OFF_CMD[] = {ESC, 0x14, 0x01};
-
 static const uint8_t NINETY_DEGREES_ROTATION_ON_CMD[] = {ESC, 0x56, 0x01};
 static const uint8_t NINETY_DEGREES_ROTATION_OFF_CMD[] = {ESC, 0x56, 0x00};
 
 // === Character commands ===
-#define FONT_MASK (1 << 0)  //!< Select character font A or B
-#define INVERSE_MASK \
-  (1 << 1)                           //!< Turn on/off white/black reverse printing mode. Not in 2.6.8
-                                     //!< firmware (see inverseOn())
-#define UPDOWN_MASK (1 << 2)         //!< Turn on/off upside-down printing mode
+#define FONT_MASK (1 << 0)           //!< Select character font A or B
 #define BOLD_MASK (1 << 3)           //!< Turn on/off bold printing mode
 #define DOUBLE_HEIGHT_MASK (1 << 4)  //!< Turn on/off double-height printing mode
 #define DOUBLE_WIDTH_MASK (1 << 5)   //!< Turn on/off double-width printing mode
@@ -177,34 +168,29 @@ void ThermalPrinterDisplay::print_text(std::string text, uint8_t font_size, std:
   ESP_LOGD("print_text", "justify: %s", justify.c_str());
 
   // not sure if this does anything
+  font = this->toUpperCase(font);
   if (font == "B") {
     this->setPrintMode(FONT_MASK);
   } else {
     this->unsetPrintMode(FONT_MASK);
   }
-  // works!
   if (inverse) {
     this->write_array(INVERSE_ON_CMD, sizeof(INVERSE_ON_CMD));
   }
-  // works!
   if (updown) {
     this->write_array(UPDOWN_ON_CMD, sizeof(UPDOWN_ON_CMD));
   }
   if (bold) {
-    // this doesn't work yet?
     ESP_LOGD("print_text", "turning on bold");
     this->setPrintMode(BOLD_MASK);
   }
   if (double_height) {
-    // works?!
-    // does this also work with the on_cmd?
     ESP_LOGD("print_text", "turning on double_height");
     this->setPrintMode(DOUBLE_HEIGHT_MASK);
   }
   if (double_width) {
-    // works!
     ESP_LOGD("print_text", "turning on double_width");
-    this->write_array(DOUBLE_WIDTH_ON_CMD, sizeof(DOUBLE_WIDTH_ON_CMD));
+    this->setPrintMode(DOUBLE_WIDTH_MASK);
   }
   if (strike) {
     // doesn't work yet
@@ -221,13 +207,12 @@ void ThermalPrinterDisplay::print_text(std::string text, uint8_t font_size, std:
   underline_weight = clamp<uint8_t>(underline_weight, 0, 2);
   ESP_LOGD("print_text", "setting underline");
   this->write_byte(ESC);
-  this->write_byte('-');
+  this->write_byte(0x2D);
   this->write_byte(underline_weight);
 
   // justify
   // make uppercase
-  std::transform(justify.begin(), justify.end(), justify.begin(), [](unsigned char c) { return std::toupper(c); });
-
+  justify = this->toUpperCase(justify);
   uint8_t justify_set = 0;
   if (justify[0] == 'C') {
     justify_set = 1;
@@ -236,20 +221,20 @@ void ThermalPrinterDisplay::print_text(std::string text, uint8_t font_size, std:
   }
   ESP_LOGD("print_text", "setting justify: %d", justify_set);
   this->write_byte(ESC);
-  this->write_byte('a');
+  this->write_byte(0x61);  //'a'
   this->write_byte(justify_set);
 
-  // disable font size handling for now
-  /*font_size = clamp<uint8_t>(font_size, 0, 7);
-  font_size = font_size * this->font_size_factor_;
-  this->write_array(FONT_SIZE_CMD, sizeof(FONT_SIZE_CMD));
-  this->write_byte(font_size | (font_size << 4));*/
+  // font_size
+  // if set, provide it to the printer. This seems to override all other params though?
+  font_size = clamp<uint8_t>(font_size, 0, 7);
+  if (font_size > 0) {
+    font_size = font_size * this->font_size_factor_;
+    this->write_array(FONT_SIZE_CMD, sizeof(FONT_SIZE_CMD));
+    this->write_byte(font_size | (font_size << 4));
+  }
 
   ESP_LOGD("print_text", "printing now!");
   this->write_str(text.c_str());
-
-  // disabling font size handling for now
-  // this->write_array(FONT_SIZE_RESET_CMD, sizeof(FONT_SIZE_RESET_CMD));
 
   // turn settings off if they were on
   if (inverse) {
@@ -272,12 +257,22 @@ void ThermalPrinterDisplay::print_text(std::string text, uint8_t font_size, std:
   }
   if (double_width) {
     ESP_LOGD("print_text", "turning off double_width");
-    this->write_array(DOUBLE_WIDTH_OFF_CMD, sizeof(DOUBLE_WIDTH_OFF_CMD));
+    this->unsetPrintMode(DOUBLE_WIDTH_MASK);
   }
   if (ninety_degrees) {
     ESP_LOGD("print_text", "turning off ninety_degrees");
     this->write_array(NINETY_DEGREES_ROTATION_OFF_CMD, sizeof(NINETY_DEGREES_ROTATION_OFF_CMD));
   }
+  if (justify_set > 0) {
+    ESP_LOGD("print_text", "turning off justify");
+    this->write_byte(ESC);
+    this->write_byte(0x61);  //'a'
+    this->write_byte(0);
+  }
+  // underline
+  this->write_array(UNDERLINE_RESET_CMD, sizeof(UNDERLINE_RESET_CMD));
+  // reset font_size
+  this->write_array(FONT_SIZE_RESET_CMD, sizeof(FONT_SIZE_RESET_CMD));
 }
 
 void ThermalPrinterDisplay::new_line(uint8_t lines) {
@@ -463,6 +458,13 @@ void ThermalPrinterDisplay::setPrintMode(uint8_t mask) {
   ESP_LOGD("setPrintMode", "printMode after: %d", printMode);
   this->writePrintMode();
   this->adjustCharValues(printMode);
+}
+
+// Method to convert a std::string to uppercase
+std::string ThermalPrinterDisplay::toUpperCase(const std::string &input) {
+  std::string result = input;  // Make a copy of the input string
+  std::transform(result.begin(), result.end(), result.begin(), [](unsigned char c) { return std::toupper(c); });
+  return result;  // Return the transformed string
 }
 
 }  // namespace thermal_printer
