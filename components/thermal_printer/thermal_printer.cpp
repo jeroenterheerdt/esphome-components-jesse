@@ -424,7 +424,7 @@ void ThermalPrinterDisplay::draw_absolute_pixel_internal(int x, int y, Color col
 }
 
 void ThermalPrinterDisplay::writePrintMode() {
-  ESP_LOGD("writePrintMode", "writing printMode: %d", printMode);
+  // ESP_LOGD("writePrintMode", "writing printMode: %d", printMode);
   static const uint8_t printModeCMD[] = {ESC, 0x21, printMode};
   this->write_array(printModeCMD, sizeof(printModeCMD));
 }
@@ -452,19 +452,19 @@ void ThermalPrinterDisplay::adjustCharValues(uint8_t printMode) {
   maxColumn = (384 / charWidth);
 }
 void ThermalPrinterDisplay::unsetPrintMode(uint8_t mask) {
-  ESP_LOGD("unsetPrintMode", "mask: %d", mask);
-  ESP_LOGD("unsetPrintMode", "printMode before: %d", printMode);
+  // ESP_LOGD("unsetPrintMode", "mask: %d", mask);
+  // ESP_LOGD("unsetPrintMode", "printMode before: %d", printMode);
   printMode &= ~mask;
-  ESP_LOGD("unsetPrintMode", "printMode after: %d", printMode);
+  // ESP_LOGD("unsetPrintMode", "printMode after: %d", printMode);
   this->writePrintMode();
   this->adjustCharValues(printMode);
 }
 
 void ThermalPrinterDisplay::setPrintMode(uint8_t mask) {
-  ESP_LOGD("setPrintMode", "mask: %d", mask);
-  ESP_LOGD("setPrintMode", "printMode before: %d", printMode);
+  // ESP_LOGD("setPrintMode", "mask: %d", mask);
+  // ESP_LOGD("setPrintMode", "printMode before: %d", printMode);
   printMode |= mask;
-  ESP_LOGD("setPrintMode", "printMode after: %d", printMode);
+  // ESP_LOGD("setPrintMode", "printMode after: %d", printMode);
   this->writePrintMode();
   this->adjustCharValues(printMode);
 }
