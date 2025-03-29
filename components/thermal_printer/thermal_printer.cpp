@@ -174,7 +174,7 @@ void ThermalPrinterDisplay::print_text(std::string text, uint8_t font_size, std:
   ESP_LOGD("print_text", "strike: %s", strike ? "true" : "false");
   ESP_LOGD("print_text", "ninety_degrees: %s", ninety_degrees ? "true" : "false");
   ESP_LOGD("print_text", "underline_weight: %d", underline_weight);
-  ESP_LOGD("print_text", "jusity: %s", jusity.c_str());
+  ESP_LOGD("print_text", "justify: %s", justify.c_str());
 
   // not sure if this does anything
   if (font == "B") {
