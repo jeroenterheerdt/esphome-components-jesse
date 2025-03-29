@@ -224,8 +224,10 @@ void ThermalPrinterDisplay::print_text(std::string text, uint8_t font_size, std:
   this->write_byte('-');
   this->write_byte(underline_weight);
 
-  // jusity
-  justify = justify.ToUpper();
+  // justify
+  // make uppercase
+  std::transform(justify.begin(), justify.end(), justify.begin(), [](unsigned char c) { return std::toupper(c); });
+
   uint8_t justify_set = 0;
   if (justify[0] == 'C') {
     justify_set = 1;
