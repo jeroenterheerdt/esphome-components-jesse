@@ -148,6 +148,12 @@ void ThermalPrinterDisplay::setLineHeight(uint8_t height) {
   this->write_byte(set);
 }*/
 
+void ThermalPrinterDisplay::print_text(std::string text, std::string font, bool inverse, bool updown, bool bold,
+                                       bool double_height, bool double_width, bool strike, bool ninety_degrees,
+                                       uint8_t underline_weight, std::string justify) {
+  this->print_text(text, -1, font, inverse, updown, bold, double_height, double_width, strike, ninety_degrees,
+                   underline_weight, justify);
+}
 void ThermalPrinterDisplay::print_text(std::string text, uint8_t font_size, std::string font, bool inverse, bool updown,
                                        bool bold, bool double_height, bool double_width, bool strike,
                                        bool ninety_degrees, uint8_t underline_weight, std::string justify) {
@@ -225,12 +231,15 @@ void ThermalPrinterDisplay::print_text(std::string text, uint8_t font_size, std:
   this->write_byte(justify_set);
 
   // font_size
-  // if set, provide it to the printer. This seems to override all other params though?
-  font_size = clamp<uint8_t>(font_size, 0, 7);
-  if (font_size > 0) {
-    font_size = font_size * this->font_size_factor_;
-    this->write_array(FONT_SIZE_CMD, sizeof(FONT_SIZE_CMD));
-    this->write_byte(font_size | (font_size << 4));
+  // if >=0, provide it to the printer.
+  // if < 0 ignore it (for overloading)
+  if (font_size >= 0) {
+    font_size = clamp<uint8_t>(font_size, 0, 7);
+    if (font_size > 0) {
+      font_size = font_size * this->font_size_factor_;
+      this->write_array(FONT_SIZE_CMD, sizeof(FONT_SIZE_CMD));
+      this->write_byte(font_size | (font_size << 4));
+    }
   }
 
   ESP_LOGD("print_text", "printing now!");

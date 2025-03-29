@@ -37,6 +37,9 @@ class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
                   bool strike = false, bool ninety_degrees = false, uint8_t underline_weight = 0,
                   std::string justify = "L");
 
+  void print_text(std::string text, std::string font, bool inverse, bool updown, bool bold, bool double_height,
+                  bool double_width, bool strike, bool ninety_degrees, uint8_t underline_weight, std::string justify);
+
   void setTabs(std::vector<uint8_t> tab);
   void tab();
   void clearTabs();
@@ -147,6 +150,31 @@ class ThermalPrinterPrintTextAction : public Action<Ts...>, public Parented<Ther
 
   void play(Ts... x) override { this->parent_->print_text(this->text_.value(x...)); }
 */
+
+template<typename... Ts>
+class ThermalPrinterPrintTextAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
+ public:
+  TEMPLATABLE_VALUE(std::string, text)
+  TEMPLATABLE_VALUE(std::string, font)
+  TEMPLATABLE_VALUE(bool, inverse)
+  TEMPLATABLE_VALUE(bool, updown)
+  TEMPLATABLE_VALUE(bool, bold)
+  TEMPLATABLE_VALUE(bool, double_height)
+  TEMPLATABLE_VALUE(bool, double_width)
+  TEMPLATABLE_VALUE(bool, strike)
+  TEMPLATABLE_VALUE(bool, ninety_degrees)
+  TEMPLATABLE_VALUE(uint8_t, underline_weight)
+  TEMPLATABLE_VALUE(std::string, justify)
+
+  void play(Ts... x) override {
+    this->parent_->print_text(this->text_.value(x...), this->font_.value(x...), this->inverse_.value(x...),
+                              this->updown_.value(x...), this->bold_.value(x...), this->double_height_.value(x...),
+                              this->double_width_.value(x...), this->strike_.value(x...),
+                              this->ninety_degrees_.value(x...), this->underline_weight_.value(x...),
+                              this->justify_.value(x...));
+  }
+};
+
 template<typename... Ts>
 class ThermalPrinterPrintTextAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:

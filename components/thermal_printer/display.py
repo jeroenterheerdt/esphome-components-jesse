@@ -30,11 +30,8 @@ ThermalPrinterClearTabsAction = thermal_printer_ns.class_(
 ThermalPrinterSetLineHeightAction = thermal_printer_ns.class_(
     "ThermalPrinterSetLineHeightAction", automation.Action
 )
-ThermalPrinterJustifyAction = thermal_printer_ns.class_(
-    "ThermalPrinterJustifyAction", automation.Action
-)
-ThermalPrinterInverseOnAction = thermal_printer_ns.class_(
-    "ThermalPrinterInverseOnAction", automation.Action
+ThermalPrinterPrintTextWidthHeightAction = thermal_printer_ns.class_(
+    "ThermalPrinterPrintTextWidthHeightAction", automation.Action
 )
 ThermalPrinterPrintTextAction = thermal_printer_ns.class_(
     "ThermalPrinterPrintTextAction", automation.Action
@@ -49,12 +46,6 @@ ThermalPrinterPrintQRCodeAction = thermal_printer_ns.class_(
 )
 ThermalPrinterPrintBarCodeAction = thermal_printer_ns.class_(
     "ThermalPrinterPrintBarCodeAction", automation.Action
-)
-ThermalPrinterBoldOffAction = thermal_printer_ns.class_(
-    "ThermalPrinterBoldOffAction", automation.Action
-)
-ThermalPrinterBoldOnAction = thermal_printer_ns.class_(
-    "ThermalPrinterBoldOnAction", automation.Action
 )
 
 BARCODETYPE = {
@@ -213,18 +204,15 @@ async def thermal_printer_setlineheight_action_to_code(
     return var
 
 
-# PRINT_TEXT()
+# PRINT_TEXT() with double_width/height
 @automation.register_action(
-    "thermal_printer.print_text",
-    ThermalPrinterPrintTextAction,
+    "thermal_printer.print_text_width_height",
+    ThermalPrinterPrintTextWidthHeightAction,
     cv.maybe_simple_value(
         cv.Schema(
             {
                 cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
                 cv.Required(CONF_TEXT): cv.templatable(cv.string),
-                cv.Optional(CONF_FONT_SIZE, default=1): cv.templatable(
-                    cv.int_range(min=0, max=7)
-                ),
                 cv.Optional(CONF_FONT, default="A"): cv.templatable(cv.string),
                 cv.Optional(CONF_INVERSE, default=False): cv.templatable(cv.boolean),
                 cv.Optional(CONF_UPSIDE_DOWN, default=False): cv.templatable(
@@ -237,6 +225,80 @@ async def thermal_printer_setlineheight_action_to_code(
                 cv.Optional(CONF_DOUBLE_WIDTH, default=False): cv.templatable(
                     cv.boolean
                 ),
+                cv.Optional(CONF_STRIKETHROUGH, default=False): cv.templatable(
+                    cv.boolean
+                ),
+                cv.Optional(CONF_NINETY_DEGREES, default=False): cv.templatable(
+                    cv.boolean
+                ),
+                cv.Optional(CONF_UNDERLINE_WEIGHT, default=0): cv.templatable(
+                    cv.int_range(min=0, max=2)
+                ),
+                cv.Optional(CONF_JUSTIFY, default="L"): cv.templatable(cv.string),
+            }
+        ),
+        key=CONF_TEXT,
+    ),
+)
+async def thermal_printer_print_text_width_height_action_to_code(
+    config, action_id, template_arg, args
+):
+    var = cg.new_Pvariable(action_id, template_arg)
+    await cg.register_parented(var, config[CONF_ID])
+    templ = await cg.templatable(config[CONF_TEXT], args, cg.std_string)
+    cg.add(var.set_text(templ))
+    templ = await cg.templatable(config[CONF_FONT], args, cg.std_string)
+    cg.add(var.set_font(templ))
+    templ = await cg.templatable(config[CONF_INVERSE], args, cg.bool_)
+    cg.add(var.set_inverse(templ))
+    templ = await cg.templatable(config[CONF_UPSIDE_DOWN], args, cg.bool_)
+    cg.add(var.set_updown(templ))
+    templ = await cg.templatable(config[CONF_BOLD], args, cg.bool_)
+    cg.add(var.set_bold(templ))
+    templ = await cg.templatable(config[CONF_DOUBLE_HEIGHT], args, cg.bool_)
+    cg.add(var.set_double_height(templ))
+    templ = await cg.templatable(config[CONF_DOUBLE_WIDTH], args, cg.bool_)
+    cg.add(var.set_double_width(templ))
+    templ = await cg.templatable(config[CONF_STRIKETHROUGH], args, cg.bool_)
+    cg.add(var.set_strike(templ))
+    templ = await cg.templatable(config[CONF_NINETY_DEGREES], args, cg.bool_)
+    cg.add(var.set_ninety_degrees(templ))
+    templ = await cg.templatable(config[CONF_UNDERLINE_WEIGHT], args, cg.uint8)
+    cg.add(var.set_underline_weight(templ))
+    templ = await cg.templatable(config[CONF_JUSTIFY], args, cg.std_string)
+    cg.add(var.set_justify(templ))
+
+    _LOGGER.debug("font: %s", config[CONF_FONT])
+    _LOGGER.debug("inverse: %s", config[CONF_INVERSE])
+    _LOGGER.debug("upside down: %s", config[CONF_UPSIDE_DOWN])
+    _LOGGER.debug("bold: %s", config[CONF_BOLD])
+    _LOGGER.debug("double height: %s", config[CONF_DOUBLE_HEIGHT])
+    _LOGGER.debug("double width: %s", config[CONF_DOUBLE_WIDTH])
+    _LOGGER.debug("strikethrough: %s", config[CONF_STRIKETHROUGH])
+    _LOGGER.debug("ninety degrees: %s", config[CONF_NINETY_DEGREES])
+    _LOGGER.debug("underline weight: %s", config[CONF_UNDERLINE_WEIGHT])
+    _LOGGER.debug("justify: %s", config[CONF_JUSTIFY])
+    return var
+
+
+# PRINT_TEXT() with font_size
+@automation.register_action(
+    "thermal_printer.print_text",
+    ThermalPrinterPrintTextAction,
+    cv.maybe_simple_value(
+        cv.Schema(
+            {
+                cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
+                cv.Required(CONF_TEXT): cv.templatable(cv.string),
+                cv.Optional(CONF_FONT_SIZE, default=0): cv.templatable(
+                    cv.int_range(min=0, max=7)
+                ),
+                cv.Optional(CONF_FONT, default="A"): cv.templatable(cv.string),
+                cv.Optional(CONF_INVERSE, default=False): cv.templatable(cv.boolean),
+                cv.Optional(CONF_UPSIDE_DOWN, default=False): cv.templatable(
+                    cv.boolean
+                ),
+                cv.Optional(CONF_BOLD, default=False): cv.templatable(cv.boolean),
                 cv.Optional(CONF_STRIKETHROUGH, default=False): cv.templatable(
                     cv.boolean
                 ),
@@ -269,10 +331,6 @@ async def thermal_printer_print_text_action_to_code(
     cg.add(var.set_updown(templ))
     templ = await cg.templatable(config[CONF_BOLD], args, cg.bool_)
     cg.add(var.set_bold(templ))
-    templ = await cg.templatable(config[CONF_DOUBLE_HEIGHT], args, cg.bool_)
-    cg.add(var.set_double_height(templ))
-    templ = await cg.templatable(config[CONF_DOUBLE_WIDTH], args, cg.bool_)
-    cg.add(var.set_double_width(templ))
     templ = await cg.templatable(config[CONF_STRIKETHROUGH], args, cg.bool_)
     cg.add(var.set_strike(templ))
     templ = await cg.templatable(config[CONF_NINETY_DEGREES], args, cg.bool_)
