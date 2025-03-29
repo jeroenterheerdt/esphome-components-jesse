@@ -167,7 +167,7 @@ void ThermalPrinterDisplay::print_text(std::string text, uint8_t font_size, std:
   ESP_LOGD("print_text", "underline_weight: %d", underline_weight);
   ESP_LOGD("print_text", "justify: %s", justify.c_str());
 
-  // not sure if this does anything
+  // doesn't work on my printer, but it's in the datasheet
   font = this->toUpperCase(font);
   if (font == "B") {
     this->setPrintMode(FONT_MASK);
@@ -180,6 +180,7 @@ void ThermalPrinterDisplay::print_text(std::string text, uint8_t font_size, std:
   if (updown) {
     this->write_array(UPDOWN_ON_CMD, sizeof(UPDOWN_ON_CMD));
   }
+  // doesn't work on my printer, but it's in the datasheet
   if (bold) {
     ESP_LOGD("print_text", "turning on bold");
     this->setPrintMode(BOLD_MASK);
@@ -192,13 +193,12 @@ void ThermalPrinterDisplay::print_text(std::string text, uint8_t font_size, std:
     ESP_LOGD("print_text", "turning on double_width");
     this->setPrintMode(DOUBLE_WIDTH_MASK);
   }
+  // doesn't work on my printer, but it's in the datasheet
   if (strike) {
-    // doesn't work yet
     ESP_LOGD("print_text", "turning on strike");
     this->setPrintMode(STRIKE_MASK);
   }
   if (ninety_degrees) {
-    // doesn't work yet
     ESP_LOGD("print_text", "turning on ninety_degrees");
     this->write_array(NINETY_DEGREES_ROTATION_ON_CMD, sizeof(NINETY_DEGREES_ROTATION_ON_CMD));
   }

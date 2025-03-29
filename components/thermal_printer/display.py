@@ -282,6 +282,19 @@ async def thermal_printer_print_text_action_to_code(
     cg.add(var.set_underline_weight(templ))
     templ = await cg.templatable(config[CONF_JUSTIFY], args, cg.std_string)
     cg.add(var.set_justify(templ))
+
+    _LOGGER.debug("font: %s", config[CONF_FONT])
+    _LOGGER.debug("font size: %s", config[CONF_FONT_SIZE])
+    _LOGGER.debug("font size factor: %s", config[CONF_FONT_SIZE_FACTOR])
+    _LOGGER.debug("inverse: %s", config[CONF_INVERSE])
+    _LOGGER.debug("upside down: %s", config[CONF_UPSIDE_DOWN])
+    _LOGGER.debug("bold: %s", config[CONF_BOLD])
+    _LOGGER.debug("double height: %s", config[CONF_DOUBLE_HEIGHT])
+    _LOGGER.debug("double width: %s", config[CONF_DOUBLE_WIDTH])
+    _LOGGER.debug("strikethrough: %s", config[CONF_STRIKETHROUGH])
+    _LOGGER.debug("ninety degrees: %s", config[CONF_NINETY_DEGREES])
+    _LOGGER.debug("underline weight: %s", config[CONF_UNDERLINE_WEIGHT])
+    _LOGGER.debug("justify: %s", config[CONF_JUSTIFY])
     return var
 
 
