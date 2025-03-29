@@ -345,8 +345,6 @@ async def thermal_printer_print_text_action_to_code(
     _LOGGER.debug("inverse: %s", config[CONF_INVERSE])
     _LOGGER.debug("upside down: %s", config[CONF_UPSIDE_DOWN])
     _LOGGER.debug("bold: %s", config[CONF_BOLD])
-    _LOGGER.debug("double height: %s", config[CONF_DOUBLE_HEIGHT])
-    _LOGGER.debug("double width: %s", config[CONF_DOUBLE_WIDTH])
     _LOGGER.debug("strikethrough: %s", config[CONF_STRIKETHROUGH])
     _LOGGER.debug("ninety degrees: %s", config[CONF_NINETY_DEGREES])
     _LOGGER.debug("underline weight: %s", config[CONF_UNDERLINE_WEIGHT])
