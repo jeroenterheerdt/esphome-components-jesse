@@ -235,11 +235,10 @@ void ThermalPrinterDisplay::print_text(std::string text, uint8_t font_size, std:
   // if ==255 ignore it (for overloading)
   if (font_size != 255) {
     font_size = clamp<uint8_t>(font_size, 0, 7);
-    if (font_size > 0) {
-      font_size = font_size * this->font_size_factor_;
-      this->write_array(FONT_SIZE_CMD, sizeof(FONT_SIZE_CMD));
-      this->write_byte(font_size | (font_size << 4));
-    }
+    font_size = font_size * this->font_size_factor_;
+    ESP_LOGD("print_text", "setting font_size: %d", font_size);
+    this->write_array(FONT_SIZE_CMD, sizeof(FONT_SIZE_CMD));
+    this->write_byte(font_size | (font_size << 4));
   }
 
   ESP_LOGD("print_text", "printing now!");
