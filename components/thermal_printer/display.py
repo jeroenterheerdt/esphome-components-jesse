@@ -69,7 +69,8 @@ BARCODETYPE = {
     "CODE128": ThermalPrinterPrintBarCodeAction.CODE128,
 }
 
-CONF_ALIGNMENT = "alignment"
+CONF_UNDERLINE_WEIGHT = "underline_weight"
+CONF_JUSTIFY = "justify"
 CONF_TABS = "tabs"
 CONF_LINE_HEIGHT = "line_height"
 CONF_FONT_SIZE = "font_size"
@@ -212,49 +213,6 @@ async def thermal_printer_setlineheight_action_to_code(
     return var
 
 
-# JUSTIFY()
-@automation.register_action(
-    "thermal_printer.justify",
-    ThermalPrinterJustifyAction,
-    cv.maybe_simple_value(
-        cv.Schema(
-            {
-                cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
-                cv.Required(CONF_ALIGNMENT): cv.templatable(cv.string),
-            }
-        ),
-        key=CONF_ALIGNMENT,
-    ),
-)
-async def thermal_printer_justify_action_to_code(config, action_id, template_arg, args):
-    var = cg.new_Pvariable(action_id, template_arg)
-    await cg.register_parented(var, config[CONF_ID])
-    templ = await cg.templatable(config[CONF_ALIGNMENT], args, cg.std_string)
-    cg.add(var.set_alignment(templ))
-    return var
-
-
-# INVERSE ON()
-@automation.register_action(
-    "thermal_printer.inverse_on",
-    ThermalPrinterInverseOnAction,
-    cv.maybe_simple_value(
-        cv.Schema(
-            {
-                cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
-            }
-        ),
-        key=cv.GenerateID(),
-    ),
-)
-async def thermal_printer_inverse_on_action_to_code(
-    config, action_id, template_arg, args
-):
-    var = cg.new_Pvariable(action_id, template_arg)
-    await cg.register_parented(var, config[CONF_ID])
-    return var
-
-
 # PRINT_TEXT()
 @automation.register_action(
     "thermal_printer.print_text",
@@ -285,6 +243,19 @@ async def thermal_printer_inverse_on_action_to_code(
                 ),
                 cv.Optional(CONF_NINETY_DEGREES, default=False): cv.templatable(
                     cv.boolean
+                ),
+                cv.Optional(CONF_UNDERLINE_WEIGHT, default=0): cv.templatable(
+                    cv.int_range(min=0, max=2)
+                ),
+                cv.Optional(CONF_JUSTIFY, default="L"): cv.templatable(
+                    cv.enum(
+                        {
+                            "L": ThermalPrinterPrintTextAction.ALIGN_LEFT,
+                            "C": ThermalPrinterPrintTextAction.ALIGN_CENTER,
+                            "R": ThermalPrinterPrintTextAction.ALIGN_RIGHT,
+                        },
+                        upper=True,
+                    )
                 ),
             }
         ),

@@ -139,7 +139,7 @@ void ThermalPrinterDisplay::setLineHeight(uint8_t height) {
 }
 
 // default is L
-void ThermalPrinterDisplay::justify(std::string value) {
+/*void ThermalPrinterDisplay::justify(std::string value) {
   this->init_();
   uint8_t set = 0;
   if (value[0] == 'C') {
@@ -155,24 +155,12 @@ void ThermalPrinterDisplay::justify(std::string value) {
   this->write_byte(ESC);
   this->write_byte('a');
   this->write_byte(set);
-}
+}*/
 
-void ThermalPrinterDisplay::inverseOn() {
-  this->init_();
-  this->write_array(INVERSE_ON_CMD, sizeof(INVERSE_ON_CMD));
-}
-void ThermalPrinterDisplay::inverseOff() {
-  this->init_();
-  this->write_array(INVERSE_OFF_CMD, sizeof(INVERSE_OFF_CMD));
-}
 void ThermalPrinterDisplay::print_text(std::string text, uint8_t font_size, std::string font, bool inverse, bool updown,
                                        bool bold, bool double_height, bool double_width, bool strike,
-                                       bool ninety_degrees) {
-  // void ThermalPrinterDisplay::print_text(std::string text) {
-  // only perform the init if any of these are true
-  if (inverse || updown || bold || double_height || double_width || strike || ninety_degrees) {
-    this->init_();
-  }
+                                       bool ninety_degrees, uint8_t underline_weight, std::string justify) {
+  this->init_();
 
   ESP_LOGD("print_text", "text: %s", text.c_str());
   ESP_LOGD("print_text", "font_size: %d", font_size);
@@ -185,12 +173,14 @@ void ThermalPrinterDisplay::print_text(std::string text, uint8_t font_size, std:
   ESP_LOGD("print_text", "double_width: %s", double_width ? "true" : "false");
   ESP_LOGD("print_text", "strike: %s", strike ? "true" : "false");
   ESP_LOGD("print_text", "ninety_degrees: %s", ninety_degrees ? "true" : "false");
+  ESP_LOGD("print_text", "underline_weight: %d", underline_weight);
+  ESP_LOGD("print_text", "jusity: %s", jusity.c_str());
 
   // not sure if this does anything
   if (font == "B") {
-    // this->setPrintMode(FONT_MASK);
+    this->setPrintMode(FONT_MASK);
   } else {
-    // this->unsetPrintMode(FONT_MASK);
+    this->unsetPrintMode(FONT_MASK);
   }
   // works!
   if (inverse) {
@@ -227,11 +217,31 @@ void ThermalPrinterDisplay::print_text(std::string text, uint8_t font_size, std:
     this->write_array(NINETY_DEGREES_ROTATION_ON_CMD, sizeof(NINETY_DEGREES_ROTATION_ON_CMD));
   }
 
+  // underline
+  underline_weight = clamp<uint8_t>(underline_weight, 0, 2);
+  ESP_LOGD("print_text", "setting underline");
+  this->write_byte(ESC);
+  this->write_byte('-');
+  this->write_byte(underline_weight);
+
+  // jusity
+  uint8_t justify_set = 0;
+  if (jusity[0].toUpper() == 'C') {
+    justify_set = 1;
+  } else if (jusity[0].toUpper() == 'R') {
+    justify_set = 2;
+  }
+  ESP_LOGD("print_text", "setting justify: %d", justify_set);
+  this->write_byte(ESC);
+  this->write_byte('a');
+  this->write_byte(justify_set);
+
   // disable font size handling for now
   /*font_size = clamp<uint8_t>(font_size, 0, 7);
   font_size = font_size * this->font_size_factor_;
   this->write_array(FONT_SIZE_CMD, sizeof(FONT_SIZE_CMD));
   this->write_byte(font_size | (font_size << 4));*/
+
   ESP_LOGD("print_text", "printing now!");
   this->write_str(text.c_str());
 
