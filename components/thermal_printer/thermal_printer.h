@@ -152,7 +152,7 @@ class ThermalPrinterPrintTextAction : public Action<Ts...>, public Parented<Ther
 */
 
 template<typename... Ts>
-class ThermalPrinterPrintTextAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
+class ThermalPrinterPrintTextWidthHeightAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:
   TEMPLATABLE_VALUE(std::string, text)
   TEMPLATABLE_VALUE(std::string, font)
