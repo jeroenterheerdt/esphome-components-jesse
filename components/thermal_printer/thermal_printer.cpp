@@ -148,12 +148,12 @@ void ThermalPrinterDisplay::setLineHeight(uint8_t height) {
   this->write_byte(set);
 }*/
 
-void ThermalPrinterDisplay::print_text(std::string text, std::string font, bool inverse, bool updown, bool bold,
+/*void ThermalPrinterDisplay::print_text(std::string text, std::string font, bool inverse, bool updown, bool bold,
                                        bool double_height, bool double_width, bool strike, bool ninety_degrees,
                                        uint8_t underline_weight, std::string justify) {
   this->print_text(text, -1, font, inverse, updown, bold, double_height, double_width, strike, ninety_degrees,
                    underline_weight, justify);
-}
+}*/
 void ThermalPrinterDisplay::print_text(std::string text, uint8_t font_size, std::string font, bool inverse, bool updown,
                                        bool bold, bool double_height, bool double_width, bool strike,
                                        bool ninety_degrees, uint8_t underline_weight, std::string justify) {

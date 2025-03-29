@@ -302,9 +302,6 @@ async def thermal_printer_print_text_width_height_action_to_code(
                 cv.Optional(CONF_STRIKETHROUGH, default=False): cv.templatable(
                     cv.boolean
                 ),
-                cv.Optional(CONF_NINETY_DEGREES, default=False): cv.templatable(
-                    cv.boolean
-                ),
                 cv.Optional(CONF_UNDERLINE_WEIGHT, default=0): cv.templatable(
                     cv.int_range(min=0, max=2)
                 ),
@@ -333,8 +330,6 @@ async def thermal_printer_print_text_action_to_code(
     cg.add(var.set_bold(templ))
     templ = await cg.templatable(config[CONF_STRIKETHROUGH], args, cg.bool_)
     cg.add(var.set_strike(templ))
-    templ = await cg.templatable(config[CONF_NINETY_DEGREES], args, cg.bool_)
-    cg.add(var.set_ninety_degrees(templ))
     templ = await cg.templatable(config[CONF_UNDERLINE_WEIGHT], args, cg.uint8)
     cg.add(var.set_underline_weight(templ))
     templ = await cg.templatable(config[CONF_JUSTIFY], args, cg.std_string)
@@ -346,7 +341,6 @@ async def thermal_printer_print_text_action_to_code(
     _LOGGER.debug("upside down: %s", config[CONF_UPSIDE_DOWN])
     _LOGGER.debug("bold: %s", config[CONF_BOLD])
     _LOGGER.debug("strikethrough: %s", config[CONF_STRIKETHROUGH])
-    _LOGGER.debug("ninety degrees: %s", config[CONF_NINETY_DEGREES])
     _LOGGER.debug("underline weight: %s", config[CONF_UNDERLINE_WEIGHT])
     _LOGGER.debug("justify: %s", config[CONF_JUSTIFY])
     return var
