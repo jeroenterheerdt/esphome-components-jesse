@@ -232,8 +232,8 @@ void ThermalPrinterDisplay::print_text(std::string text, uint8_t font_size, std:
 
   // font_size
   // if >=0, provide it to the printer.
-  // if < 0 ignore it (for overloading)
-  if (font_size >= 0) {
+  // if ==255 ignore it (for overloading)
+  if (font_size != 255) {
     font_size = clamp<uint8_t>(font_size, 0, 7);
     if (font_size > 0) {
       font_size = font_size * this->font_size_factor_;
