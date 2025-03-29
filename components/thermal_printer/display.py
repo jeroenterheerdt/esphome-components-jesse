@@ -225,7 +225,6 @@ async def thermal_printer_setlineheight_action_to_code(
                 cv.Optional(CONF_FONT_SIZE, default=1): cv.templatable(
                     cv.int_range(min=0, max=7)
                 ),
-                cv.Optional(CONF_FONT_SIZE_FACTOR): cv.templatable(cv.float_),
                 cv.Optional(CONF_FONT, default="A"): cv.templatable(cv.string),
                 cv.Optional(CONF_INVERSE, default=False): cv.templatable(cv.boolean),
                 cv.Optional(CONF_UPSIDE_DOWN, default=False): cv.templatable(
@@ -285,7 +284,6 @@ async def thermal_printer_print_text_action_to_code(
 
     _LOGGER.debug("font: %s", config[CONF_FONT])
     _LOGGER.debug("font size: %s", config[CONF_FONT_SIZE])
-    _LOGGER.debug("font size factor: %s", config[CONF_FONT_SIZE_FACTOR])
     _LOGGER.debug("inverse: %s", config[CONF_INVERSE])
     _LOGGER.debug("upside down: %s", config[CONF_UPSIDE_DOWN])
     _LOGGER.debug("bold: %s", config[CONF_BOLD])
