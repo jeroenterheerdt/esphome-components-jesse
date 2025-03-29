@@ -167,8 +167,8 @@ class ThermalPrinterPrintTextAction : public Action<Ts...>, public Parented<Ther
     this->parent_->print_text(this->text_.value(x...), this->font_size_.value(x...), this->font_.value(x...),
                               this->inverse_.value(x...), this->updown_.value(x...), this->bold_.value(x...),
                               this->double_height_.value(x...), this->double_width_.value(x...),
-                              this->strike_.value(x...)),
-        this->ninety_degrees_.value(x...), this->underline_weight_.value(x...), this->justify_.value(x...);
+                              this->strike_.value(x...), this->ninety_degrees_.value(x...),
+                              this->underline_weight_.value(x...), this->justify_.value(x...));
   }
 };
 
