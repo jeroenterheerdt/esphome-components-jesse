@@ -83,7 +83,7 @@ class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
   uint8_t tabsAmount{0};
   uint8_t widthMax{32}, cursor{0}, charWidth{12}, charHeight{24};
   void unsetPrintMode(uint8_t mask), setPrintMode(uint8_t mask), writePrintMode(), adjustCharValues(uint8_t mask);
-  std::string ThermalPrinterDisplay::toUpperCase(const std::string &input);
+  std::string toUpperCase(const std::string &input);
 };
 
 // SET TABS
