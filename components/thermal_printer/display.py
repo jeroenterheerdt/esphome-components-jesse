@@ -247,16 +247,7 @@ async def thermal_printer_setlineheight_action_to_code(
                 cv.Optional(CONF_UNDERLINE_WEIGHT, default=0): cv.templatable(
                     cv.int_range(min=0, max=2)
                 ),
-                cv.Optional(CONF_JUSTIFY, default="L"): cv.templatable(
-                    cv.enum(
-                        {
-                            "L": ThermalPrinterPrintTextAction.ALIGN_LEFT,
-                            "C": ThermalPrinterPrintTextAction.ALIGN_CENTER,
-                            "R": ThermalPrinterPrintTextAction.ALIGN_RIGHT,
-                        },
-                        upper=True,
-                    )
-                ),
+                cv.Optional(CONF_JUSTIFY, default="L"): cv.templatable(cv.string),
             }
         ),
         key=CONF_TEXT,

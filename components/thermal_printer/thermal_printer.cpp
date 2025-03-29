@@ -226,9 +226,9 @@ void ThermalPrinterDisplay::print_text(std::string text, uint8_t font_size, std:
 
   // jusity
   uint8_t justify_set = 0;
-  if (jusity[0].toUpper() == 'C') {
+  if (justify[0].toUpper() == 'C') {
     justify_set = 1;
-  } else if (jusity[0].toUpper() == 'R') {
+  } else if (justify[0].toUpper() == 'R') {
     justify_set = 2;
   }
   ESP_LOGD("print_text", "setting justify: %d", justify_set);
