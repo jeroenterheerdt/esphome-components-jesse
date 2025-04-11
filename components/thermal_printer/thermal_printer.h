@@ -27,6 +27,7 @@ class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
   int get_width_internal() override { return 8 * 58; };  // 58mm, 8 dots per mm
   int get_height_internal() override { return this->height_; };
 
+  void set_height(int height) { this->height_ = height; }
   display::DisplayType get_display_type() override { return display::DisplayType::DISPLAY_TYPE_BINARY; }
 
   void print_text(std::string text);
