@@ -18,21 +18,6 @@ thermal_printer_ns = cg.esphome_ns.namespace("thermal_printer")
 ThermalPrinterDisplay = thermal_printer_ns.class_(
     "ThermalPrinterDisplay", display.DisplayBuffer, uart.UARTDevice
 )
-ThermalPrinterSetTabsAction = thermal_printer_ns.class_(
-    "ThermalPrinterSetTabsAction", automation.Action
-)
-ThermalPrinterTabAction = thermal_printer_ns.class_(
-    "ThermalPrinterTabAction", automation.Action
-)
-ThermalPrinterClearTabsAction = thermal_printer_ns.class_(
-    "ThermalPrinterClearTabsAction", automation.Action
-)
-ThermalPrinterSetLineHeightAction = thermal_printer_ns.class_(
-    "ThermalPrinterSetLineHeightAction", automation.Action
-)
-ThermalPrinterPrintTextWidthHeightAction = thermal_printer_ns.class_(
-    "ThermalPrinterPrintTextWidthHeightAction", automation.Action
-)
 ThermalPrinterPrintTextAction = thermal_printer_ns.class_(
     "ThermalPrinterPrintTextAction", automation.Action
 )
@@ -40,47 +25,10 @@ ThermalPrinterPrintTextAction = thermal_printer_ns.class_(
 ThermalPrinterNewLineAction = thermal_printer_ns.class_(
     "ThermalPrinterNewLineAction", automation.Action
 )
-
-ThermalPrinterPrintQRCodeAction = thermal_printer_ns.class_(
-    "ThermalPrinterPrintQRCodeAction", automation.Action
-)
-ThermalPrinterPrintBarCodeAction = thermal_printer_ns.class_(
-    "ThermalPrinterPrintBarCodeAction", automation.Action
-)
-
-BARCODETYPE = {
-    "UPC_A": ThermalPrinterPrintBarCodeAction.UPC_A,
-    "UPC_E": ThermalPrinterPrintBarCodeAction.UPC_E,
-    "EAN13": ThermalPrinterPrintBarCodeAction.EAN13,
-    "EAN8": ThermalPrinterPrintBarCodeAction.EAN8,
-    "CODE39": ThermalPrinterPrintBarCodeAction.CODE39,
-    "ITF": ThermalPrinterPrintBarCodeAction.ITF,
-    "CODABAR": ThermalPrinterPrintBarCodeAction.CODABAR,
-    "CODE93": ThermalPrinterPrintBarCodeAction.CODE93,
-    "CODE128": ThermalPrinterPrintBarCodeAction.CODE128,
-}
-
-CONF_UNDERLINE_WEIGHT = "underline_weight"
-CONF_JUSTIFY = "justify"
-CONF_TABS = "tabs"
-CONF_LINE_HEIGHT = "line_height"
-CONF_FONT_SIZE = "font_size"
 CONF_FONT_SIZE_FACTOR = "font_size_factor"
-CONF_FIRMWARE = "firmware"
-CONF_FONT = "font"
-CONF_INVERSE = "inverse"
-CONF_UPSIDE_DOWN = "upside_down"
-CONF_BOLD = "bold"
-CONF_DOUBLE_HEIGHT = "double_height"
-CONF_DOUBLE_WIDTH = "double_width"
-CONF_STRIKETHROUGH = "strikethrough"
-CONF_NINETY_DEGREES = "ninety_degrees"
 CONF_TEXT = "text"
 CONF_SEND_WAKEUP = "send_wakeup"
 CONF_LINES = "lines"
-CONF_DATA = "qrcode"
-CONF_BARCODE = "barcode"
-CONF_BARCODE_TYPE = "type"
 
 CONFIG_SCHEMA = (
     display.FULL_DISPLAY_SCHEMA.extend(
@@ -116,172 +64,7 @@ async def to_code(config):
         cg.add(var.set_writer(lambda_))
 
 
-# SETTABS()
-@automation.register_action(
-    "thermal_printer.settabs",
-    ThermalPrinterSetTabsAction,
-    cv.maybe_simple_value(
-        cv.Schema(
-            {
-                cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
-                cv.Required(CONF_TABS): cv.templatable(cv.ensure_list(cv.int_)),
-            }
-        ),
-        key=CONF_TABS,
-    ),
-)
-async def thermal_printer_settabs_action_to_code(config, action_id, template_arg, args):
-    var = cg.new_Pvariable(action_id, template_arg)
-    await cg.register_parented(var, config[CONF_ID])
-    templ = await cg.templatable(config[CONF_TABS], args, cg.std_vector(cg.uint8))
-    cg.add(var.set_tabs(templ))
-    return var
-
-
-# TAB()
-@automation.register_action(
-    "thermal_printer.tab",
-    ThermalPrinterTabAction,
-    cv.maybe_simple_value(
-        cv.Schema(
-            {
-                cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
-            }
-        ),
-        key=cv.GenerateID(),
-    ),
-)
-async def thermal_printer_tab_action_to_code(config, action_id, template_arg, args):
-    var = cg.new_Pvariable(action_id, template_arg)
-    await cg.register_parented(var, config[CONF_ID])
-    return var
-
-
-# CLEAR_TABS()
-@automation.register_action(
-    "thermal_printer.cleartabs",
-    ThermalPrinterClearTabsAction,
-    cv.maybe_simple_value(
-        cv.Schema(
-            {
-                cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
-            }
-        ),
-        key=cv.GenerateID(),
-    ),
-)
-async def thermal_printer_cleartabs_action_to_code(
-    config, action_id, template_arg, args
-):
-    var = cg.new_Pvariable(action_id, template_arg)
-    await cg.register_parented(var, config[CONF_ID])
-    return var
-
-
-# SET_LINE_HEIGHT()
-@automation.register_action(
-    "thermal_printer.setlineheight",
-    ThermalPrinterSetLineHeightAction,
-    cv.maybe_simple_value(
-        cv.Schema(
-            {
-                cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
-                cv.Optional(CONF_LINE_HEIGHT, default=24): cv.templatable(
-                    cv.int_range(min=0, max=255)
-                ),
-            }
-        ),
-        key=CONF_LINE_HEIGHT,
-    ),
-)
-async def thermal_printer_setlineheight_action_to_code(
-    config, action_id, template_arg, args
-):
-    var = cg.new_Pvariable(action_id, template_arg)
-    await cg.register_parented(var, config[CONF_ID])
-    templ = await cg.templatable(config[CONF_LINE_HEIGHT], args, cg.uint8)
-    cg.add(var.set_height(templ))
-    return var
-
-
-# PRINT_TEXT() with double_width/height
-@automation.register_action(
-    "thermal_printer.print_text_width_height",
-    ThermalPrinterPrintTextWidthHeightAction,
-    cv.maybe_simple_value(
-        cv.Schema(
-            {
-                cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
-                cv.Required(CONF_TEXT): cv.templatable(cv.string),
-                cv.Optional(CONF_FONT, default="A"): cv.templatable(cv.string),
-                cv.Optional(CONF_INVERSE, default=False): cv.templatable(cv.boolean),
-                cv.Optional(CONF_UPSIDE_DOWN, default=False): cv.templatable(
-                    cv.boolean
-                ),
-                cv.Optional(CONF_BOLD, default=False): cv.templatable(cv.boolean),
-                cv.Optional(CONF_DOUBLE_HEIGHT, default=False): cv.templatable(
-                    cv.boolean
-                ),
-                cv.Optional(CONF_DOUBLE_WIDTH, default=False): cv.templatable(
-                    cv.boolean
-                ),
-                cv.Optional(CONF_STRIKETHROUGH, default=False): cv.templatable(
-                    cv.boolean
-                ),
-                cv.Optional(CONF_NINETY_DEGREES, default=False): cv.templatable(
-                    cv.boolean
-                ),
-                cv.Optional(CONF_UNDERLINE_WEIGHT, default=0): cv.templatable(
-                    cv.int_range(min=0, max=2)
-                ),
-                cv.Optional(CONF_JUSTIFY, default="L"): cv.templatable(cv.string),
-            }
-        ),
-        key=CONF_TEXT,
-    ),
-)
-async def thermal_printer_print_text_width_height_action_to_code(
-    config, action_id, template_arg, args
-):
-    var = cg.new_Pvariable(action_id, template_arg)
-    await cg.register_parented(var, config[CONF_ID])
-    templ = await cg.templatable(config[CONF_TEXT], args, cg.std_string)
-    cg.add(var.set_text(templ))
-    templ = await cg.templatable(config[CONF_FONT], args, cg.std_string)
-    cg.add(var.set_font(templ))
-    templ = await cg.templatable(config[CONF_INVERSE], args, cg.bool_)
-    cg.add(var.set_inverse(templ))
-    templ = await cg.templatable(config[CONF_UPSIDE_DOWN], args, cg.bool_)
-    cg.add(var.set_updown(templ))
-    templ = await cg.templatable(config[CONF_BOLD], args, cg.bool_)
-    cg.add(var.set_bold(templ))
-    templ = await cg.templatable(config[CONF_DOUBLE_HEIGHT], args, cg.bool_)
-    cg.add(var.set_double_height(templ))
-    templ = await cg.templatable(config[CONF_DOUBLE_WIDTH], args, cg.bool_)
-    cg.add(var.set_double_width(templ))
-    templ = await cg.templatable(config[CONF_STRIKETHROUGH], args, cg.bool_)
-    cg.add(var.set_strike(templ))
-    templ = await cg.templatable(config[CONF_NINETY_DEGREES], args, cg.bool_)
-    cg.add(var.set_ninety_degrees(templ))
-    templ = await cg.templatable(config[CONF_UNDERLINE_WEIGHT], args, cg.uint8)
-    cg.add(var.set_underline_weight(templ))
-    templ = await cg.templatable(config[CONF_JUSTIFY], args, cg.std_string)
-    cg.add(var.set_justify(templ))
-
-    _LOGGER.debug("font: %s", config[CONF_FONT])
-    _LOGGER.debug("inverse: %s", config[CONF_INVERSE])
-    _LOGGER.debug("upside down: %s", config[CONF_UPSIDE_DOWN])
-    _LOGGER.debug("bold: %s", config[CONF_BOLD])
-    _LOGGER.debug("double height: %s", config[CONF_DOUBLE_HEIGHT])
-    _LOGGER.debug("double width: %s", config[CONF_DOUBLE_WIDTH])
-    _LOGGER.debug("strikethrough: %s", config[CONF_STRIKETHROUGH])
-    _LOGGER.debug("ninety degrees: %s", config[CONF_NINETY_DEGREES])
-    _LOGGER.debug("underline weight: %s", config[CONF_UNDERLINE_WEIGHT])
-    _LOGGER.debug("justify: %s", config[CONF_JUSTIFY])
-    return var
-
-
-# PRINT_TEXT() with font_size
+# PRINT_TEXT()
 @automation.register_action(
     "thermal_printer.print_text",
     ThermalPrinterPrintTextAction,
@@ -290,22 +73,6 @@ async def thermal_printer_print_text_width_height_action_to_code(
             {
                 cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
                 cv.Required(CONF_TEXT): cv.templatable(cv.string),
-                cv.Optional(CONF_FONT_SIZE, default=0): cv.templatable(
-                    cv.int_range(min=0, max=7)
-                ),
-                cv.Optional(CONF_FONT, default="A"): cv.templatable(cv.string),
-                cv.Optional(CONF_INVERSE, default=False): cv.templatable(cv.boolean),
-                cv.Optional(CONF_UPSIDE_DOWN, default=False): cv.templatable(
-                    cv.boolean
-                ),
-                cv.Optional(CONF_BOLD, default=False): cv.templatable(cv.boolean),
-                cv.Optional(CONF_STRIKETHROUGH, default=False): cv.templatable(
-                    cv.boolean
-                ),
-                cv.Optional(CONF_UNDERLINE_WEIGHT, default=0): cv.templatable(
-                    cv.int_range(min=0, max=2)
-                ),
-                cv.Optional(CONF_JUSTIFY, default="L"): cv.templatable(cv.string),
             }
         ),
         key=CONF_TEXT,
@@ -318,31 +85,7 @@ async def thermal_printer_print_text_action_to_code(
     await cg.register_parented(var, config[CONF_ID])
     templ = await cg.templatable(config[CONF_TEXT], args, cg.std_string)
     cg.add(var.set_text(templ))
-    templ = await cg.templatable(config[CONF_FONT_SIZE], args, cg.uint8)
-    cg.add(var.set_font_size(templ))
-    templ = await cg.templatable(config[CONF_FONT], args, cg.std_string)
-    cg.add(var.set_font(templ))
-    templ = await cg.templatable(config[CONF_INVERSE], args, cg.bool_)
-    cg.add(var.set_inverse(templ))
-    templ = await cg.templatable(config[CONF_UPSIDE_DOWN], args, cg.bool_)
-    cg.add(var.set_updown(templ))
-    templ = await cg.templatable(config[CONF_BOLD], args, cg.bool_)
-    cg.add(var.set_bold(templ))
-    templ = await cg.templatable(config[CONF_STRIKETHROUGH], args, cg.bool_)
-    cg.add(var.set_strike(templ))
-    templ = await cg.templatable(config[CONF_UNDERLINE_WEIGHT], args, cg.uint8)
-    cg.add(var.set_underline_weight(templ))
-    templ = await cg.templatable(config[CONF_JUSTIFY], args, cg.std_string)
-    cg.add(var.set_justify(templ))
 
-    _LOGGER.debug("font: %s", config[CONF_FONT])
-    _LOGGER.debug("font size: %s", config[CONF_FONT_SIZE])
-    _LOGGER.debug("inverse: %s", config[CONF_INVERSE])
-    _LOGGER.debug("upside down: %s", config[CONF_UPSIDE_DOWN])
-    _LOGGER.debug("bold: %s", config[CONF_BOLD])
-    _LOGGER.debug("strikethrough: %s", config[CONF_STRIKETHROUGH])
-    _LOGGER.debug("underline weight: %s", config[CONF_UNDERLINE_WEIGHT])
-    _LOGGER.debug("justify: %s", config[CONF_JUSTIFY])
     return var
 
 
@@ -367,57 +110,4 @@ async def thermal_printer_new_line_action_to_code(
     await cg.register_parented(var, config[CONF_ID])
     templ = await cg.templatable(config[CONF_LINES], args, cg.uint8)
     cg.add(var.set_lines(templ))
-    return var
-
-
-# PRINT_QR_CODE()
-@automation.register_action(
-    "thermal_printer.print_qr_code",
-    ThermalPrinterPrintQRCodeAction,
-    cv.maybe_simple_value(
-        cv.Schema(
-            {
-                cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
-                cv.Required(CONF_DATA): cv.templatable(cg.std_string),
-            }
-        ),
-        key=CONF_DATA,
-    ),
-)
-async def thermal_printer_print_qr_code_action_to_code(
-    config, action_id, template_arg, args
-):
-    var = cg.new_Pvariable(action_id, template_arg)
-    await cg.register_parented(var, config[CONF_ID])
-    templ = await cg.templatable(config[CONF_DATA], args, cg.std_string)
-    cg.add(var.set_qrcode(templ))
-    return var
-
-
-# PRINT_BAR_CODE()
-@automation.register_action(
-    "thermal_printer.print_bar_code",
-    ThermalPrinterPrintBarCodeAction,
-    cv.maybe_simple_value(
-        cv.Schema(
-            {
-                cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
-                cv.Required(CONF_BARCODE): cv.templatable(cg.std_string),
-                cv.Optional(CONF_BARCODE_TYPE, default="UPC_A"): cv.templatable(
-                    cv.enum(BARCODETYPE, upper=True)
-                ),
-            }
-        ),
-        key=CONF_BARCODE,
-    ),
-)
-async def thermal_printer_print_bar_code_action_to_code(
-    config, action_id, template_arg, args
-):
-    var = cg.new_Pvariable(action_id, template_arg)
-    await cg.register_parented(var, config[CONF_ID])
-    templ = await cg.templatable(config[CONF_BARCODE], args, cg.std_string)
-    cg.add(var.set_barcode(templ))
-    templ = await cg.templatable(config[CONF_BARCODE_TYPE], args, cg.std_string)
-    cg.add(var.set_type(templ))
     return var
