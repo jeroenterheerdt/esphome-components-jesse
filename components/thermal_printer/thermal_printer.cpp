@@ -39,71 +39,72 @@ void ThermalPrinterDisplay::print_text(std::string text) {
 
   ESP_LOGD("print_text", "printing now!");
   this->write_str(text.c_str());
+}
 
-  void ThermalPrinterDisplay::new_line(uint8_t lines) {
-    for (uint8_t i = 0; i < lines; i++) {
-      this->write_byte('\n');
-    }
+void ThermalPrinterDisplay::new_line(uint8_t lines) {
+  for (uint8_t i = 0; i < lines; i++) {
+    this->write_byte('\n');
   }
-  void ThermalPrinterDisplay::queue_data_(std::vector<uint8_t> data) {
-    for (size_t i = 0; i < data.size(); i += BYTES_PER_LOOP) {
-      std::vector<uint8_t> chunk(data.begin() + i, data.begin() + std::min(i + BYTES_PER_LOOP, data.size()));
-      this->queue_.push(chunk);
-    }
+}
+void ThermalPrinterDisplay::queue_data_(std::vector<uint8_t> data) {
+  for (size_t i = 0; i < data.size(); i += BYTES_PER_LOOP) {
+    std::vector<uint8_t> chunk(data.begin() + i, data.begin() + std::min(i + BYTES_PER_LOOP, data.size()));
+    this->queue_.push(chunk);
   }
-  void ThermalPrinterDisplay::queue_data_(const uint8_t *data, size_t size) {
-    for (size_t i = 0; i < size; i += BYTES_PER_LOOP) {
-      size_t chunk_size = std::min(i + BYTES_PER_LOOP, size) - i;
-      std::vector<uint8_t> chunk(data + i, data + i + chunk_size);
-      this->queue_.push(chunk);
-    }
+}
+void ThermalPrinterDisplay::queue_data_(const uint8_t *data, size_t size) {
+  for (size_t i = 0; i < size; i += BYTES_PER_LOOP) {
+    size_t chunk_size = std::min(i + BYTES_PER_LOOP, size) - i;
+    std::vector<uint8_t> chunk(data + i, data + i + chunk_size);
+    this->queue_.push(chunk);
   }
+}
 
-  void ThermalPrinterDisplay::loop() {
-    if (this->queue_.empty()) {
-      return;
-    }
-
-    std::vector<uint8_t> data = this->queue_.front();
-    this->queue_.pop();
-    this->write_array(data.data(), data.size());
+void ThermalPrinterDisplay::loop() {
+  if (this->queue_.empty()) {
+    return;
   }
 
-  static uint16_t count = 0;
+  std::vector<uint8_t> data = this->queue_.front();
+  this->queue_.pop();
+  this->write_array(data.data(), data.size());
+}
 
-  void ThermalPrinterDisplay::update() {
-    this->do_update_();
-    this->write_to_device_();
-    ESP_LOGD(TAG, "count: %d;", count);
-    count = 0;
+static uint16_t count = 0;
+
+void ThermalPrinterDisplay::update() {
+  this->do_update_();
+  this->write_to_device_();
+  ESP_LOGD(TAG, "count: %d;", count);
+  count = 0;
+}
+
+void ThermalPrinterDisplay::write_to_device_() {
+  if (this->buffer_ == nullptr) {
+    return;
   }
 
-  void ThermalPrinterDisplay::write_to_device_() {
-    if (this->buffer_ == nullptr) {
-      return;
-    }
+  uint8_t header[] = {0x1D, 0x76, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00};
 
-    uint8_t header[] = {0x1D, 0x76, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00};
+  uint16_t width = this->get_width() / 8;
+  uint16_t height = this->get_height();
 
-    uint16_t width = this->get_width() / 8;
-    uint16_t height = this->get_height();
+  header[3] = 0;  // Mode
+  header[4] = width & 0xFF;
+  header[5] = (width >> 8) & 0xFF;
+  header[6] = height & 0xFF;
+  header[7] = (height >> 8) & 0xFF;
 
-    header[3] = 0;  // Mode
-    header[4] = width & 0xFF;
-    header[5] = (width >> 8) & 0xFF;
-    header[6] = height & 0xFF;
-    header[7] = (height >> 8) & 0xFF;
+  this->queue_data_(header, sizeof(header));
+  this->queue_data_(this->buffer_, this->get_buffer_length_());
+}
 
-    this->queue_data_(header, sizeof(header));
-    this->queue_data_(this->buffer_, this->get_buffer_length_());
-  }
-
-  // Method to convert a std::string to uppercase
-  std::string ThermalPrinterDisplay::toUpperCase(const std::string &input) {
-    std::string result = input;  // Make a copy of the input string
-    std::transform(result.begin(), result.end(), result.begin(), [](unsigned char c) { return std::toupper(c); });
-    return result;  // Return the transformed string
-  }
+// Method to convert a std::string to uppercase
+std::string ThermalPrinterDisplay::toUpperCase(const std::string &input) {
+  std::string result = input;  // Make a copy of the input string
+  std::transform(result.begin(), result.end(), result.begin(), [](unsigned char c) { return std::toupper(c); });
+  return result;  // Return the transformed string
+}
 
 }  // namespace thermal_printer
 }  // namespace esphome
