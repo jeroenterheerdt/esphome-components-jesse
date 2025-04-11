@@ -99,6 +99,26 @@ void ThermalPrinterDisplay::write_to_device_() {
   this->queue_data_(this->buffer_, this->get_buffer_length_());
 }
 
+void ThermalPrinterDisplay::draw_absolute_pixel_internal(int x, int y, Color color) {
+  if (this->buffer_ == nullptr) {
+    ESP_LOGW(TAG, "Buffer is null");
+    return;
+  }
+  if (x < 0 || y < 0 || x >= this->get_width_internal() || y >= this->get_height_internal()) {
+    ESP_LOGW(TAG, "Invalid pixel: x=%d, y=%d", x, y);
+    return;
+  }
+  uint8_t width = this->get_width_internal() / 8;
+  uint16_t index = x / 8 + y * width;
+  uint8_t bit = x % 8;
+  if (color.is_on()) {
+    this->buffer_[index] |= 1 << (7 - bit);
+  } else {
+    this->buffer_[index] &= ~(1 << (7 - bit));
+  }
+  count++;
+}
+
 // Method to convert a std::string to uppercase
 std::string ThermalPrinterDisplay::toUpperCase(const std::string &input) {
   std::string result = input;  // Make a copy of the input string

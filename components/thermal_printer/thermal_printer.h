@@ -44,6 +44,7 @@ class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
   }
 
  protected:
+  void draw_absolute_pixel_internal(int x, int y, Color color) override;
   size_t get_buffer_length_() { return size_t(this->get_width_internal()) * size_t(this->get_height_internal()) / 8; }
   void queue_data_(std::vector<uint8_t> data);
   void queue_data_(const uint8_t *data, size_t size);
