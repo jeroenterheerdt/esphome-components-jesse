@@ -32,6 +32,7 @@ CONF_LINES = "lines"
 CONF_ALIGN = "align"
 CONF_INVERSE = "inverse"
 CONF_90_DEGREE = "ninety_degree"
+CONF_UNDERLINE_WEIGHT = "underline_weight"
 
 CONFIG_SCHEMA = (
     display.FULL_DISPLAY_SCHEMA.extend(
@@ -81,6 +82,9 @@ async def to_code(config):
                 ),
                 cv.Optional(CONF_INVERSE, default=False): cv.templatable(cv.boolean),
                 cv.Optional(CONF_90_DEGREE, default=False): cv.templatable(cv.boolean),
+                cv.Optional(CONF_UNDERLINE_WEIGHT, default=0): cv.templatable(
+                    cv.int_range(0, 2)
+                ),
             }
         ),
         key=CONF_TEXT,
@@ -99,6 +103,8 @@ async def thermal_printer_print_text_action_to_code(
     cg.add(var.set_inverse(templ))
     templ = await cg.templatable(config[CONF_90_DEGREE], args, cg.bool_)
     cg.add(var.set_ninety_degree(templ))
+    templ = await cg.templatable(config[CONF_UNDERLINE_WEIGHT], args, cg.uint8)
+    cg.add(var.set_underline_weight(templ))
 
     return var
 
