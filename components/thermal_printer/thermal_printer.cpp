@@ -6,7 +6,7 @@
 03 - horizontal tab
 04 - set tab locations
 09 - set row spacing
-10 - alignment
+*10 - alignment
 11 - set double width mode (also settable through 16)
 12 - cancel double width mode (also settable through 16)
 16 - set print mode (font/inverse/upsidedown/bold/doubleheight/doublewidth/strikethrough)
@@ -32,6 +32,7 @@ static const uint8_t TAB = '\t';  // Horizontal tab
 static const uint8_t INIT_PRINTER_CMD[] = {ESC, 0x40};
 static const uint8_t WAKEUP_CMD[] = {ESC, 0x38, 0, 0};
 static const uint8_t SET_ALIGNMENT_CMD[] = {ESC, 0x61};
+static const uint8_t SET_INVERSE_CMD[] = {ESC, 0x42};
 static const uint8_t BYTES_PER_LOOP = 120;
 
 void ThermalPrinterDisplay::setup() {
@@ -52,7 +53,7 @@ void ThermalPrinterDisplay::init_() {
   this->write_array(INIT_PRINTER_CMD, sizeof(INIT_PRINTER_CMD));
 }
 
-void ThermalPrinterDisplay::print_text(std::string text, std::string align) {
+void ThermalPrinterDisplay::print_text(std::string text, std::string align, bool inverse) {
   this->init_();
 
   ESP_LOGD("print_text", "text: %s", text.c_str());
@@ -73,6 +74,15 @@ void ThermalPrinterDisplay::print_text(std::string text, std::string align) {
   } else {
     ESP_LOGW(TAG, "Invalid alignment: %s", align.c_str());
   }
+  // inverse
+  if (inverse) {
+    this->write_array(SET_INVERSE_CMD, sizeof(SET_INVERSE_CMD));
+    this->write_byte(0x01);  // Inverse
+  } else {
+    this->write_array(SET_INVERSE_CMD, sizeof(SET_INVERSE_CMD));
+    this->write_byte(0x00);  // Normal
+  }
+
   ESP_LOGD("print_text", "printing now!");
   this->write_str(text.c_str());
 }
