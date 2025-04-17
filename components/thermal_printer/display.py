@@ -29,6 +29,7 @@ CONF_FONT_SIZE_FACTOR = "font_size_factor"
 CONF_TEXT = "text"
 CONF_SEND_WAKEUP = "send_wakeup"
 CONF_LINES = "lines"
+CONF_ALIGN = "align"
 
 CONFIG_SCHEMA = (
     display.FULL_DISPLAY_SCHEMA.extend(
@@ -73,6 +74,9 @@ async def to_code(config):
             {
                 cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
                 cv.Required(CONF_TEXT): cv.templatable(cv.string),
+                cv.Optional(CONF_ALIGN, default="L"): cv.one_of(
+                    "Left", "Center", "Right"
+                ),
             }
         ),
         key=CONF_TEXT,
@@ -85,6 +89,8 @@ async def thermal_printer_print_text_action_to_code(
     await cg.register_parented(var, config[CONF_ID])
     templ = await cg.templatable(config[CONF_TEXT], args, cg.std_string)
     cg.add(var.set_text(templ))
+    templ = await cg.templatable(config[CONF_ALIGN], args, cg.std_string)
+    cg.add(var.set_align(templ))
 
     return var
 

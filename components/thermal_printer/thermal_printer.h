@@ -30,7 +30,7 @@ class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
   void set_height(int height) { this->height_ = height; }
   display::DisplayType get_display_type() override { return display::DisplayType::DISPLAY_TYPE_BINARY; }
 
-  void print_text(std::string text);
+  void print_text(std::string text, std::string align = "L");
   void new_line(uint8_t lines);
 
   void set_send_wakeup(bool send_wakeup) {
@@ -64,8 +64,9 @@ template<typename... Ts>
 class ThermalPrinterPrintTextAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:
   TEMPLATABLE_VALUE(std::string, text)
+  TEMPLATABLE_VALUE(std::string, align)
 
-  void play(Ts... x) override { this->parent_->print_text(this->text_.value(x...)); }
+  void play(Ts... x) override { this->parent_->print_text(this->text_.value(x...), this->align_.value(x...)); }
 };
 
 template<typename... Ts>

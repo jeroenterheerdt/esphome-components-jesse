@@ -2,6 +2,24 @@
 
 #include <cinttypes>
 
+/* Commands (* means done)
+03 - horizontal tab
+04 - set tab locations
+09 - set row spacing
+10 - alignment
+11 - set double width mode (also settable through 16)
+12 - cancel double width mode (also settable through 16)
+16 - set print mode (font/inverse/upsidedown/bold/doubleheight/doublewidth/strikethrough)
+17 - font size (also settable through 16)
+18 - inverse (also settable through 16)
+19 - 90 degree rotation
+22 - bold (also settable through 16)
+24 - upside down (also settable through 16)
+25 - underline
+36 - print bitmap
+46 - print barcode
+?? - print qr code
+*/
 namespace esphome {
 namespace thermal_printer {
 
@@ -13,7 +31,7 @@ static const uint8_t TAB = '\t';  // Horizontal tab
 
 static const uint8_t INIT_PRINTER_CMD[] = {ESC, 0x40};
 static const uint8_t WAKEUP_CMD[] = {ESC, 0x38, 0, 0};
-
+static const uint8_t SET_ALIGNMENT_CMD[] = {ESC, 0x61};
 static const uint8_t BYTES_PER_LOOP = 120;
 
 void ThermalPrinterDisplay::setup() {
@@ -34,9 +52,27 @@ void ThermalPrinterDisplay::init_() {
   this->write_array(INIT_PRINTER_CMD, sizeof(INIT_PRINTER_CMD));
 }
 
-void ThermalPrinterDisplay::print_text(std::string text) {
+void ThermalPrinterDisplay::print_text(std::string text, std::string align) {
   this->init_();
 
+  ESP_LOGD("print_text", "text: %s", text.c_str());
+  ESP_LOGD("print_text", "align: %s", align.c_str());
+
+  // alignment
+  //  Convert the alignment string to uppercase
+  align = this->toUpperCase(align)[0];
+  if (align == "C") {
+    this->write_array(SET_ALIGNMENT_CMD, sizeof(SET_ALIGNMENT_CMD));
+    this->write_byte(0x01);  // Center
+  } else if (align == "R") {
+    this->write_array(SET_ALIGNMENT_CMD, sizeof(SET_ALIGNMENT_CMD));
+    this->write_byte(0x02);  // Right
+  } else if (align == "L") {
+    this->write_array(SET_ALIGNMENT_CMD, sizeof(SET_ALIGNMENT_CMD));
+    this->write_byte(0x00);  // Left
+  } else {
+    ESP_LOGW(TAG, "Invalid alignment: %s", align.c_str());
+  }
   ESP_LOGD("print_text", "printing now!");
   this->write_str(text.c_str());
 }
