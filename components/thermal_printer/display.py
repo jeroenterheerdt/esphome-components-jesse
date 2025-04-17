@@ -74,8 +74,8 @@ async def to_code(config):
             {
                 cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
                 cv.Required(CONF_TEXT): cv.templatable(cv.string),
-                cv.Optional(CONF_ALIGN, default="L"): cv.one_of(
-                    "Left", "Center", "Right"
+                cv.Optional(CONF_ALIGN, default="L"): cv.templatable(
+                    cv.one_of("Left", "Center", "Right")
                 ),
             }
         ),
