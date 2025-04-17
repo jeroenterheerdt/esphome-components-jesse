@@ -70,7 +70,7 @@ class ThermalPrinterPrintTextAction : public Action<Ts...>, public Parented<Ther
 
   void play(Ts... x) override {
     this->parent_->print_text(this->text_.value(x...), this->align_.value(x...), this->inverse_.value(x...),
-                              this->ninety_degree_.value(x_));
+                              this->ninety_degree_.value(x...));
   }
 };
 
