@@ -15,7 +15,7 @@
 *19 - 90 degree rotation
 22 - bold (also settable through 16)
 24 - upside down (also settable through 16)
-25 - underline
+*25 - underline (can't be combined with 90 degree rotation. if both set, underline is ignored)
 36 - print bitmap
 46 - print barcode
 ?? - print qr code
@@ -35,6 +35,7 @@ static const uint8_t SET_ALIGNMENT_CMD[] = {ESC, 0x61};
 static const uint8_t SET_INVERSE_CMD[] = {GS, 0x42};
 static const uint8_t SET_90_DEGREE_CMD[] = {ESC, 0x56};
 static const uint8_t SET_UNDERLINE_CMD[] = {ESC, 0x2D};
+static const uint8_t SET_UPDOWN_CMD[] = {ESC, 0x7B};
 static const uint8_t BYTES_PER_LOOP = 120;
 
 void ThermalPrinterDisplay::setup() {
@@ -56,7 +57,7 @@ void ThermalPrinterDisplay::init_() {
 }
 
 void ThermalPrinterDisplay::print_text(std::string text, std::string align, bool inverse, bool ninety_degree,
-                                       uint8_t underline_weight) {
+                                       uint8_t underline_weight, bool updown) {
   this->init_();
 
   ESP_LOGD("print_text", "text: %s", text.c_str());
@@ -64,6 +65,7 @@ void ThermalPrinterDisplay::print_text(std::string text, std::string align, bool
   ESP_LOGD("print_text", "inverse: %s", inverse ? "true" : "false");
   ESP_LOGD("print_text", "ninety_degree: %s", ninety_degree ? "true" : "false");
   ESP_LOGD("print_text", "underline_weight: %d", underline_weight);
+  ESP_LOGD("print_text", "updown: %s", updown ? "true" : "false");
 
   // alignment
   //  Convert the alignment string to uppercase
@@ -102,6 +104,14 @@ void ThermalPrinterDisplay::print_text(std::string text, std::string align, bool
   this->write_array(SET_UNDERLINE_CMD, sizeof(SET_UNDERLINE_CMD));
   this->write_byte(underline_weight);  // Underline
 
+  // updown
+  if (updown) {
+    this->write_array(SET_UPDOWN_CMD, sizeof(SET_UPDOWN_CMD));
+    this->write_byte(0x01);  // Updown
+  } else {
+    this->write_array(SET_UPDOWN_CMD, sizeof(SET_UPDOWN_CMD));
+    this->write_byte(0x00);  // Normal
+  }
   ESP_LOGD("print_text", "printing now!");
   this->write_str(text.c_str());
 }
