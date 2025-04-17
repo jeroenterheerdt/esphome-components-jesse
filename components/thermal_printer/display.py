@@ -31,6 +31,7 @@ CONF_SEND_WAKEUP = "send_wakeup"
 CONF_LINES = "lines"
 CONF_ALIGN = "align"
 CONF_INVERSE = "inverse"
+CONF_90_DEGREE = "ninety_degree"
 
 CONFIG_SCHEMA = (
     display.FULL_DISPLAY_SCHEMA.extend(
@@ -79,6 +80,7 @@ async def to_code(config):
                     cv.one_of("Left", "Center", "Right")
                 ),
                 cv.Optional(CONF_INVERSE, default=False): cv.templatable(cv.boolean),
+                cv.Optional(CONF_90_DEGREE, default=False): cv.templatable(cv.boolean),
             }
         ),
         key=CONF_TEXT,
@@ -95,6 +97,8 @@ async def thermal_printer_print_text_action_to_code(
     cg.add(var.set_align(templ))
     templ = await cg.templatable(config[CONF_INVERSE], args, cg.bool_)
     cg.add(var.set_inverse(templ))
+    templ = await cg.templatable(config[CONF_90_DEGREE], args, cg.bool_)
+    cg.add(var.set_ninety_degree(templ))
 
     return var
 

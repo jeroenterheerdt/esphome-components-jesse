@@ -11,7 +11,7 @@
 12 - cancel double width mode (also settable through 16)
 16 - set print mode (font/inverse/upsidedown/bold/doubleheight/doublewidth/strikethrough)
 17 - font size (also settable through 16)
-18 - inverse (also settable through 16)
+*18 - inverse (also settable through 16)
 19 - 90 degree rotation
 22 - bold (also settable through 16)
 24 - upside down (also settable through 16)
@@ -33,6 +33,7 @@ static const uint8_t INIT_PRINTER_CMD[] = {ESC, 0x40};
 static const uint8_t WAKEUP_CMD[] = {ESC, 0x38, 0, 0};
 static const uint8_t SET_ALIGNMENT_CMD[] = {ESC, 0x61};
 static const uint8_t SET_INVERSE_CMD[] = {GS, 0x42};
+static const uint8_t SET_90_DEGREE_CMD[] = {ESC, 0x56};
 static const uint8_t BYTES_PER_LOOP = 120;
 
 void ThermalPrinterDisplay::setup() {
@@ -53,11 +54,13 @@ void ThermalPrinterDisplay::init_() {
   this->write_array(INIT_PRINTER_CMD, sizeof(INIT_PRINTER_CMD));
 }
 
-void ThermalPrinterDisplay::print_text(std::string text, std::string align, bool inverse) {
+void ThermalPrinterDisplay::print_text(std::string text, std::string align, bool inverse, bool ninety_degree) {
   this->init_();
 
   ESP_LOGD("print_text", "text: %s", text.c_str());
   ESP_LOGD("print_text", "align: %s", align.c_str());
+  ESP_LOGD("print_text", "inverse: %s", inverse ? "true" : "false");
+  ESP_LOGD("print_text", "ninety_degree: %s", ninety_degree ? "true" : "false");
 
   // alignment
   //  Convert the alignment string to uppercase
@@ -83,6 +86,14 @@ void ThermalPrinterDisplay::print_text(std::string text, std::string align, bool
     this->write_byte(0x00);  // Normal
   }
 
+  // 90 degree
+  if (ninety_degree) {
+    this->write_array(SET_90_DEGREE_CMD, sizeof(SET_90_DEGREE_CMD));
+    this->write_byte(0x01);  // 90 degree
+  } else {
+    this->write_array(SET_90_DEGREE_CMD, sizeof(SET_90_DEGREE_CMD));
+    this->write_byte(0x00);  // Normal
+  }
   ESP_LOGD("print_text", "printing now!");
   this->write_str(text.c_str());
 }
