@@ -12,12 +12,11 @@
 16 - set print mode (font/inverse/upsidedown/bold/doubleheight/doublewidth/strikethrough)
 17 - font size (also settable through 16)
 *18 - inverse (also settable through 16)
-*19 - 90 degree rotation
+*19 - 90 degree rotation (
 22 - bold (also settable through 16)
-24 - upside down (also settable through 16)
-*25 - underline (can't be combined with 90 degree rotation. if both set, underline is ignored)
-36 - print bitmap
-46 - print barcode
+*24 - upside down (also settable through 16, keep in mind that this also inverts the meaning of the l/r alignment
+*25 - underline (can't be combined with 90 degree rotation. if both set, underline is ignored) 36 - print
+bitmap 46 - print barcode
 ?? - print qr code
 */
 namespace esphome {
