@@ -32,7 +32,7 @@ static const uint8_t TAB = '\t';  // Horizontal tab
 static const uint8_t INIT_PRINTER_CMD[] = {ESC, 0x40};
 static const uint8_t WAKEUP_CMD[] = {ESC, 0x38, 0, 0};
 static const uint8_t SET_ALIGNMENT_CMD[] = {ESC, 0x61};
-static const uint8_t SET_INVERSE_CMD[] = {ESC, 0x42};
+static const uint8_t SET_INVERSE_CMD[] = {GS, 0x42};
 static const uint8_t BYTES_PER_LOOP = 120;
 
 void ThermalPrinterDisplay::setup() {
