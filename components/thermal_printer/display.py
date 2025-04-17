@@ -93,7 +93,7 @@ async def thermal_printer_print_text_action_to_code(
     cg.add(var.set_text(templ))
     templ = await cg.templatable(config[CONF_ALIGN], args, cg.std_string)
     cg.add(var.set_align(templ))
-    templ = await cg.templatable(config[CONF_INVERSE], args, cg.std_string)
+    templ = await cg.templatable(config[CONF_INVERSE], args, cg.bool_)
     cg.add(var.set_inverse(templ))
 
     return var
