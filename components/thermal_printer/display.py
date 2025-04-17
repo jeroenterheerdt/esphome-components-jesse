@@ -108,7 +108,7 @@ async def thermal_printer_print_text_action_to_code(
     templ = await cg.templatable(config[CONF_UNDERLINE_WEIGHT], args, cg.uint8)
     cg.add(var.set_underline_weight(templ))
     templ = await cg.templatable(config[CONF_UPDOWN], args, cg.bool_)
-    cg.add(var.set_upsidedown(templ))
+    cg.add(var.set_updown(templ))
 
     return var
 
