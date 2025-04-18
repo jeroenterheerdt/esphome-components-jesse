@@ -35,6 +35,7 @@ CONF_90_DEGREE = "ninety_degree"
 CONF_UNDERLINE_WEIGHT = "underline_weight"
 CONF_UPDOWN = "upside_down"
 CONF_BOLD = "bold"
+CONF_DOUBLE_WIDTH = "double_width"
 
 CONFIG_SCHEMA = (
     display.FULL_DISPLAY_SCHEMA.extend(
@@ -89,6 +90,9 @@ async def to_code(config):
                 ),
                 cv.Optional(CONF_UPDOWN, default=False): cv.templatable(cv.boolean),
                 cv.Optional(CONF_BOLD, default=False): cv.templatable(cv.boolean),
+                cv.Optional(CONF_DOUBLE_WIDTH, default=False): cv.templatable(
+                    cv.boolean
+                ),
             }
         ),
         key=CONF_TEXT,
@@ -113,6 +117,8 @@ async def thermal_printer_print_text_action_to_code(
     cg.add(var.set_updown(templ))
     templ = await cg.templatable(config[CONF_BOLD], args, cg.bool_)
     cg.add(var.set_bold(templ))
+    templ = await cg.templatable(config[CONF_DOUBLE_WIDTH], args, cg.bool_)
+    cg.add(var.set_double_width(templ))
 
     return var
 
