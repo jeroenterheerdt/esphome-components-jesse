@@ -9,7 +9,15 @@
 *10 - alignment
 *11 - set double width mode (also settable through 16)
 *12 - cancel double width mode (also settable through 16)
-16 - set print mode (font/inverse#/upsidedown#/bold#/doubleheight/doublewidth#/strikethrough)
+16 - set print mode (
+  font //implemented correctly but not seeing any difference in my printer!
+  inverse (also settable through 18)
+  upsidedown (also settable though 24)
+  bold (also settable through 22)
+  doubleheight
+  doublewidth (also settable through 11/12)
+  strikethrough
+  )
 17 - font size (also settable through 16)
 *18 - inverse (also settable through 16)
 *19 - 90 degree rotation (
