@@ -36,6 +36,7 @@ CONF_UNDERLINE_WEIGHT = "underline_weight"
 CONF_UPDOWN = "upside_down"
 CONF_BOLD = "bold"
 CONF_DOUBLE_WIDTH = "double_width"
+CONF_FONT = "font"
 
 CONFIG_SCHEMA = (
     display.FULL_DISPLAY_SCHEMA.extend(
@@ -93,6 +94,9 @@ async def to_code(config):
                 cv.Optional(CONF_DOUBLE_WIDTH, default=False): cv.templatable(
                     cv.boolean
                 ),
+                cv.Optional(CONF_FONT, default="A"): cv.templatable(
+                    cv.one_of("A", "B")
+                ),
             }
         ),
         key=CONF_TEXT,
@@ -119,6 +123,8 @@ async def thermal_printer_print_text_action_to_code(
     cg.add(var.set_bold(templ))
     templ = await cg.templatable(config[CONF_DOUBLE_WIDTH], args, cg.bool_)
     cg.add(var.set_double_width(templ))
+    templ = await cg.templatable(config[CONF_FONT], args, cg.std_string)
+    cg.add(var.set_font(templ))
 
     return var
 

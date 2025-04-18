@@ -9,7 +9,7 @@
 *10 - alignment
 *11 - set double width mode (also settable through 16)
 *12 - cancel double width mode (also settable through 16)
-16 - set print mode (font/inverse/upsidedown/bold/doubleheight/doublewidth/strikethrough)
+16 - set print mode (font/inverse#/upsidedown#/bold#/doubleheight/doublewidth#/strikethrough)
 17 - font size (also settable through 16)
 *18 - inverse (also settable through 16)
 *19 - 90 degree rotation (
@@ -36,9 +36,10 @@ static const uint8_t SET_INVERSE_CMD[] = {GS, 0x42};
 static const uint8_t SET_90_DEGREE_CMD[] = {ESC, 0x56};
 static const uint8_t SET_UNDERLINE_CMD[] = {ESC, 0x2D};
 static const uint8_t SET_UPDOWN_CMD[] = {ESC, 0x7B};
-static const uint8_t SET_BOLD_CMD[] = {ESC, 0x47};              // watch out, gets overriden with esc, 0x21!
+static const uint8_t SET_BOLD_CMD[] = {ESC, 0x47};              // watch out, gets (maybe) overriden with esc, 0x21!
 static const uint8_t SET_DOUBLE_WIDTH_ON_CMD[] = {ESC, 0x0E};   // watch out, gets overriden with esc, 0x21!
 static const uint8_t SET_DOUBLE_WIDTH_OFF_CMD[] = {ESC, 0x14};  // watch out, gets overriden with esc, 0x21!
+static const uint8_t SET_PRINT_MODE_CMD[] = {ESC, 0x21};  // conflicts with bold, double width on and double width off?
 static const uint8_t BYTES_PER_LOOP = 120;
 
 void ThermalPrinterDisplay::setup() {
@@ -60,7 +61,8 @@ void ThermalPrinterDisplay::init_() {
 }
 
 void ThermalPrinterDisplay::print_text(std::string text, std::string align, bool inverse, bool ninety_degree,
-                                       uint8_t underline_weight, bool updown, bool bold, bool double_width) {
+                                       uint8_t underline_weight, bool updown, bool bold, bool double_width,
+                                       std::string font) {
   this->init_();
 
   ESP_LOGD("print_text", "text: %s", text.c_str());
@@ -71,6 +73,7 @@ void ThermalPrinterDisplay::print_text(std::string text, std::string align, bool
   ESP_LOGD("print_text", "updown: %s", updown ? "true" : "false");
   ESP_LOGD("print_text", "bold: %s", bold ? "true" : "false");
   ESP_LOGD("print_text", "double_width: %s", double_width ? "true" : "false");
+  ESP_LOGD("print_text", "font: %s", font.c_str());
 
   // alignment
   //  Convert the alignment string to uppercase
@@ -130,6 +133,18 @@ void ThermalPrinterDisplay::print_text(std::string text, std::string align, bool
     this->write_array(SET_DOUBLE_WIDTH_ON_CMD, sizeof(SET_DOUBLE_WIDTH_ON_CMD));
   } else {
     this->write_array(SET_DOUBLE_WIDTH_OFF_CMD, sizeof(SET_DOUBLE_WIDTH_OFF_CMD));
+  }
+
+  // font
+  font = this->toUpperCase(font)[0];
+  if (font == "A") {
+    this->write_array(SET_PRINT_MODE_CMD, sizeof(SET_PRINT_MODE_CMD));
+    this->write_byte(0x00);  // Font A
+  } else if (font == "B") {
+    this->write_array(SET_PRINT_MODE_CMD, sizeof(SET_PRINT_MODE_CMD));
+    this->write_byte(0x01);  // Font B
+  } else {
+    ESP_LOGW(TAG, "Invalid font: %s", font.c_str());
   }
   ESP_LOGD("print_text", "printing now!");
   this->write_str(text.c_str());
