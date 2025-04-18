@@ -31,7 +31,7 @@ class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
   display::DisplayType get_display_type() override { return display::DisplayType::DISPLAY_TYPE_BINARY; }
 
   void print_text(std::string text, std::string align = "L", bool inverse = false, bool ninety_degree = false,
-                  uint8_t underline_weight = 0, bool updown = false);
+                  uint8_t underline_weight = 0, bool updown = false, bool bold = false);
   void new_line(uint8_t lines);
 
   void set_send_wakeup(bool send_wakeup) {
@@ -70,11 +70,12 @@ class ThermalPrinterPrintTextAction : public Action<Ts...>, public Parented<Ther
   TEMPLATABLE_VALUE(bool, ninety_degree)
   TEMPLATABLE_VALUE(uint8_t, underline_weight)
   TEMPLATABLE_VALUE(bool, updown)
+  TEMPLATABLE_VALUE(bool, bold)
 
   void play(Ts... x) override {
     this->parent_->print_text(this->text_.value(x...), this->align_.value(x...), this->inverse_.value(x...),
                               this->ninety_degree_.value(x...), this->underline_weight_.value(x...),
-                              this->updown_.value(x...));
+                              this->updown_.value(x...), this->bold_.value(x...));
   }
 };
 
