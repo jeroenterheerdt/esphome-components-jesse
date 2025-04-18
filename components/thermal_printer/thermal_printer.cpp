@@ -7,16 +7,17 @@
 04 - set tab locations
 09 - set row spacing
 *10 - alignment
-11 - set double width mode (also settable through 16)
-12 - cancel double width mode (also settable through 16)
+*11 - set double width mode (also settable through 16)
+*12 - cancel double width mode (also settable through 16)
 16 - set print mode (font/inverse/upsidedown/bold/doubleheight/doublewidth/strikethrough)
 17 - font size (also settable through 16)
 *18 - inverse (also settable through 16)
 *19 - 90 degree rotation (
 *22 - bold (also settable through 16)
 *24 - upside down (also settable through 16, keep in mind that this also inverts the meaning of the l/r alignment
-*25 - underline (can't be combined with 90 degree rotation. if both set, underline is ignored) 36 - print
-bitmap 46 - print barcode
+*25 - underline (can't be combined with 90 degree rotation. if both set, underline is ignored)
+36 - print bitmap
+46 - print barcode
 ?? - print qr code
 */
 namespace esphome {
@@ -35,9 +36,9 @@ static const uint8_t SET_INVERSE_CMD[] = {GS, 0x42};
 static const uint8_t SET_90_DEGREE_CMD[] = {ESC, 0x56};
 static const uint8_t SET_UNDERLINE_CMD[] = {ESC, 0x2D};
 static const uint8_t SET_UPDOWN_CMD[] = {ESC, 0x7B};
-static const uint8_t SET_BOLD_CMD[] = {ESC, 0x45};  // watch out, gets overriden with esc, 0x21!
-static const uint8_t SET_DOUBLE_WIDTH_ON_CMD[] = {ESC, 0x0E};
-static const uint8_t SET_DOUBLE_WIDTH_OFF_CMD[] = {ESC, 0x14};
+static const uint8_t SET_BOLD_CMD[] = {ESC, 0x47};              // watch out, gets overriden with esc, 0x21!
+static const uint8_t SET_DOUBLE_WIDTH_ON_CMD[] = {ESC, 0x0E};   // watch out, gets overriden with esc, 0x21!
+static const uint8_t SET_DOUBLE_WIDTH_OFF_CMD[] = {ESC, 0x14};  // watch out, gets overriden with esc, 0x21!
 static const uint8_t BYTES_PER_LOOP = 120;
 
 void ThermalPrinterDisplay::setup() {
