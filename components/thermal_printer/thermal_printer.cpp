@@ -194,8 +194,8 @@ void ThermalPrinterDisplay::print_text(std::string text, std::string align, bool
   this->write_byte(this->spacing);  // Row spacing
 
   // tab positions
-  this->write_array(SET_TAB_POSITIONS_CMD, sizeof(SET_TAB_POSITIONS_CMD));
-  this->write_array(this->tab_positions.data(), this->tab_positions.size());
+  // this->write_array(SET_TAB_POSITIONS_CMD, sizeof(SET_TAB_POSITIONS_CMD));
+  // this->write_array(this->tab_positions.data(), this->tab_positions.size());
 
   ESP_LOGD(tag, "printing now!");
   this->write_str(text.c_str());
