@@ -208,7 +208,5 @@ class ThermalPrinterPartialCutAction : public Action<Ts...>, public Parented<The
   void play(Ts... x) override { this->parent_->cut_partial(); }
 };
 
-}  // namespace esphome
-
 }  // namespace thermal_printer
 }  // namespace esphome

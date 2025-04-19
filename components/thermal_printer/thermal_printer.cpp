@@ -26,7 +26,7 @@
 *25 - underline (can't be combined with 90 degree rotation. if both set, underline is ignored)
 36 - print bitmap
 *46 - print barcode
-XX - print qr code ~ wip
+*XX - print qr code (in basic and advanced datasheet)
 XX - full cut
 XX - partial cut
 # also check what else the printer can do, maybe cut paper as well? (see datasheet linked here:
