@@ -43,7 +43,7 @@ class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
   void set_row_spacing(uint8_t spacing);
   void new_line(uint8_t lines);
   void print_barcode(std::string text, BarcodeType type = BarcodeType::EAN13, uint8_t height = 162, uint8_t width = 2,
-                     BarcodeTextPosition pos = BarcodeTextPosition::HRI_BELOW,
+                     BarcodeTextPosition pos = BarcodeTextPosition::BELOW,
                      // BarcodeAlignment align = BarcodeAlignment::ALIGN_CENTER
                      std::string align = "C");
 
