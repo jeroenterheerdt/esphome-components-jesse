@@ -59,6 +59,15 @@ static const uint8_t BARCODE_TEXT_POSITION_CMD[] = {GS, 0x48};  // GS H
 static const uint8_t BARCODE_HEIGHT_CMD[] = {GS, 0x68};         // GS h
 static const uint8_t BARCODE_WIDTH_CMD[] = {GS, 0x77};          // GS w
 static const uint8_t PRINT_BARCODE_CMD[] = {GS, 0x6B};          // GS k
+
+// QRCode commands
+static const uint8_t QR_FN = 0x28;
+static const uint8_t QR_MOD = 0x6B;
+static const uint8_t QR_CODE_MODEL_CMD[] = {GS, QR_FN, QR_MOD, 0x04, 0x00, 0x31, 0x41};             // GS ( k
+static const uint8_t QR_CODE_SIZE_CMD[] = {GS, QR_FN, QR_MOD, 0x03, 0x00, 0x31, 0x43};              // GS ( k
+static const uint8_t QR_CODE_ERROR_CORRECTION_CMD[] = {GS, QR_FN, QR_MOD, 0x03, 0x00, 0x31, 0x45};  // GS ( k
+static const uint8_t QR_CODE_DATA_CMD[] = {GS, QR_FN, QR_MOD};                                      // GS ( k
+static const uint8_t QR_CODE_PRINT_CMD[] = {GS, QR_FN, QR_MOD, 0x03, 0x00, 0x31, 0x51, 0x30};       // GS ( Q
 static const uint8_t BYTES_PER_LOOP = 120;
 
 void ThermalPrinterDisplay::setup() {
@@ -306,6 +315,66 @@ void ThermalPrinterDisplay::print_barcode(std::string text,  // BarcodeType type
     this->write_byte(c);  // Barcode data
   }
   this->write_byte(0x00);  // End with NUL
+}
+
+void ThermalPrinterDisplay::print_qr_code(std::string text, std::string model, std::string error_correction_level,
+                                          uint8_t size) {
+  this->init_();
+  const char *tag = "print_qr_code";
+  ESP_LOGD(tag, "text: %s", text.c_str());
+  ESP_LOGD(tag, "model: %s", model.c_str());
+  ESP_LOGD(tag, "error_correction_level: %s", error_correction_level.c_str());
+  ESP_LOGD(tag, "size: %d", size);
+  // model
+  // Convert the model string to uppercase
+  model = this->toUpperCase(model);
+  uint8_t qmodel = 0x00;
+  if (model == "MODEL_1") {
+    qmodel = QRCodeModel::MODEL_1;
+  } else if (model == "MODEL_2") {
+    qmodel = QRCodeModel::MODEL_2;
+  } else {
+    ESP_LOGW(TAG, "Invalid QR code model: %s", model.c_str());
+  }
+  this->write_array(QR_CODE_MODEL_CMD, sizeof(QR_CODE_MODEL_CMD));
+  this->write_byte(qmodel);  // QR code model
+  // error correction level
+  // Convert the error correction level string to uppercase
+  error_correction_level = this->toUpperCase(error_correction_level);
+  uint8_t qeclevel = 0x00;
+  if (error_correction_level == "LEVEL_L") {
+    qeclevel = QRCodeErrorCorrectionLevel::LEVEL_L;
+  } else if (error_correction_level == "LEVEL_M") {
+    qeclevel = QRCodeErrorCorrectionLevel::LEVEL_M;
+  } else if (error_correction_level == "LEVEL_Q") {
+    qeclevel = QRCodeErrorCorrectionLevel::LEVEL_Q;
+  } else if (error_correction_level == "LEVEL_H") {
+    qeclevel = QRCodeErrorCorrectionLevel::LEVEL_H;
+  } else {
+    ESP_LOGW(TAG, "Invalid QR code error correction level: %s", error_correction_level.c_str());
+  }
+  this->write_array(QR_CODE_ERROR_CORRECTION_CMD, sizeof(QR_CODE_ERROR_CORRECTION_CMD));
+  this->write_byte(qeclevel);  // QR code error correction level
+  // size
+  size = clamp<uint8_t>(size, 1, 16);
+  this->write_array(QR_CODE_SIZE_CMD, sizeof(QR_CODE_SIZE_CMD));
+  this->write_byte(size);  // QR code size
+  // data
+  uint16_t len = text.length() + 3;
+  uint8_t pL = len & 0xFF;
+  uint8_t pH = (len >> 8) & 0xFF;
+
+  this->write_array(QR_CODE_DATA_CMD, sizeof(QR_CODE_DATA_CMD));
+  this->write_byte(pL);
+  this->write_byte(pH);
+  this->write_byte(0x31);  // Mode
+  this->write_byte(0x50);  // Character count
+  this->write_byte(0x30);
+  for (char c : text) {
+    this->write_byte(c);  // QRCode data
+  }
+  // print the qr code
+  this->write_array(QR_CODE_PRINT_CMD, sizeof(QR_CODE_PRINT_CMD));
 }
 
 void ThermalPrinterDisplay::queue_data_(std::vector<uint8_t> data) {

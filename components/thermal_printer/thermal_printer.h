@@ -15,7 +15,15 @@ namespace thermal_printer {
 // Barcodes
 enum BarcodeType : uint8_t { UPC_A = 0, UPC_E = 1, EAN13 = 2, EAN8 = 3, CODE39 = 4, ITF = 5, CODABAR = 6 };
 enum BarcodeTextPosition : uint8_t { NONE = 0, ABOVE = 1, BELOW = 2, BOTH = 3 };
-// enum BarcodeAlignment : uint8_t { ALIGN_LEFT = 0, ALIGN_CENTER = 1, ALIGN_RIGHT = 2 };
+
+// QR Codes
+enum QRCodeModel : uint8_t { MODEL_1 = 0, MODEL_2 = 1 };
+enum QRCodeErrorCorrectionLevel : uint8_t {
+  LEVEL_L = 0,  // 7% error correction
+  LEVEL_M = 1,  // 15% error correction
+  LEVEL_Q = 2,  // 25% error correction
+  LEVEL_H = 3   // 30% error correction
+};
 
 class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDevice {
  public:
@@ -48,6 +56,11 @@ class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
                      std::string pos = "BELOW",
                      // BarcodeAlignment align = BarcodeAlignment::ALIGN_CENTER
                      std::string align = "C");
+  void print_qr_code(std::string text,
+                     // QRCodeModel model = QRCodeModel::MODEL_2,
+                     std::string model = "MODEL_2",
+                     // QRCodeErrorCorrectionLevel error_correction_level = QRCodeErrorCorrectionLevel::LEVEL_L,
+                     std::string error_correction_level = "LEVEL_L", uint8_t size = 3);
 
   void set_send_wakeup(bool send_wakeup) {
     ESP_LOGD("set_send_wakeup", "send_wakeup: %s", send_wakeup ? "true" : "false");
@@ -166,6 +179,20 @@ class ThermalPrinterBarcodeAction : public Action<Ts...>, public Parented<Therma
     this->parent_->print_barcode(this->barcode_text_.value(x...), this->barcode_type_.value(x...),
                                  this->barcode_height_.value(x...), this->barcode_width_.value(x...),
                                  this->barcode_text_pos_.value(x...), this->barcode_align_.value(x...));
+  }
+};
+
+template<typename... Ts>
+class ThermalPrinterQRCodeAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
+ public:
+  TEMPLATABLE_VALUE(std::string, qr_code_text)
+  TEMPLATABLE_VALUE(std::string, qr_code_model)
+  TEMPLATABLE_VALUE(std::string, qr_code_error_correction_level)
+  TEMPLATABLE_VALUE(uint8_t, qr_code_size)
+
+  void play(Ts... x) override {
+    this->parent_->print_qr_code(this->qr_code_text_.value(x...), this->qr_code_model_.value(x...),
+                                 this->qr_code_error_correction_level_.value(x...), this->qr_code_size_.value(x...));
   }
 };
 
