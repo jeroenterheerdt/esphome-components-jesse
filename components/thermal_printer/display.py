@@ -32,6 +32,9 @@ ThermalPrinterNewLineAction = thermal_printer_ns.class_(
 ThermalPrinterBarcodeAction = thermal_printer_ns.class_(
     "ThermalPrinterBarcodeAction", automation.Action
 )
+ThermalPrinterQRCodeAction = thermal_printer_ns.class_(
+    "ThermalPrinterQRCodeAction", automation.Action
+)
 CONF_FONT_SIZE_FACTOR = "font_size_factor"
 CONF_TEXT = "text"
 CONF_SEND_WAKEUP = "send_wakeup"
@@ -55,6 +58,10 @@ CONF_BARCODE_TYPE = "barcode_type"
 CONF_BARCODE_WIDTH = "width"
 CONF_BARCODE_HEIGHT = "height"
 CONF_BARCODE_TEXT_POSITION = "text_position"
+CONF_QRCODE_TEXT = "qrcode_text"
+CONF_QRCODE_MODEL = "qrcode_model"
+CONF_QRCODE_ERROR_CORRECTION_LEVEL = "qrcode_error_correction_level"
+CONF_QRCODE_SIZE = "qrcode_size"
 
 CONFIG_SCHEMA = (
     display.FULL_DISPLAY_SCHEMA.extend(
@@ -351,5 +358,49 @@ async def thermal_printer_print_barcode_action_to_code(
         config[CONF_BARCODE_TEXT_POSITION], args, cg.std_string
     )
     cg.add(var.set_barcode_text_pos(templ))
+
+    return var
+
+
+# PRINT_QRCODE()
+@automation.register_action(
+    "thermal_printer.print_qrcode",
+    ThermalPrinterQRCodeAction,
+    cv.maybe_simple_value(
+        cv.Schema(
+            {
+                cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
+                cv.Required(CONF_QRCODE_TEXT): cv.templatable(cv.string),
+                cv.Optional(CONF_QRCODE_MODEL, default="Model_2"): cv.templatable(
+                    cv.one_of("Model_1", "Model_2")
+                ),
+                cv.Optional(
+                    CONF_QRCODE_ERROR_CORRECTION_LEVEL, default="Level_L"
+                ): cv.templatable(
+                    cv.one_of("Level_L", "Level_M", "Level_Q", "Level_H")
+                ),
+                cv.Optional(CONF_QRCODE_SIZE, default=3): cv.templatable(
+                    cv.int_range(1, 16)
+                ),
+            }
+        ),
+        key=CONF_QRCODE_TEXT,
+    ),
+)
+async def thermal_printer_print_qrcode_action_to_code(
+    config, action_id, template_arg, args
+):
+    var = cg.new_Pvariable(action_id, template_arg)
+    await cg.register_parented(var, config[CONF_ID])
+    templ = await cg.templatable(config[CONF_QRCODE_TEXT], args, cg.std_string)
+    cg.add(var.set_qrcode_text(templ))
+    templ = await cg.templatable(config[CONF_QRCODE_MODEL], args, cg.std_string)
+    cg.add(var.set_qrcode_model(templ))
+    templ = await cg.templatable(
+        config[CONF_QRCODE_ERROR_CORRECTION_LEVEL], args, cg.std_string
+    )
+    cg.add(var.set_qrcode_error_correction_level(templ))
+    templ = await cg.templatable(config[CONF_QRCODE_SIZE], args, cg.uint8)
+    cg.add(var.set_qrcode_size(templ))
 
     return var
