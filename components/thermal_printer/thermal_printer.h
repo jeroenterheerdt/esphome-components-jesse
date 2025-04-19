@@ -151,10 +151,10 @@ template<typename... Ts>
 class ThermalPrinterBarcodeAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:
   TEMPLATABLE_VALUE(std::string, barcode_text)
-  TEMPLATABLE_VALUE(BarcodeType, barcode_type)
+  TEMPLATABLE_VALUE(std::string, barcode_type)
   TEMPLATABLE_VALUE(uint8_t, barcode_height)
   TEMPLATABLE_VALUE(uint8_t, barcode_width)
-  TEMPLATABLE_VALUE(BarcodeTextPosition, barcode_text_pos)
+  TEMPLATABLE_VALUE(std::string, barcode_text_pos)
   // TEMPLATABLE_VALUE(BarcodeAlignment, align)
   TEMPLATABLE_VALUE(std::string, barcode_align)
 
