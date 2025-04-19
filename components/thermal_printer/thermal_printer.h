@@ -42,8 +42,10 @@ class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
   void set_tab_positions(std::vector<int> tab_positions);
   void set_row_spacing(uint8_t spacing);
   void new_line(uint8_t lines);
-  void print_barcode(std::string text, BarcodeType type = BarcodeType::EAN13, uint8_t height = 162, uint8_t width = 2,
-                     BarcodeTextPosition pos = BarcodeTextPosition::BELOW,
+  void print_barcode(std::string text,  // BarcodeType type = BarcodeType::EAN13
+                     , std::string type = "EAN13", uint8_t height = 162, uint8_t width = 2,
+                     // BarcodeTextPosition pos = BarcodeTextPosition::BELOW,
+                     std::string pos = "BELOW",
                      // BarcodeAlignment align = BarcodeAlignment::ALIGN_CENTER
                      std::string align = "C");
 
@@ -151,9 +153,11 @@ template<typename... Ts>
 class ThermalPrinterBarcodeAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:
   TEMPLATABLE_VALUE(std::string, barcode_text)
+  // TEMPLATABLE_VALUE(BarcodeType, barcode_type)
   TEMPLATABLE_VALUE(std::string, barcode_type)
   TEMPLATABLE_VALUE(uint8_t, barcode_height)
   TEMPLATABLE_VALUE(uint8_t, barcode_width)
+  // TEMPLATABLE_VALUE(BarcodeTextPosition, barcode_text_pos)
   TEMPLATABLE_VALUE(std::string, barcode_text_pos)
   // TEMPLATABLE_VALUE(BarcodeAlignment, align)
   TEMPLATABLE_VALUE(std::string, barcode_align)

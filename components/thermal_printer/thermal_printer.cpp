@@ -224,8 +224,10 @@ void ThermalPrinterDisplay::new_line(uint8_t lines) {
   }
 }
 
-void ThermalPrinterDisplay::print_barcode(std::string text, BarcodeType type, uint8_t height, uint8_t width,
-                                          BarcodeTextPosition pos,  // BarcodeAlignment align
+void ThermalPrinterDisplay::print_barcode(std::string text,  // BarcodeType type
+                                          std::string type, uint8_t height, uint8_t width,
+                                          // BarcodeTextPosition pos,
+                                          std::string pos,  // BarcodeAlignment align
                                           std::string align) {
   this->init_();
   const char *tag = "print_barcode";
@@ -245,9 +247,24 @@ void ThermalPrinterDisplay::print_barcode(std::string text, BarcodeType type, ui
     ESP_LOGW(TAG, "Invalid alignment: %s", align.c_str());
   }
   // hri text position
-  pos = static_cast<BarcodeTextPosition>(clamp<int>(static_cast<int>(pos), 0, 3));
+  // Convert the position string to uppercase
+  pos = this->toUpperCase(pos);
+  if (pos == "BELOW") {
+    this->write_array(BARCODE_TEXT_POSITION_CMD, sizeof(BARCODE_TEXT_POSITION_CMD));
+    this->write_byte(BarcodeTextPosition::BELOW);  // HRI text position
+  } else if (pos == "ABOVE") {
+    this->write_array(BARCODE_TEXT_POSITION_CMD, sizeof(BARCODE_TEXT_POSITION_CMD));
+    this->write_byte(BarcodeTextPosition::ABOVE);  // HRI text position
+  } else if (pos == "BOTH") {
+    this->write_array(BARCODE_TEXT_POSITION_CMD, sizeof(BARCODE_TEXT_POSITION_CMD));
+    this->write_byte(BarcodeTextPosition::BOTH);  // HRI text position
+  } else if (pos == "NONE") {
+    this->write_array(BARCODE_TEXT_POSITION_CMD, sizeof(BARCODE_TEXT_POSITION_CMD));
+    this->write_byte(BarcodeTextPosition::NONE);  // HRI text position
+  } else {
+    ESP_LOGW(TAG, "Invalid barcode text position: %s", pos.c_str());
+  }
   this->write_array(BARCODE_TEXT_POSITION_CMD, sizeof(BARCODE_TEXT_POSITION_CMD));
-  this->write_byte(static_cast<uint8_t>(pos));  // HRI text position
   // barcode height
   height = clamp<uint8_t>(height, 1, 255);
   this->write_array(BARCODE_HEIGHT_CMD, sizeof(BARCODE_HEIGHT_CMD));
@@ -275,9 +292,28 @@ void ThermalPrinterDisplay::print_barcode(std::string text, BarcodeType type, ui
       ESP_LOGW(tag, "Invalid barcode type: %d", static_cast<int>(type));
       return;
   }*/
-  uint8_t type_byte = static_cast<uint8_t>(type);
+  // Convert the type string to uppercase
+  type = this->toUpperCase(type)[0];
+  uint8_t btype = 0x00;
+  if (type == "EAN13") {
+    btype = BarcodeType::EAN13;
+  } else if (type == "CODE39") {
+    btype = BarcodeType::CODE39;
+  } else if (type == "ITF") {
+    btype = BarcodeType::ITF;
+  } else if (type == "UPC_A") {
+    btype = BarcodeType::UPC_A;
+  } else if (type == "UPC_E") {
+    btype = BarcodeType::UPC_E;
+  } else if (type == "EAN8") {
+    btype = BarcodeType::EAN8;
+  } else if (type == "CODABAR") {
+    btype = BarcodeType::CODABAR;
+  } else {
+    ESP_LOGW(TAG, "Invalid barcode type: %s", type.c_str());
+  }
   this->write_array(PRINT_BARCODE_CMD, sizeof(PRINT_BARCODE_CMD));
-  this->write_byte(type_byte);  // Barcode type
+  this->write_byte(btype);  // Barcode type
   for (char c : text) {
     this->write_byte(c);  // Barcode data
   }
