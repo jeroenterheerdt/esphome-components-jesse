@@ -393,14 +393,14 @@ async def thermal_printer_print_qrcode_action_to_code(
     var = cg.new_Pvariable(action_id, template_arg)
     await cg.register_parented(var, config[CONF_ID])
     templ = await cg.templatable(config[CONF_QRCODE_TEXT], args, cg.std_string)
-    cg.add(var.set_qrcode_text(templ))
+    cg.add(var.set_qr_code_text(templ))
     templ = await cg.templatable(config[CONF_QRCODE_MODEL], args, cg.std_string)
-    cg.add(var.set_qrcode_model(templ))
+    cg.add(var.set_qr_code_model(templ))
     templ = await cg.templatable(
         config[CONF_QRCODE_ERROR_CORRECTION_LEVEL], args, cg.std_string
     )
-    cg.add(var.set_qrcode_error_correction_level(templ))
+    cg.add(var.set_qr_code_error_correction_level(templ))
     templ = await cg.templatable(config[CONF_QRCODE_SIZE], args, cg.uint8)
-    cg.add(var.set_qrcode_size(templ))
+    cg.add(var.set_qr_code_size(templ))
 
     return var
