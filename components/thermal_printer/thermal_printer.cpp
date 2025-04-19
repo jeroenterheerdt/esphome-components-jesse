@@ -73,8 +73,8 @@ void ThermalPrinterDisplay::init_() {
 void ThermalPrinterDisplay::print_text(std::string text, std::string align, bool inverse, bool ninety_degree,
                                        uint8_t underline_weight, bool updown, bool bold, bool double_width,
                                        bool double_height, std::string font) {
-  uin8t_t font_width = 2;
-  uin8t_t font_height = 2;
+  uint8_t font_width = 2;
+  uint8_t font_height = 2;
   this->print_text(text, align, inverse, ninety_degree, underline_weight, updown, bold, font_width, font_height, font);
 }
 void ThermalPrinterDisplay::print_text(std::string text, std::string align, bool inverse, bool ninety_degree,
