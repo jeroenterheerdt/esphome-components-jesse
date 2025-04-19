@@ -155,7 +155,8 @@ class ThermalPrinterBarcodeAction : public Action<Ts...>, public Parented<Therma
   TEMPLATABLE_VALUE(uint8_t, height)
   TEMPLATABLE_VALUE(uint8_t, width)
   TEMPLATABLE_VALUE(BarcodeTextPosition, pos)
-  TEMPLATABLE_VALUE(BarcodeAlignment, align)
+  // TEMPLATABLE_VALUE(BarcodeAlignment, align)
+  TEMPLATABLE_VALUE(std::string, align)
 
   void play(Ts... x) override {
     this->parent_->print_barcode(this->text_.value(x...), this->type_.value(x...), this->height_.value(x...),
