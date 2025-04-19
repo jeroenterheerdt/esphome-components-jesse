@@ -226,23 +226,23 @@ void ThermalPrinterDisplay::new_line(uint8_t lines) {
 
 void ThermalPrinterDisplay::print_barcode(std::string text, BarcodeType type, uint8_t height, uint8_t width,
                                           BarcodeTextPosition pos,  // BarcodeAlignment align
-                                          std::string align = "C") {
+                                          std::string align) {
   this->init_();
   const char *tag = "print_barcode";
   // alignment
   //  Convert the alignment string to uppercase
-  std::string align_str = this->toUpperCase(align)[0];
-  if (align_str == "C") {
+  align = this->toUpperCase(align)[0];
+  if (align == "C") {
     this->write_array(SET_ALIGNMENT_CMD, sizeof(SET_ALIGNMENT_CMD));
     this->write_byte(0x01);  // Center
-  } else if (align_str == "R") {
+  } else if (align == "R") {
     this->write_array(SET_ALIGNMENT_CMD, sizeof(SET_ALIGNMENT_CMD));
     this->write_byte(0x02);  // Right
-  } else if (align_str == "L") {
+  } else if (align == "L") {
     this->write_array(SET_ALIGNMENT_CMD, sizeof(SET_ALIGNMENT_CMD));
     this->write_byte(0x00);  // Left
   } else {
-    ESP_LOGW(TAG, "Invalid alignment: %s", align_str.c_str());
+    ESP_LOGW(TAG, "Invalid alignment: %s", align.c_str());
   }
   // hri text position
   pos = static_cast<BarcodeTextPosition>(clamp<int>(static_cast<int>(pos), 0, 3));
