@@ -221,7 +221,7 @@ async def thermal_printer_print_text_FW_FH_action_to_code(
             {
                 cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
                 cv.Required(CONF_TAB_POSITIONS): cv.templatable(
-                    cv.ensure_list(cv.int_)
+                    cv.ensure_list(cv.uint8t_)
                 ),
             }
         ),
