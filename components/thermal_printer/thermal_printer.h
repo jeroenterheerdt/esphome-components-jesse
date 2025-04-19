@@ -150,17 +150,18 @@ class ThermalPrinterNewLineAction : public Action<Ts...>, public Parented<Therma
 template<typename... Ts>
 class ThermalPrinterBarcodeAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:
-  TEMPLATABLE_VALUE(std::string, text)
-  TEMPLATABLE_VALUE(BarcodeType, type)
-  TEMPLATABLE_VALUE(uint8_t, height)
-  TEMPLATABLE_VALUE(uint8_t, width)
-  TEMPLATABLE_VALUE(BarcodeTextPosition, pos)
+  TEMPLATABLE_VALUE(std::string, barcode_text)
+  TEMPLATABLE_VALUE(BarcodeType, barcode_type)
+  TEMPLATABLE_VALUE(uint8_t, barcode_height)
+  TEMPLATABLE_VALUE(uint8_t, barcode_width)
+  TEMPLATABLE_VALUE(BarcodeTextPosition, barcode_text_pos)
   // TEMPLATABLE_VALUE(BarcodeAlignment, align)
-  TEMPLATABLE_VALUE(std::string, align)
+  TEMPLATABLE_VALUE(std::string, barcode_align)
 
   void play(Ts... x) override {
-    this->parent_->print_barcode(this->text_.value(x...), this->type_.value(x...), this->height_.value(x...),
-                                 this->width_.value(x...), this->pos_.value(x...), this->align_.value(x...));
+    this->parent_->print_barcode(this->barcode_text_.value(x...), this->barcode_type_.value(x...),
+                                 this->barcode_height_.value(x...), this->barcode_width_.value(x...),
+                                 this->barcode_text_pos_.value(x...), this->barcode_align_.value(x...));
   }
 };
 

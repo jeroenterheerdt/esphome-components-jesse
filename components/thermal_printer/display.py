@@ -349,6 +349,6 @@ async def thermal_printer_print_barcode_action_to_code(
     templ = await cg.templatable(
         config[CONF_BARCODE_TEXT_POSITION], args, cg.std_string
     )
-    cg.add(var.set_barcode_text_position(templ))
+    cg.add(var.set_barcode_text_pos(templ))
 
     return var
