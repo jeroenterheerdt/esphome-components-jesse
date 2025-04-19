@@ -9,19 +9,17 @@ DEPENDENCIES = ["uart"]
 
 _LOGGER = logging.getLogger(__name__)
 
-# todo:
-# add other abilities:
-# doublewidth mode, bold etc (https://github.com/adafruit/Adafruit-Thermal-Printer-Library/tree/master)
-# also check what else the printer can do, maybe cut paper as well? (see datasheet linked here: https://wiki.dfrobot.com/Embedded%20Thermal%20Printer%20-%20TTL%20Serial%20SKU%3A%20DFR0503-EN)
 thermal_printer_ns = cg.esphome_ns.namespace("thermal_printer")
 
 ThermalPrinterDisplay = thermal_printer_ns.class_(
     "ThermalPrinterDisplay", display.DisplayBuffer, uart.UARTDevice
 )
-ThermalPrinterPrintTextAction = thermal_printer_ns.class_(
-    "ThermalPrinterPrintTextAction", automation.Action
+ThermalPrinterPrintTextActionDWDH = thermal_printer_ns.class_(
+    "ThermalPrinterPrintTextActionDWDH", automation.Action
 )
-
+ThermalPrinterPrintTextActionFWFH = thermal_printer_ns.class_(
+    "ThermalPrinterPrintTextActionFWFH", automation.Action
+)
 ThermalPrinterNewLineAction = thermal_printer_ns.class_(
     "ThermalPrinterNewLineAction", automation.Action
 )
@@ -36,6 +34,9 @@ CONF_UNDERLINE_WEIGHT = "underline_weight"
 CONF_UPDOWN = "upside_down"
 CONF_BOLD = "bold"
 CONF_DOUBLE_WIDTH = "double_width"
+CONF_DOUBLE_HEIGHT = "double_height"
+CONF_FONT_WIDTH = "font_width"
+CONF_FONT_HEIGHT = "font_height"
 CONF_FONT = "font"
 
 CONFIG_SCHEMA = (
@@ -72,10 +73,10 @@ async def to_code(config):
         cg.add(var.set_writer(lambda_))
 
 
-# PRINT_TEXT()
+# PRINT_TEXT() width double height and width bools
 @automation.register_action(
     "thermal_printer.print_text",
-    ThermalPrinterPrintTextAction,
+    ThermalPrinterPrintTextActionDWDH,
     cv.maybe_simple_value(
         cv.Schema(
             {
@@ -94,6 +95,9 @@ async def to_code(config):
                 cv.Optional(CONF_DOUBLE_WIDTH, default=False): cv.templatable(
                     cv.boolean
                 ),
+                cv.Optional(CONF_DOUBLE_HEIGHT, default=False): cv.templatable(
+                    cv.boolean
+                ),
                 cv.Optional(CONF_FONT, default="A"): cv.templatable(
                     cv.one_of("A", "B")
                 ),
@@ -102,7 +106,7 @@ async def to_code(config):
         key=CONF_TEXT,
     ),
 )
-async def thermal_printer_print_text_action_to_code(
+async def thermal_printer_print_text_DW_DH_action_to_code(
     config, action_id, template_arg, args
 ):
     var = cg.new_Pvariable(action_id, template_arg)
@@ -123,6 +127,70 @@ async def thermal_printer_print_text_action_to_code(
     cg.add(var.set_bold(templ))
     templ = await cg.templatable(config[CONF_DOUBLE_WIDTH], args, cg.bool_)
     cg.add(var.set_double_width(templ))
+    templ = await cg.templatable(config[CONF_DOUBLE_HEIGHT], args, cg.bool_)
+    cg.add(var.set_double_height(templ))
+    templ = await cg.templatable(config[CONF_FONT], args, cg.std_string)
+    cg.add(var.set_font(templ))
+
+    return var
+
+
+# PRINT_TEXT() width font height and width ints
+@automation.register_action(
+    "thermal_printer.print_text",
+    ThermalPrinterPrintTextActionFWFH,
+    cv.maybe_simple_value(
+        cv.Schema(
+            {
+                cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
+                cv.Required(CONF_TEXT): cv.templatable(cv.string),
+                cv.Optional(CONF_ALIGN, default="L"): cv.templatable(
+                    cv.one_of("Left", "Center", "Right")
+                ),
+                cv.Optional(CONF_INVERSE, default=False): cv.templatable(cv.boolean),
+                cv.Optional(CONF_90_DEGREE, default=False): cv.templatable(cv.boolean),
+                cv.Optional(CONF_UNDERLINE_WEIGHT, default=0): cv.templatable(
+                    cv.int_range(0, 2)
+                ),
+                cv.Optional(CONF_UPDOWN, default=False): cv.templatable(cv.boolean),
+                cv.Optional(CONF_BOLD, default=False): cv.templatable(cv.boolean),
+                cv.Optional(CONF_FONT_WIDTH, default=1): cv.templatable(
+                    cv.int_range(1, 8)
+                ),
+                cv.Optional(CONF_FONT_HEIGHT, default=1): cv.templatable(
+                    cv.int_range(1, 8)
+                ),
+                cv.Optional(CONF_FONT, default="A"): cv.templatable(
+                    cv.one_of("A", "B")
+                ),
+            }
+        ),
+        key=CONF_TEXT,
+    ),
+)
+async def thermal_printer_print_text_FW_FH_action_to_code(
+    config, action_id, template_arg, args
+):
+    var = cg.new_Pvariable(action_id, template_arg)
+    await cg.register_parented(var, config[CONF_ID])
+    templ = await cg.templatable(config[CONF_TEXT], args, cg.std_string)
+    cg.add(var.set_text(templ))
+    templ = await cg.templatable(config[CONF_ALIGN], args, cg.std_string)
+    cg.add(var.set_align(templ))
+    templ = await cg.templatable(config[CONF_INVERSE], args, cg.bool_)
+    cg.add(var.set_inverse(templ))
+    templ = await cg.templatable(config[CONF_90_DEGREE], args, cg.bool_)
+    cg.add(var.set_ninety_degree(templ))
+    templ = await cg.templatable(config[CONF_UNDERLINE_WEIGHT], args, cg.uint8)
+    cg.add(var.set_underline_weight(templ))
+    templ = await cg.templatable(config[CONF_UPDOWN], args, cg.bool_)
+    cg.add(var.set_updown(templ))
+    templ = await cg.templatable(config[CONF_BOLD], args, cg.bool_)
+    cg.add(var.set_bold(templ))
+    templ = await cg.templatable(config[CONF_FONT_WIDTH], args, cg.uint8)
+    cg.add(var.set_font_width(templ))
+    templ = await cg.templatable(config[CONF_FONT_HEIGHT], args, cg.uint8)
+    cg.add(var.set_font_height(templ))
     templ = await cg.templatable(config[CONF_FONT], args, cg.std_string)
     cg.add(var.set_font(templ))
 

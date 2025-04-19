@@ -27,6 +27,8 @@
 36 - print bitmap
 46 - print barcode
 ?? - print qr code
+# also check what else the printer can do, maybe cut paper as well? (see datasheet linked here:
+https://wiki.dfrobot.com/Embedded%20Thermal%20Printer%20-%20TTL%20Serial%20SKU%3A%20DFR0503-EN)
 */
 namespace esphome {
 namespace thermal_printer {
@@ -47,6 +49,7 @@ static const uint8_t SET_UPDOWN_CMD[] = {ESC, 0x7B};
 static const uint8_t SET_BOLD_CMD[] = {ESC, 0x47};              // watch out, gets (maybe) overriden with esc, 0x21!
 static const uint8_t SET_DOUBLE_WIDTH_ON_CMD[] = {ESC, 0x0E};   // watch out, gets overriden with esc, 0x21!
 static const uint8_t SET_DOUBLE_WIDTH_OFF_CMD[] = {ESC, 0x14};  // watch out, gets overriden with esc, 0x21!
+static const uin8t_t SET_FONT_SIZE_CMD[] = {GS, 0x21};
 static const uint8_t SET_PRINT_MODE_CMD[] = {ESC, 0x21};  // conflicts with bold, double width on and double width off?
 static const uint8_t BYTES_PER_LOOP = 120;
 
@@ -67,10 +70,16 @@ void ThermalPrinterDisplay::init_() {
   }
   this->write_array(INIT_PRINTER_CMD, sizeof(INIT_PRINTER_CMD));
 }
-
 void ThermalPrinterDisplay::print_text(std::string text, std::string align, bool inverse, bool ninety_degree,
                                        uint8_t underline_weight, bool updown, bool bold, bool double_width,
-                                       std::string font) {
+                                       bool double_height, std::string font) {
+  uin8t_t font_width = 2;
+  uin8t_t font_height = 2;
+  this->print_text(text, align, inverse, ninety_degree, underline_weight, updown, bold, font_width, font_height, font);
+}
+void ThermalPrinterDisplay::print_text(std::string text, std::string align, bool inverse, bool ninety_degree,
+                                       uint8_t underline_weight, bool updown, bool bold, uint8_t font_width,
+                                       uint8_t font_height, std::string font) {
   this->init_();
 
   ESP_LOGD("print_text", "text: %s", text.c_str());
@@ -80,7 +89,8 @@ void ThermalPrinterDisplay::print_text(std::string text, std::string align, bool
   ESP_LOGD("print_text", "underline_weight: %d", underline_weight);
   ESP_LOGD("print_text", "updown: %s", updown ? "true" : "false");
   ESP_LOGD("print_text", "bold: %s", bold ? "true" : "false");
-  ESP_LOGD("print_text", "double_width: %s", double_width ? "true" : "false");
+  ESP_LOGD("print_text", "font_width: %d", font_width);
+  ESP_LOGD("print_text", "font_height: %d", font_height);
   ESP_LOGD("print_text", "font: %s", font.c_str());
 
   // alignment
@@ -136,15 +146,23 @@ void ThermalPrinterDisplay::print_text(std::string text, std::string align, bool
     this->write_array(SET_BOLD_CMD, sizeof(SET_BOLD_CMD));
     this->write_byte(0x00);  // Normal
   }
-  // double width
+  /*// double width
   if (double_width) {
     this->write_array(SET_DOUBLE_WIDTH_ON_CMD, sizeof(SET_DOUBLE_WIDTH_ON_CMD));
   } else {
     this->write_array(SET_DOUBLE_WIDTH_OFF_CMD, sizeof(SET_DOUBLE_WIDTH_OFF_CMD));
-  }
+  }*/
+  // font_width and font_height
+  font_width = clamp<uint8_t>(font_width, 1, 8);
+  font_height = clamp<uint8_t>(font_height, 1, 8);
+  uint8_t width_bits = (font_width - 1) << 4;
+  uint8_t height_bits = (font_height - 1) & 0x0F;
+  uint8_t n = width_bits | height_bits;
+  this->write_array(SET_FONT_SIZE_CMD, sizeof(SET_FONT_SIZE_CMD));
+  this->write_byte(n);  // Font size
 
   // font
-  font = this->toUpperCase(font)[0];
+  /*font = this->toUpperCase(font)[0];
   if (font == "A") {
     this->write_array(SET_PRINT_MODE_CMD, sizeof(SET_PRINT_MODE_CMD));
     this->write_byte(0x00);  // Font A
@@ -153,7 +171,7 @@ void ThermalPrinterDisplay::print_text(std::string text, std::string align, bool
     this->write_byte(0x01);  // Font B
   } else {
     ESP_LOGW(TAG, "Invalid font: %s", font.c_str());
-  }
+  }*/
   ESP_LOGD("print_text", "printing now!");
   this->write_str(text.c_str());
 }
