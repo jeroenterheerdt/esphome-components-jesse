@@ -5,7 +5,7 @@
 /* Commands (* means done)
 03 - horizontal tab ~ is just \t in text
 04 - set tab locations ~ kind of done but issue in display.py when adding the templ.
-09 - set row spacing ~ need to test
+*09 - set row spacing
 *10 - alignment
 *11 - set double width mode (also settable through 16)
 *12 - cancel double width mode (also settable through 16)
@@ -25,8 +25,10 @@
 *24 - upside down (also settable through 16, keep in mind that this also inverts the meaning of the l/r alignment
 *25 - underline (can't be combined with 90 degree rotation. if both set, underline is ignored)
 36 - print bitmap
-46 - print barcode (wip)
-?? - print qr code
+*46 - print barcode
+XX - print qr code ~ wip
+XX - full cut
+XX - partial cut
 # also check what else the printer can do, maybe cut paper as well? (see datasheet linked here:
 https://wiki.dfrobot.com/Embedded%20Thermal%20Printer%20-%20TTL%20Serial%20SKU%3A%20DFR0503-EN)
 */
@@ -68,6 +70,12 @@ static const uint8_t QR_CODE_SIZE_CMD[] = {GS, QR_FN, QR_MOD, 0x03, 0x00, 0x31, 
 static const uint8_t QR_CODE_ERROR_CORRECTION_CMD[] = {GS, QR_FN, QR_MOD, 0x03, 0x00, 0x31, 0x45};  // GS ( k
 static const uint8_t QR_CODE_DATA_CMD[] = {GS, QR_FN, QR_MOD};                                      // GS ( k
 static const uint8_t QR_CODE_PRINT_CMD[] = {GS, QR_FN, QR_MOD, 0x03, 0x00, 0x31, 0x51, 0x30};       // GS ( Q
+
+// Cut commands
+static const uint8_t CUT_FULL_CMD[] = {ESC, 0x69};     // ESC i
+static const uint8_t CUT_PARTIAL_CMD[] = {ESC, 0x6D};  // ESC m
+
+// Other
 static const uint8_t BYTES_PER_LOOP = 120;
 
 void ThermalPrinterDisplay::setup() {
@@ -375,6 +383,15 @@ void ThermalPrinterDisplay::print_qr_code(std::string text, std::string model, s
   }
   // print the qr code
   this->write_array(QR_CODE_PRINT_CMD, sizeof(QR_CODE_PRINT_CMD));
+}
+
+void ThermalPrinterDisplay::cut_full() {
+  this->init_();
+  this->write_array(CUT_FULL_CMD, sizeof(CUT_FULL_CMD));
+}
+void ThermalPrinterDisplay::cut_partial() {
+  this->init_();
+  this->write_array(CUT_PARTIAL_CMD, sizeof(CUT_PARTIAL_CMD));
 }
 
 void ThermalPrinterDisplay::queue_data_(std::vector<uint8_t> data) {
