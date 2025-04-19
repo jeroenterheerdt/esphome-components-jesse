@@ -3,7 +3,7 @@
 #include <cinttypes>
 
 /* Commands (* means done)
-03 - horizontal tab
+03 - horizontal tab ~ is just \t?!
 04 - set tab locations ~ kind of done but issue in display when adding the templ.
 09 - set row spacing
 *10 - alignment
@@ -54,6 +54,11 @@ static const uint8_t SET_PRINT_MODE_CMD[] = {ESC, 0x21};  // conflicts with bold
 static const uint8_t SET_TAB_POSITIONS_CMD[] = {ESC, 0x44};  // ESC D
 static const uint8_t SET_ROW_SPACING_CMD[] = {ESC, 0x33};    // ESC 3
 static const uint8_t BYTES_PER_LOOP = 120;
+
+// Barcodes
+enum BarcodeType : uint8_t { UPC_A = 0, UPC_E = 1, EAN13 = 2, EAN8 = 3, CODE39 = 4, ITF = 5, CODABAR = 6 };
+enum BarcodeTextPosition : uint8_t { HRI_NONE = 0, HRI_ABOVE = 1, HRI_BELOW = 2, HRI_BOTH = 3 };
+enum BarcodeAlignment : uint8_t { ALIGN_LEFT = 0, ALIGN_CENTER = 1, ALIGN_RIGHT = 2 };
 
 void ThermalPrinterDisplay::setup() {
   this->init_internal_(this->get_buffer_length_());
@@ -183,6 +188,14 @@ void ThermalPrinterDisplay::print_text(std::string text, std::string align, bool
   this->write_array(SET_PRINT_MODE_CMD, sizeof(SET_PRINT_MODE_CMD));
   this->write_byte(n);  // Print mode
 
+  // row spacing
+  this->write_array(SET_ROW_SPACING_CMD, sizeof(SET_ROW_SPACING_CMD));
+  this->write_byte(this->spacing);  // Row spacing
+
+  // tab positions
+  this->write_array(SET_TAB_POSITIONS_CMD, sizeof(SET_TAB_POSITIONS_CMD));
+  this->write_array(this->tab_positions.data(), this->tab_positions.size());
+
   ESP_LOGD(tag, "printing now!");
   this->write_str(text.c_str());
 }
@@ -195,14 +208,13 @@ void ThermalPrinterDisplay::set_tab_positions(std::vector<int> tab_positions) {
   }
 
   cmd.push_back(0x00);  // End with NUL
-  this->write_array(SET_TAB_POSITIONS_CMD, sizeof(SET_TAB_POSITIONS_CMD));
-  this->write_array(cmd.data(), cmd.size());
+  this->tab_positions = cmd;
 }
 
 // default is 32. range 0<=n<=255
 void ThermalPrinterDisplay::set_row_spacing(uint8_t spacing) {
-  this->write_array(SET_ROW_SPACING_CMD, sizeof(SET_ROW_SPACING_CMD));
-  this->write_byte(spacing);  // Row spacing
+  spacing = clamp<uint8_t>(spacing, 0, 255);
+  this->spacing = spacing;
 }
 
 void ThermalPrinterDisplay::new_line(uint8_t lines) {
@@ -210,6 +222,9 @@ void ThermalPrinterDisplay::new_line(uint8_t lines) {
     this->write_byte('\n');
   }
 }
+
+void ThermalPrinterDisplay::print_barcode(std::string text, BarcodeType type, uint8_t height, uint8_t width,
+                                          BarcodeTextPosition pos, BarcodeAlignment align) {}
 void ThermalPrinterDisplay::queue_data_(std::vector<uint8_t> data) {
   for (size_t i = 0; i < data.size(); i += BYTES_PER_LOOP) {
     std::vector<uint8_t> chunk(data.begin() + i, data.begin() + std::min(i + BYTES_PER_LOOP, data.size()));

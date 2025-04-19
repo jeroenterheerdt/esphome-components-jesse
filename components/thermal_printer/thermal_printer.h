@@ -39,6 +39,9 @@ class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
   void set_tab_positions(std::vector<int> tab_positions);
   void set_row_spacing(uint8_t spacing);
   void new_line(uint8_t lines);
+  void print_barcode(std::string text, BarcodeType type = BarcodeType::EAN13, uint8_t height = 162, uint8_t width = 2,
+                     BarcodeTextPosition pos = BarcodeTextPosition::HRI_BELOW,
+                     BarcodeAlignment align = BarcodeAlignment::ALIGN_CENTER);
 
   void set_send_wakeup(bool send_wakeup) {
     ESP_LOGD("set_send_wakeup", "send_wakeup: %s", send_wakeup ? "true" : "false");
@@ -62,6 +65,8 @@ class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
   bool ready_{false};
   bool send_wakeup_{false};
   double font_size_factor_{1.0};
+  uint8_t spacing{32};
+  std::vector<uint8_t> tab_positions{};
 
  private:
   std::string toUpperCase(const std::string &input);
@@ -136,6 +141,22 @@ class ThermalPrinterNewLineAction : public Action<Ts...>, public Parented<Therma
   TEMPLATABLE_VALUE(uint8_t, lines)
 
   void play(Ts... x) override { this->parent_->new_line(this->lines_.value(x...)); }
+};
+
+template<typename... Ts>
+class ThermalPrinterBarcodeAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
+ public:
+  TEMPLATABLE_VALUE(std::string, text)
+  TEMPLATABLE_VALUE(BarcodeType, type)
+  TEMPLATABLE_VALUE(uint8_t, height)
+  TEMPLATABLE_VALUE(uint8_t, width)
+  TEMPLATABLE_VALUE(BarcodeTextPosition, pos)
+  TEMPLATABLE_VALUE(BarcodeAlignment, align)
+
+  void play(Ts... x) override {
+    this->parent_->print_barcode(this->text_.value(x...), this->type_.value(x...), this->height_.value(x...),
+                                 this->width_.value(x...), this->pos_.value(x...), this->align_.value(x...));
+  }
 };
 
 }  // namespace thermal_printer
