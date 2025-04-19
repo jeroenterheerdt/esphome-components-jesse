@@ -3,9 +3,9 @@
 #include <cinttypes>
 
 /* Commands (* means done)
-03 - horizontal tab ~ is just \t?!
-04 - set tab locations ~ kind of done but issue in display when adding the templ.
-09 - set row spacing
+03 - horizontal tab ~ is just \t in text
+04 - set tab locations ~ kind of done but issue in display.py when adding the templ.
+09 - set row spacing ~ need to test
 *10 - alignment
 *11 - set double width mode (also settable through 16)
 *12 - cancel double width mode (also settable through 16)
@@ -25,7 +25,7 @@
 *24 - upside down (also settable through 16, keep in mind that this also inverts the meaning of the l/r alignment
 *25 - underline (can't be combined with 90 degree rotation. if both set, underline is ignored)
 36 - print bitmap
-46 - print barcode
+46 - print barcode (wip)
 ?? - print qr code
 # also check what else the printer can do, maybe cut paper as well? (see datasheet linked here:
 https://wiki.dfrobot.com/Embedded%20Thermal%20Printer%20-%20TTL%20Serial%20SKU%3A%20DFR0503-EN)
@@ -293,7 +293,7 @@ void ThermalPrinterDisplay::print_barcode(std::string text,  // BarcodeType type
       return;
   }*/
   // Convert the type string to uppercase
-  type = this->toUpperCase(type)[0];
+  type = this->toUpperCase(type);
   uint8_t btype = 0x00;
   if (type == "EAN13") {
     btype = BarcodeType::EAN13;
