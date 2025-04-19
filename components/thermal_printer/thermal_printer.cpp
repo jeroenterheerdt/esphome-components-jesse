@@ -49,7 +49,7 @@ static const uint8_t SET_UPDOWN_CMD[] = {ESC, 0x7B};
 static const uint8_t SET_BOLD_CMD[] = {ESC, 0x47};              // watch out, gets (maybe) overriden with esc, 0x21!
 static const uint8_t SET_DOUBLE_WIDTH_ON_CMD[] = {ESC, 0x0E};   // watch out, gets overriden with esc, 0x21!
 static const uint8_t SET_DOUBLE_WIDTH_OFF_CMD[] = {ESC, 0x14};  // watch out, gets overriden with esc, 0x21!
-static const uin8t_t SET_FONT_SIZE_CMD[] = {GS, 0x21};
+static const uint8_t SET_FONT_SIZE_CMD[] = {GS, 0x21};
 static const uint8_t SET_PRINT_MODE_CMD[] = {ESC, 0x21};  // conflicts with bold, double width on and double width off?
 static const uint8_t BYTES_PER_LOOP = 120;
 
