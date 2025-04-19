@@ -325,8 +325,8 @@ async def thermal_printer_new_line_action_to_code(
                     cv.int_range(1, 8)
                 ),
                 cv.Optional(
-                    CONF_BARCODE_TEXT_POSITION, default="BELOW"
-                ): cv.templatable(cv.one_of("NONE", "ABOVE", "BELOW", "BOTH")),
+                    CONF_BARCODE_TEXT_POSITION, default="Below"
+                ): cv.templatable(cv.one_of("None", "Above", "Below", "Both")),
             }
         ),
         key=CONF_TEXT,
