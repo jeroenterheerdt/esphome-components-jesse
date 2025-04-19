@@ -9,16 +9,16 @@
 *10 - alignment
 *11 - set double width mode (also settable through 16)
 *12 - cancel double width mode (also settable through 16)
-16 - set print mode (
-  font //implemented correctly but not seeing any difference in my printer!
-  inverse (also settable through 18)
-  upsidedown (also settable though 24)
-  bold (also settable through 22)
-  doubleheight
-  doublewidth (also settable through 11/12)
-  strikethrough
-  )
-17 - font size (also settable through 16)
+*16 - set print mode (
+*  font //implemented correctly but not seeing any difference on my printer!
+*  inverse (also settable through 18)
+*  upsidedown (also settable though 24)
+*  bold (also settable through 22)
+*  doubleheight (settable through 17)
+*  doublewidth (also settable through 11/12)
+*  strikethrough (implemented but don't see diff on my printer)
+*  )
+*17 - font size
 *18 - inverse (also settable through 16)
 *19 - 90 degree rotation (
 *22 - bold (also settable through 16)
@@ -51,6 +51,7 @@ static const uint8_t SET_DOUBLE_WIDTH_ON_CMD[] = {ESC, 0x0E};   // watch out, ge
 static const uint8_t SET_DOUBLE_WIDTH_OFF_CMD[] = {ESC, 0x14};  // watch out, gets overriden with esc, 0x21!
 static const uint8_t SET_FONT_SIZE_CMD[] = {GS, 0x21};
 static const uint8_t SET_PRINT_MODE_CMD[] = {ESC, 0x21};  // conflicts with bold, double width on and double width off?
+static const uint8_t SET_TAB_POSITIONS_CMD[] = {ESC, 0x44};  // ESC D
 static const uint8_t BYTES_PER_LOOP = 120;
 
 void ThermalPrinterDisplay::setup() {
@@ -169,6 +170,8 @@ void ThermalPrinterDisplay::print_text(std::string text, std::string align, bool
   font = this->toUpperCase(font)[0];
   if (font == "B") {
     n |= 0x01;  // Font B
+  } else if (font == "A") {
+    n |= 0x00;  // Font A
   } else {
     ESP_LOGW(tag, "Invalid font: %s", font.c_str());
   }
@@ -181,6 +184,18 @@ void ThermalPrinterDisplay::print_text(std::string text, std::string align, bool
 
   ESP_LOGD(tag, "printing now!");
   this->write_str(text.c_str());
+}
+
+void ThermalPrinterDisplay::set_tab_positions(std::vector<uint8_t> tab_positions) {
+  std::vector<uint8_t> cmd;
+  for (int pos : tab_positions) {
+    if (pos >= 1 && pos <= 255)
+      cmd.push_back(static_cast<uint8_t>(pos));
+  }
+
+  cmd.push_back(0x00);  // End with NUL
+  this->write_array(SET_TAB_POSITIONS_CMD, sizeof(SET_TAB_POSITIONS_CMD));
+  this->write_array(cmd.data(), cmd.size());
 }
 
 void ThermalPrinterDisplay::new_line(uint8_t lines) {

@@ -20,6 +20,9 @@ ThermalPrinterPrintTextActionDWDH = thermal_printer_ns.class_(
 ThermalPrinterPrintTextActionFWFH = thermal_printer_ns.class_(
     "ThermalPrinterPrintTextActionFWFH", automation.Action
 )
+ThermalPrinterTabPositionsAction = thermal_printer_ns.class_(
+    "ThermalPrinterTabPositionsAction", automation.Action
+)
 ThermalPrinterNewLineAction = thermal_printer_ns.class_(
     "ThermalPrinterNewLineAction", automation.Action
 )
@@ -39,6 +42,7 @@ CONF_FONT_WIDTH = "font_width"
 CONF_FONT_HEIGHT = "font_height"
 CONF_FONT = "font"
 CONF_STRIKETHROUGH = "strikethrough"
+CONF_TAB_POSITIONS = "tab_positions"
 
 CONFIG_SCHEMA = (
     display.FULL_DISPLAY_SCHEMA.extend(
@@ -205,6 +209,32 @@ async def thermal_printer_print_text_FW_FH_action_to_code(
     templ = await cg.templatable(config[CONF_STRIKETHROUGH], args, cg.bool_)
     cg.add(var.set_strikethrough(templ))
 
+    return var
+
+
+# SET TAB POSITIONS()
+@automation.register_action(
+    "thermal_printer.set_tab_positions",
+    ThermalPrinterTabPositionsAction,
+    cv.maybe_simple_value(
+        cv.Schema(
+            {
+                cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
+                cv.Required(CONF_TAB_POSITIONS): cv.templatable(
+                    cv.ensure_list(cv.int_)
+                ),
+            }
+        ),
+        key=CONF_TAB_POSITIONS,
+    ),
+)
+async def thermal_printer_set_tab_positions_action_to_code(
+    config, action_id, template_arg, args
+):
+    var = cg.new_Pvariable(action_id, template_arg)
+    await cg.register_parented(var, config[CONF_ID])
+    templ = await cg.templatable(config[CONF_TAB_POSITIONS], args, cg.uint8)
+    cg.add(var.set_tab_positions(templ))
     return var
 
 
