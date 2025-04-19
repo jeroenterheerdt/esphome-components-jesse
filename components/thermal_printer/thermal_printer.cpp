@@ -82,18 +82,19 @@ void ThermalPrinterDisplay::print_text(std::string text, std::string align, bool
                                        uint8_t underline_weight, bool updown, bool bold, uint8_t font_width,
                                        uint8_t font_height, std::string font, bool strikethrough) {
   this->init_();
+  const char *tag = "print_text";
 
-  ESP_LOGD("print_text", "text: %s", text.c_str());
-  ESP_LOGD("print_text", "align: %s", align.c_str());
-  ESP_LOGD("print_text", "inverse: %s", inverse ? "true" : "false");
-  ESP_LOGD("print_text", "ninety_degree: %s", ninety_degree ? "true" : "false");
-  ESP_LOGD("print_text", "underline_weight: %d", underline_weight);
-  ESP_LOGD("print_text", "updown: %s", updown ? "true" : "false");
-  ESP_LOGD("print_text", "bold: %s", bold ? "true" : "false");
-  ESP_LOGD("print_text", "font_width: %d", font_width);
-  ESP_LOGD("print_text", "font_height: %d", font_height);
-  ESP_LOGD("print_text", "font: %s", font.c_str());
-  ESP_LOGD("print_text", "strikethrough: %s", strikethrough ? "true" : "false");
+  ESP_LOGD(tag, "text: %s", text.c_str());
+  ESP_LOGD(tag, "align: %s", align.c_str());
+  ESP_LOGD(tag, "inverse: %s", inverse ? "true" : "false");
+  ESP_LOGD(tag, "ninety_degree: %s", ninety_degree ? "true" : "false");
+  ESP_LOGD(tag, "underline_weight: %d", underline_weight);
+  ESP_LOGD(tag, "updown: %s", updown ? "true" : "false");
+  ESP_LOGD(tag, "bold: %s", bold ? "true" : "false");
+  ESP_LOGD(tag, "font_width: %d", font_width);
+  ESP_LOGD(tag, "font_height: %d", font_height);
+  ESP_LOGD(tag, "font: %s", font.c_str());
+  ESP_LOGD(tag, "strikethrough: %s", strikethrough ? "true" : "false");
 
   // alignment
   //  Convert the alignment string to uppercase
@@ -169,15 +170,16 @@ void ThermalPrinterDisplay::print_text(std::string text, std::string align, bool
   if (font == "B") {
     n |= 0x01;  // Font B
   } else {
-    ESP_LOGW(TAG, "Invalid font: %s", font.c_str());
+    ESP_LOGW(tag, "Invalid font: %s", font.c_str());
   }
   if (strikethrough) {
     n |= 0x40;  // Strikethrough
   }
+  ESP_LOGD(tag, "font and strikethough byte: %d", n);
   this->write_array(SET_PRINT_MODE_CMD, sizeof(SET_PRINT_MODE_CMD));
   this->write_byte(n);  // Print mode
 
-  ESP_LOGD("print_text", "printing now!");
+  ESP_LOGD(tag, "printing now!");
   this->write_str(text.c_str());
 }
 
