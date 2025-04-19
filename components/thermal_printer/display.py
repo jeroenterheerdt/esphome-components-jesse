@@ -38,6 +38,7 @@ CONF_DOUBLE_HEIGHT = "double_height"
 CONF_FONT_WIDTH = "font_width"
 CONF_FONT_HEIGHT = "font_height"
 CONF_FONT = "font"
+CONF_STRIKETHROUGH = "strikethrough"
 
 CONFIG_SCHEMA = (
     display.FULL_DISPLAY_SCHEMA.extend(
@@ -101,6 +102,9 @@ async def to_code(config):
                 cv.Optional(CONF_FONT, default="A"): cv.templatable(
                     cv.one_of("A", "B")
                 ),
+                cv.Optional(CONF_STRIKETHROUGH, default=False): cv.templatable(
+                    cv.boolean
+                ),
             }
         ),
         key=CONF_TEXT,
@@ -131,6 +135,8 @@ async def thermal_printer_print_text_DW_DH_action_to_code(
     cg.add(var.set_double_height(templ))
     templ = await cg.templatable(config[CONF_FONT], args, cg.std_string)
     cg.add(var.set_font(templ))
+    templ = await cg.templatable(config[CONF_STRIKETHROUGH], args, cg.bool_)
+    cg.add(var.set_strikethrough(templ))
 
     return var
 
@@ -163,6 +169,9 @@ async def thermal_printer_print_text_DW_DH_action_to_code(
                 cv.Optional(CONF_FONT, default="A"): cv.templatable(
                     cv.one_of("A", "B")
                 ),
+                cv.Optional(CONF_STRIKETHROUGH, default=False): cv.templatable(
+                    cv.boolean
+                ),
             }
         ),
         key=CONF_TEXT,
@@ -193,6 +202,8 @@ async def thermal_printer_print_text_FW_FH_action_to_code(
     cg.add(var.set_font_height(templ))
     templ = await cg.templatable(config[CONF_FONT], args, cg.std_string)
     cg.add(var.set_font(templ))
+    templ = await cg.templatable(config[CONF_STRIKETHROUGH], args, cg.bool_)
+    cg.add(var.set_strikethrough(templ))
 
     return var
 
