@@ -329,7 +329,7 @@ async def thermal_printer_new_line_action_to_code(
                 ): cv.templatable(cv.one_of("None", "Above", "Below", "Both")),
             }
         ),
-        key=CONF_TEXT,
+        key=CONF_BARCODE_TEXT,
     ),
 )
 async def thermal_printer_print_barcode_action_to_code(
