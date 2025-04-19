@@ -67,7 +67,7 @@ class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
 };
 
 template<typename... Ts>
-class ThermalPrinterPrintTextAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
+class ThermalPrinterPrintTextActionDWDH : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:
   TEMPLATABLE_VALUE(std::string, text)
   TEMPLATABLE_VALUE(std::string, align)
@@ -89,7 +89,7 @@ class ThermalPrinterPrintTextAction : public Action<Ts...>, public Parented<Ther
 };
 
 template<typename... Ts>
-class ThermalPrinterPrintTextAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
+class ThermalPrinterPrintTextActionFWFH : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:
   TEMPLATABLE_VALUE(std::string, text)
   TEMPLATABLE_VALUE(std::string, align)
