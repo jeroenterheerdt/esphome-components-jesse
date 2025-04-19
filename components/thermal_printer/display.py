@@ -35,11 +35,8 @@ ThermalPrinterBarcodeAction = thermal_printer_ns.class_(
 ThermalPrinterQRCodeAction = thermal_printer_ns.class_(
     "ThermalPrinterQRCodeAction", automation.Action
 )
-ThermalPrinterFullCutAction = thermal_printer_ns.class_(
-    "ThermalPrinterFullCutAction", automation.Action
-)
-ThermalPrinterPartialCutAction = thermal_printer_ns.class_(
-    "ThermalPrinterPartialCutAction", automation.Action
+ThermalPrinterCutAction = thermal_printer_ns.class_(
+    "ThermalPrinterCutAction", automation.Action
 )
 CONF_FONT_SIZE_FACTOR = "font_size_factor"
 CONF_TEXT = "text"
@@ -68,6 +65,7 @@ CONF_QRCODE_TEXT = "qrcode_text"
 CONF_QRCODE_MODEL = "qrcode_model"
 CONF_QRCODE_ERROR_CORRECTION_LEVEL = "qrcode_error_correction_level"
 CONF_QRCODE_SIZE = "qrcode_size"
+CONF_CUT_TYPE = "cut_type"
 
 CONFIG_SCHEMA = (
     display.FULL_DISPLAY_SCHEMA.extend(
@@ -412,41 +410,26 @@ async def thermal_printer_print_qrcode_action_to_code(
     return var
 
 
-# FULL_CUT()
+# CUT()
 @automation.register_action(
-    "thermal_printer.full_cut",
-    ThermalPrinterFullCutAction,
+    "thermal_printer.cut",
+    ThermalPrinterCutAction,
     cv.maybe_simple_value(
         cv.Schema(
             {
                 cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
+                cv.Optional(CONF_CUT_TYPE, default="Full"): cv.templatable(
+                    cv.one_of("Partial", "Full")
+                ),
             }
         ),
+        key=CONF_CUT_TYPE,
     ),
 )
-async def thermal_printer_full_cut_action_to_code(
-    config, action_id, template_arg, args
-):
+async def thermal_printer_cut_action_to_code(config, action_id, template_arg, args):
     var = cg.new_Pvariable(action_id, template_arg)
     await cg.register_parented(var, config[CONF_ID])
-    return var
+    templ = await cg.templatable(config[CONF_CUT_TYPE], args, cg.std_string)
+    cg.add(var.set_cut_type(templ))
 
-
-# PARTIAL_CUT()
-@automation.register_action(
-    "thermal_printer.partial_cut",
-    ThermalPrinterPartialCutAction,
-    cv.maybe_simple_value(
-        cv.Schema(
-            {
-                cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
-            }
-        ),
-    ),
-)
-async def thermal_printer_partial_cut_action_to_code(
-    config, action_id, template_arg, args
-):
-    var = cg.new_Pvariable(action_id, template_arg)
-    await cg.register_parented(var, config[CONF_ID])
     return var

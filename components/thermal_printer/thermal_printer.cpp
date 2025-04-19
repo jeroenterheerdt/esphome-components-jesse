@@ -385,13 +385,19 @@ void ThermalPrinterDisplay::print_qr_code(std::string text, std::string model, s
   this->write_array(QR_CODE_PRINT_CMD, sizeof(QR_CODE_PRINT_CMD));
 }
 
-void ThermalPrinterDisplay::cut_full() {
+void ThermalPrinterDisplay::cut(std::string cut_type) {
   this->init_();
-  this->write_array(CUT_FULL_CMD, sizeof(CUT_FULL_CMD));
-}
-void ThermalPrinterDisplay::cut_partial() {
-  this->init_();
-  this->write_array(CUT_PARTIAL_CMD, sizeof(CUT_PARTIAL_CMD));
+  const char *tag = "cut";
+  ESP_LOGD(tag, "cut_type: %s", cut_type.c_str());
+  // Convert the cut type string to uppercase
+  cut_type = this->toUpperCase(cut_type);
+  if (cut_type == "FULL") {
+    this->write_array(CUT_FULL_CMD, sizeof(CUT_FULL_CMD));
+  } else if (cut_type == "PARTIAL") {
+    this->write_array(CUT_PARTIAL_CMD, sizeof(CUT_PARTIAL_CMD));
+  } else {
+    ESP_LOGW(TAG, "Invalid cut type: %s", cut_type.c_str());
+  }
 }
 
 void ThermalPrinterDisplay::queue_data_(std::vector<uint8_t> data) {

@@ -61,8 +61,7 @@ class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
                      std::string model = "MODEL_2",
                      // QRCodeErrorCorrectionLevel error_correction_level = QRCodeErrorCorrectionLevel::LEVEL_L,
                      std::string error_correction_level = "LEVEL_L", uint8_t size = 3);
-  void cut_full();
-  void cut_partial();
+  void cut(std::string cut_type = "Full");
 
   void set_send_wakeup(bool send_wakeup) {
     ESP_LOGD("set_send_wakeup", "send_wakeup: %s", send_wakeup ? "true" : "false");
@@ -196,16 +195,10 @@ class ThermalPrinterQRCodeAction : public Action<Ts...>, public Parented<Thermal
                                  this->qr_code_error_correction_level_.value(x...), this->qr_code_size_.value(x...));
   }
 };
-template<typename... Ts>
-class ThermalPrinterFullCutAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
+template<typename... Ts> class ThermalPrinterCutAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:
-  void play(Ts... x) override { this->parent_->cut_full(); }
-};
-
-template<typename... Ts>
-class ThermalPrinterPartialCutAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
- public:
-  void play(Ts... x) override { this->parent_->cut_partial(); }
+  TEMPLATABLE_VALUE(std::string, cut_type)
+  void play(Ts... x) override { this->parent_->cut(this->cut_type_.value(x...)); }
 };
 
 }  // namespace thermal_printer
