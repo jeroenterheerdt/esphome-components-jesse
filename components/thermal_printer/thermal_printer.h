@@ -36,7 +36,7 @@ class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
   void print_text(std::string text, std::string align = "L", bool inverse = false, bool ninety_degree = false,
                   uint8_t underline_weight = 0, bool updown = false, bool bold = false, uint8_t font_width = 0,
                   uint8_t font_height = 0, std::string font = "A", bool strikethrough = false);
-  void set_tab_positions(std::vector<uint8_t> tab_positions);
+  void set_tab_positions(std::vector<int> tab_positions);
   void new_line(uint8_t lines);
 
   void set_send_wakeup(bool send_wakeup) {
@@ -117,7 +117,7 @@ class ThermalPrinterPrintTextActionFWFH : public Action<Ts...>, public Parented<
 template<typename... Ts>
 class ThermalPrinterTabPositionsAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:
-  TEMPLATABLE_VALUE(std::vector<uint8_t>, tabs)
+  TEMPLATABLE_VALUE(std::vector<int>, tabs)
 
   void play(Ts... x) override { this->parent_->set_tab_positions(this->tabs_.value(x...)); }
 };
