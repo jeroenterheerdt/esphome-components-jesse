@@ -72,14 +72,15 @@ void ThermalPrinterDisplay::init_() {
 }
 void ThermalPrinterDisplay::print_text(std::string text, std::string align, bool inverse, bool ninety_degree,
                                        uint8_t underline_weight, bool updown, bool bold, bool double_width,
-                                       bool double_height, std::string font) {
+                                       bool double_height, std::string font, bool strikethrough) {
   uint8_t font_width = 2;
   uint8_t font_height = 2;
-  this->print_text(text, align, inverse, ninety_degree, underline_weight, updown, bold, font_width, font_height, font);
+  this->print_text(text, align, inverse, ninety_degree, underline_weight, updown, bold, font_width, font_height, font,
+                   strikethrough);
 }
 void ThermalPrinterDisplay::print_text(std::string text, std::string align, bool inverse, bool ninety_degree,
                                        uint8_t underline_weight, bool updown, bool bold, uint8_t font_width,
-                                       uint8_t font_height, std::string font) {
+                                       uint8_t font_height, std::string font, bool strikethrough) {
   this->init_();
 
   ESP_LOGD("print_text", "text: %s", text.c_str());
@@ -92,6 +93,7 @@ void ThermalPrinterDisplay::print_text(std::string text, std::string align, bool
   ESP_LOGD("print_text", "font_width: %d", font_width);
   ESP_LOGD("print_text", "font_height: %d", font_height);
   ESP_LOGD("print_text", "font: %s", font.c_str());
+  ESP_LOGD("print_text", "strikethrough: %s", strikethrough ? "true" : "false");
 
   // alignment
   //  Convert the alignment string to uppercase
@@ -161,17 +163,20 @@ void ThermalPrinterDisplay::print_text(std::string text, std::string align, bool
   this->write_array(SET_FONT_SIZE_CMD, sizeof(SET_FONT_SIZE_CMD));
   this->write_byte(n);  // Font size
 
-  // font
-  /*font = this->toUpperCase(font)[0];
-  if (font == "A") {
-    this->write_array(SET_PRINT_MODE_CMD, sizeof(SET_PRINT_MODE_CMD));
-    this->write_byte(0x00);  // Font A
-  } else if (font == "B") {
-    this->write_array(SET_PRINT_MODE_CMD, sizeof(SET_PRINT_MODE_CMD));
-    this->write_byte(0x01);  // Font B
+  // font and strikethrough
+  uint8_t n = 0x00;
+  font = this->toUpperCase(font)[0];
+  if (font == "B") {
+    n |= 0x01;  // Font B
   } else {
     ESP_LOGW(TAG, "Invalid font: %s", font.c_str());
-  }*/
+  }
+  if (strikethrough) {
+    n |= 0x40;  // Strikethrough
+  }
+  this->write_array(SET_PRINT_MODE_CMD, sizeof(SET_PRINT_MODE_CMD));
+  this->write_byte(n);  // Print mode
+
   ESP_LOGD("print_text", "printing now!");
   this->write_str(text.c_str());
 }

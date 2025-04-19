@@ -32,10 +32,10 @@ class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
 
   void print_text(std::string text, std::string align = "L", bool inverse = false, bool ninety_degree = false,
                   uint8_t underline_weight = 0, bool updown = false, bool bold = false, bool double_width = false,
-                  bool double_height = false, std::string font = "A");
+                  bool double_height = false, std::string font = "A", bool strikethrough = false);
   void print_text(std::string text, std::string align = "L", bool inverse = false, bool ninety_degree = false,
                   uint8_t underline_weight = 0, bool updown = false, bool bold = false, uint8_t font_width = 0,
-                  uint8_t font_height = 0, std::string font = "A");
+                  uint8_t font_height = 0, std::string font = "A", bool strikethrough = false);
 
   void new_line(uint8_t lines);
 
@@ -79,12 +79,14 @@ class ThermalPrinterPrintTextActionDWDH : public Action<Ts...>, public Parented<
   TEMPLATABLE_VALUE(bool, double_width)
   TEMPLATABLE_VALUE(bool, double_height)
   TEMPLATABLE_VALUE(std::string, font)
+  TEMPLATABLE_VALUE(bool, strikethrough)
 
   void play(Ts... x) override {
     this->parent_->print_text(this->text_.value(x...), this->align_.value(x...), this->inverse_.value(x...),
                               this->ninety_degree_.value(x...), this->underline_weight_.value(x...),
                               this->updown_.value(x...), this->bold_.value(x...), this->double_width_.value(x...),
-                              this->double_height_.value(x...), this->font_.value(x...));
+                              this->double_height_.value(x...), this->font_.value(x...),
+                              this->strikethrough_.value(x...));
   }
 };
 
@@ -101,12 +103,14 @@ class ThermalPrinterPrintTextActionFWFH : public Action<Ts...>, public Parented<
   TEMPLATABLE_VALUE(uint8_t, font_width)
   TEMPLATABLE_VALUE(uint8_t, font_height)
   TEMPLATABLE_VALUE(std::string, font)
+  TEMPLATABLE_VALUE(bool, strikethrough)
 
   void play(Ts... x) override {
     this->parent_->print_text(this->text_.value(x...), this->align_.value(x...), this->inverse_.value(x...),
                               this->ninety_degree_.value(x...), this->underline_weight_.value(x...),
                               this->updown_.value(x...), this->bold_.value(x...), this->font_width_.value(x...),
-                              this->font_height_.value(x...), this->font_.value(x...));
+                              this->font_height_.value(x...), this->font_.value(x...),
+                              this->strikethrough_.value(x...));
   }
 };
 
