@@ -12,7 +12,10 @@
 namespace esphome {
 namespace thermal_printer {
 
-enum BarcodeType { UPC_A = 0x41, UPC_E, EAN13, EAN8, CODE39, ITF, CODABAR, CODE93, CODE128, UNKNOWN };
+// Barcodes
+enum BarcodeType : uint8_t { UPC_A = 0, UPC_E = 1, EAN13 = 2, EAN8 = 3, CODE39 = 4, ITF = 5, CODABAR = 6 };
+enum BarcodeTextPosition : uint8_t { HRI_NONE = 0, HRI_ABOVE = 1, HRI_BELOW = 2, HRI_BOTH = 3 };
+enum BarcodeAlignment : uint8_t { ALIGN_LEFT = 0, ALIGN_CENTER = 1, ALIGN_RIGHT = 2 };
 
 class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDevice {
  public:
