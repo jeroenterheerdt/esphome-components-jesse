@@ -29,6 +29,9 @@ ThermalPrinterRowSpacingAction = thermal_printer_ns.class_(
 ThermalPrinterNewLineAction = thermal_printer_ns.class_(
     "ThermalPrinterNewLineAction", automation.Action
 )
+ThermalPrinterBarcodeAction = thermal_printer_ns.class_(
+    "ThermalPrinterBarcodeAction", automation.Action
+)
 CONF_FONT_SIZE_FACTOR = "font_size_factor"
 CONF_TEXT = "text"
 CONF_SEND_WAKEUP = "send_wakeup"
@@ -47,6 +50,10 @@ CONF_FONT = "font"
 CONF_STRIKETHROUGH = "strikethrough"
 CONF_TAB_POSITIONS = "tab_positions"
 CONF_ROW_SPACING = "row_spacing"
+CONF_BARCODE_TYPE = "type"
+CONF_BARCODE_WIDTH = "width"
+CONF_BARCODE_HEIGHT = "height"
+CONF_BARCODE_TEXT_POSITION = "text_position"
 
 CONFIG_SCHEMA = (
     display.FULL_DISPLAY_SCHEMA.extend(
@@ -290,4 +297,58 @@ async def thermal_printer_new_line_action_to_code(
     await cg.register_parented(var, config[CONF_ID])
     templ = await cg.templatable(config[CONF_LINES], args, cg.uint8)
     cg.add(var.set_lines(templ))
+    return var
+
+
+# PRINT_BARCODE()
+@automation.register_action(
+    "thermal_printer.print_barcode",
+    ThermalPrinterBarcodeAction,
+    cv.maybe_simple_value(
+        cv.Schema(
+            {
+                cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
+                cv.Required(CONF_TEXT): cv.templatable(cv.string),
+                cv.Required(CONF_BARCODE_TYPE): cv.templatable(
+                    cv.one_of(
+                        "UPC_A", "UPC_E", "EAN_13", "EAN8", "CODE_39", "ITF", "CODABAR"
+                    )
+                ),
+                cv.Optional(CONF_ALIGN, default="L"): cv.templatable(
+                    cv.one_of("Left", "Center", "Right")
+                ),
+                cv.Optional(CONF_BARCODE_HEIGHT, default=50): cv.templatable(
+                    cv.int_range(1, 255)
+                ),
+                cv.Optional(CONF_BARCODE_WIDTH, default=2): cv.templatable(
+                    cv.int_range(1, 8)
+                ),
+                cv.Optional(
+                    CONF_BARCODE_TEXT_POSITION, default="BELOW"
+                ): cv.templatable(cv.one_of("NONE", "ABOVE", "BELOW", "BOTH")),
+            }
+        ),
+        key=CONF_TEXT,
+    ),
+)
+async def thermal_printer_print_barcode_action_to_code(
+    config, action_id, template_arg, args
+):
+    var = cg.new_Pvariable(action_id, template_arg)
+    await cg.register_parented(var, config[CONF_ID])
+    templ = await cg.templatable(config[CONF_TEXT], args, cg.std_string)
+    cg.add(var.set_text(templ))
+    templ = await cg.templatable(config[CONF_BARCODE_TYPE], args, cg.std_string)
+    cg.add(var.set_barcode_type(templ))
+    templ = await cg.templatable(config[CONF_ALIGN], args, cg.std_string)
+    cg.add(var.set_align(templ))
+    templ = await cg.templatable(config[CONF_BARCODE_HEIGHT], args, cg.uint8)
+    cg.add(var.set_barcode_height(templ))
+    templ = await cg.templatable(config[CONF_BARCODE_WIDTH], args, cg.uint8)
+    cg.add(var.set_barcode_width(templ))
+    templ = await cg.templatable(
+        config[CONF_BARCODE_TEXT_POSITION], args, cg.std_string
+    )
+    cg.add(var.set_barcode_text_position(templ))
+
     return var
