@@ -4,7 +4,7 @@
 
 /* Commands (* means done)
 03 - horizontal tab
-04 - set tab locations
+04 - set tab locations ~ kind of done but issue in display when adding the templ.
 09 - set row spacing
 *10 - alignment
 *11 - set double width mode (also settable through 16)
@@ -52,6 +52,7 @@ static const uint8_t SET_DOUBLE_WIDTH_OFF_CMD[] = {ESC, 0x14};  // watch out, ge
 static const uint8_t SET_FONT_SIZE_CMD[] = {GS, 0x21};
 static const uint8_t SET_PRINT_MODE_CMD[] = {ESC, 0x21};  // conflicts with bold, double width on and double width off?
 static const uint8_t SET_TAB_POSITIONS_CMD[] = {ESC, 0x44};  // ESC D
+static const uint8_t SET_ROW_SPACING_CMD[] = {ESC, 0x33};    // ESC 3
 static const uint8_t BYTES_PER_LOOP = 120;
 
 void ThermalPrinterDisplay::setup() {
@@ -196,6 +197,12 @@ void ThermalPrinterDisplay::set_tab_positions(std::vector<int> tab_positions) {
   cmd.push_back(0x00);  // End with NUL
   this->write_array(SET_TAB_POSITIONS_CMD, sizeof(SET_TAB_POSITIONS_CMD));
   this->write_array(cmd.data(), cmd.size());
+}
+
+// default is 32. range 0<=n<=255
+void ThermalPrinterDisplay::set_row_spacing(uint8_t spacing) {
+  this->write_array(SET_ROW_SPACING_CMD, sizeof(SET_ROW_SPACING_CMD));
+  this->write_byte(spacing);  // Row spacing
 }
 
 void ThermalPrinterDisplay::new_line(uint8_t lines) {

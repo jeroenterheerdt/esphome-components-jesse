@@ -37,6 +37,7 @@ class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
                   uint8_t underline_weight = 0, bool updown = false, bool bold = false, uint8_t font_width = 0,
                   uint8_t font_height = 0, std::string font = "A", bool strikethrough = false);
   void set_tab_positions(std::vector<int> tab_positions);
+  void set_row_spacing(uint8_t spacing);
   void new_line(uint8_t lines);
 
   void set_send_wakeup(bool send_wakeup) {
@@ -120,6 +121,14 @@ class ThermalPrinterTabPositionsAction : public Action<Ts...>, public Parented<T
   TEMPLATABLE_VALUE(std::vector<int>, tabs)
 
   void play(Ts... x) override { this->parent_->set_tab_positions(this->tabs_.value(x...)); }
+};
+
+template<typename... Ts>
+class ThermalPrinterRowSpacingAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
+ public:
+  TEMPLATABLE_VALUE(uint8_t, spacing)
+
+  void play(Ts... x) override { this->parent_->set_row_spacing(this->spacing_.value(x...)); }
 };
 template<typename... Ts>
 class ThermalPrinterNewLineAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {

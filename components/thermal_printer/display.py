@@ -23,6 +23,9 @@ ThermalPrinterPrintTextActionFWFH = thermal_printer_ns.class_(
 ThermalPrinterTabPositionsAction = thermal_printer_ns.class_(
     "ThermalPrinterTabPositionsAction", automation.Action
 )
+ThermalPrinterRowSpacingAction = thermal_printer_ns.class_(
+    "ThermalPrinterRowSpacingAction", automation.Action
+)
 ThermalPrinterNewLineAction = thermal_printer_ns.class_(
     "ThermalPrinterNewLineAction", automation.Action
 )
@@ -43,6 +46,7 @@ CONF_FONT_HEIGHT = "font_height"
 CONF_FONT = "font"
 CONF_STRIKETHROUGH = "strikethrough"
 CONF_TAB_POSITIONS = "tab_positions"
+CONF_ROW_SPACING = "row_spacing"
 
 CONFIG_SCHEMA = (
     display.FULL_DISPLAY_SCHEMA.extend(
@@ -236,8 +240,32 @@ async def thermal_printer_set_tab_positions_action_to_code(
     templ = await cg.templatable(
         config[CONF_TAB_POSITIONS], args, cg.std_vector(cg.uint8)
     )
-    print(type(templ))
+    # this fails, not sure why!
     # cg.add(var.set_tabs(templ))
+    return var
+
+
+# SET_ROW_SPACING()
+@automation.register_action(
+    "thermal_printer.set_row_spacing",
+    ThermalPrinterRowSpacingAction,
+    cv.maybe_simple_value(
+        cv.Schema(
+            {
+                cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
+                cv.Required(CONF_ROW_SPACING): cv.templatable(cv.int_),
+            }
+        ),
+        key=CONF_LINES,
+    ),
+)
+async def thermal_printer_set_row_spacing_action_to_code(
+    config, action_id, template_arg, args
+):
+    var = cg.new_Pvariable(action_id, template_arg)
+    await cg.register_parented(var, config[CONF_ID])
+    templ = await cg.templatable(config[CONF_ROW_SPACING], args, cg.uint8)
+    cg.add(var.set_lines(templ))
     return var
 
 
