@@ -319,6 +319,7 @@ void ThermalPrinterDisplay::print_barcode(std::string text,  // BarcodeType type
   }
   this->write_byte(0x00);  // End with NUL
 }
+
 void ThermalPrinterDisplay::queue_data_(std::vector<uint8_t> data) {
   for (size_t i = 0; i < data.size(); i += BYTES_PER_LOOP) {
     std::vector<uint8_t> chunk(data.begin() + i, data.begin() + std::min(i + BYTES_PER_LOOP, data.size()));
