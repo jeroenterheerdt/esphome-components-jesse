@@ -159,9 +159,9 @@ void ThermalPrinterDisplay::print_text(std::string text, std::string align, bool
   font_height = clamp<uint8_t>(font_height, 1, 8);
   uint8_t width_bits = (font_width - 1) << 4;
   uint8_t height_bits = (font_height - 1) & 0x0F;
-  uint8_t n = width_bits | height_bits;
+  uint8_t wn = width_bits | height_bits;
   this->write_array(SET_FONT_SIZE_CMD, sizeof(SET_FONT_SIZE_CMD));
-  this->write_byte(n);  // Font size
+  this->write_byte(wn);  // Font size
 
   // font and strikethrough
   uint8_t n = 0x00;
