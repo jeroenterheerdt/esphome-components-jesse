@@ -84,7 +84,7 @@ class ThermalPrinterPrintTextAction : public Action<Ts...>, public Parented<Ther
     this->parent_->print_text(this->text_.value(x...), this->align_.value(x...), this->inverse_.value(x...),
                               this->ninety_degree_.value(x...), this->underline_weight_.value(x...),
                               this->updown_.value(x...), this->bold_.value(x...), this->double_width_.value(x...),
-                              this->double_height_.value(x...), ->font_.value(x...));
+                              this->double_height_.value(x...), this->font_.value(x...));
   }
 };
 
@@ -106,7 +106,7 @@ class ThermalPrinterPrintTextAction : public Action<Ts...>, public Parented<Ther
     this->parent_->print_text(this->text_.value(x...), this->align_.value(x...), this->inverse_.value(x...),
                               this->ninety_degree_.value(x...), this->underline_weight_.value(x...),
                               this->updown_.value(x...), this->bold_.value(x...), this->font_width_.value(x...),
-                              this->font_height_.value(x...), ->font_.value(x...));
+                              this->font_height_.value(x...), this->font_.value(x...));
   }
 };
 
