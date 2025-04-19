@@ -35,6 +35,12 @@ ThermalPrinterBarcodeAction = thermal_printer_ns.class_(
 ThermalPrinterQRCodeAction = thermal_printer_ns.class_(
     "ThermalPrinterQRCodeAction", automation.Action
 )
+ThermalPrinterFullCutAction = thermal_printer_ns.class_(
+    "ThermalPrinterFullCutAction", automation.Action
+)
+ThermalPrinterPartialCutAction = thermal_printer_ns.class_(
+    "ThermalPrinterPartialCutAction", automation.Action
+)
 CONF_FONT_SIZE_FACTOR = "font_size_factor"
 CONF_TEXT = "text"
 CONF_SEND_WAKEUP = "send_wakeup"
@@ -403,4 +409,44 @@ async def thermal_printer_print_qrcode_action_to_code(
     templ = await cg.templatable(config[CONF_QRCODE_SIZE], args, cg.uint8)
     cg.add(var.set_qr_code_size(templ))
 
+    return var
+
+
+# FULL_CUT()
+@automation.register_action(
+    "thermal_printer.full_cut",
+    ThermalPrinterFullCutAction,
+    cv.maybe_simple_value(
+        cv.Schema(
+            {
+                cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
+            }
+        ),
+    ),
+)
+async def thermal_printer_full_cut_action_to_code(
+    config, action_id, template_arg, args
+):
+    var = cg.new_Pvariable(action_id, template_arg)
+    await cg.register_parented(var, config[CONF_ID])
+    return var
+
+
+# PARTIAL_CUT()
+@automation.register_action(
+    "thermal_printer.partial_cut",
+    ThermalPrinterPartialCutAction,
+    cv.maybe_simple_value(
+        cv.Schema(
+            {
+                cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
+            }
+        ),
+    ),
+)
+async def thermal_printer_partial_cut_action_to_code(
+    config, action_id, template_arg, args
+):
+    var = cg.new_Pvariable(action_id, template_arg)
+    await cg.register_parented(var, config[CONF_ID])
     return var
