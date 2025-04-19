@@ -231,6 +231,12 @@ void ThermalPrinterDisplay::print_barcode(std::string text,  // BarcodeType type
                                           std::string align) {
   this->init_();
   const char *tag = "print_barcode";
+  ESP_LOGD(tag, "text: %s", text.c_str());
+  ESP_LOGD(tag, "type: %s", type.c_str());
+  ESP_LOGD(tag, "height: %d", height);
+  ESP_LOGD(tag, "width: %d", width);
+  ESP_LOGD(tag, "pos: %s", pos.c_str());
+  ESP_LOGD(tag, "align: %s", align.c_str());
   // alignment
   //  Convert the alignment string to uppercase
   align = this->toUpperCase(align)[0];
@@ -274,24 +280,6 @@ void ThermalPrinterDisplay::print_barcode(std::string text,  // BarcodeType type
   this->write_array(BARCODE_WIDTH_CMD, sizeof(BARCODE_WIDTH_CMD));
   this->write_byte(width);  // Barcode width
   // barcode type
-  /*uint8_t type_byte = 0;
-  switch (type) {
-    case BarcodeType::EAN13:
-      type_byte = 0x0A;
-      break;
-    case BarcodeType::CODE39:
-      type_byte = 0x08;
-      break;
-    case BarcodeType::CODE128:
-      type_byte = 0x09;
-      break;
-    case BarcodeType::ITF:
-      type_byte = 0x0B;
-      break;
-    default:
-      ESP_LOGW(tag, "Invalid barcode type: %d", static_cast<int>(type));
-      return;
-  }*/
   // Convert the type string to uppercase
   type = this->toUpperCase(type);
   uint8_t btype = 0x00;

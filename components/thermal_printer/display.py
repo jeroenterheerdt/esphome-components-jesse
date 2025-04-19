@@ -312,7 +312,7 @@ async def thermal_printer_new_line_action_to_code(
                 cv.Required(CONF_BARCODE_TEXT): cv.templatable(cv.string),
                 cv.Required(CONF_BARCODE_TYPE): cv.templatable(
                     cv.one_of(
-                        "UPC_A", "UPC_E", "EAN_13", "EAN8", "CODE_39", "ITF", "CODABAR"
+                        "UPC_A", "UPC_E", "EAN_13", "EAN_8", "CODE_39", "ITF", "CODABAR"
                     )
                 ),
                 cv.Optional(CONF_ALIGN, default="Left"): cv.templatable(
