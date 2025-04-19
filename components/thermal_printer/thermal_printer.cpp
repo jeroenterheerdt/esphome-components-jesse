@@ -295,9 +295,9 @@ void ThermalPrinterDisplay::print_barcode(std::string text,  // BarcodeType type
   // Convert the type string to uppercase
   type = this->toUpperCase(type);
   uint8_t btype = 0x00;
-  if (type == "EAN13") {
+  if (type == "EAN_13") {
     btype = BarcodeType::EAN13;
-  } else if (type == "CODE39") {
+  } else if (type == "CODE_39") {
     btype = BarcodeType::CODE39;
   } else if (type == "ITF") {
     btype = BarcodeType::ITF;
@@ -305,7 +305,7 @@ void ThermalPrinterDisplay::print_barcode(std::string text,  // BarcodeType type
     btype = BarcodeType::UPC_A;
   } else if (type == "UPC_E") {
     btype = BarcodeType::UPC_E;
-  } else if (type == "EAN8") {
+  } else if (type == "EAN_8") {
     btype = BarcodeType::EAN8;
   } else if (type == "CODABAR") {
     btype = BarcodeType::CODABAR;
