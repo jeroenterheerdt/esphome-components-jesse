@@ -115,7 +115,7 @@ class ThermalPrinterPrintTextActionFWFH : public Action<Ts...>, public Parented<
 };
 
 template<typename... Ts>
-class ThermalPrinterSetTabsAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
+class ThermalPrinterTabPositionsAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:
   TEMPLATABLE_VALUE(std::vector<uint8_t>, tabs)
 
