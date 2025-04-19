@@ -15,7 +15,7 @@ namespace thermal_printer {
 // Barcodes
 enum BarcodeType : uint8_t { UPC_A = 0, UPC_E = 1, EAN13 = 2, EAN8 = 3, CODE39 = 4, ITF = 5, CODABAR = 6 };
 enum BarcodeTextPosition : uint8_t { HRI_NONE = 0, HRI_ABOVE = 1, HRI_BELOW = 2, HRI_BOTH = 3 };
-enum BarcodeAlignment : uint8_t { ALIGN_LEFT = 0, ALIGN_CENTER = 1, ALIGN_RIGHT = 2 };
+// enum BarcodeAlignment : uint8_t { ALIGN_LEFT = 0, ALIGN_CENTER = 1, ALIGN_RIGHT = 2 };
 
 class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDevice {
  public:
@@ -44,7 +44,8 @@ class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
   void new_line(uint8_t lines);
   void print_barcode(std::string text, BarcodeType type = BarcodeType::EAN13, uint8_t height = 162, uint8_t width = 2,
                      BarcodeTextPosition pos = BarcodeTextPosition::HRI_BELOW,
-                     BarcodeAlignment align = BarcodeAlignment::ALIGN_CENTER);
+                     // BarcodeAlignment align = BarcodeAlignment::ALIGN_CENTER
+                     std::string align = "C");
 
   void set_send_wakeup(bool send_wakeup) {
     ESP_LOGD("set_send_wakeup", "send_wakeup: %s", send_wakeup ? "true" : "false");
