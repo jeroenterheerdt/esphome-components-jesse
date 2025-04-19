@@ -256,7 +256,7 @@ async def thermal_printer_set_tab_positions_action_to_code(
                 cv.Required(CONF_ROW_SPACING): cv.templatable(cv.int_),
             }
         ),
-        key=CONF_LINES,
+        key=CONF_ROW_SPACING,
     ),
 )
 async def thermal_printer_set_row_spacing_action_to_code(
@@ -265,7 +265,7 @@ async def thermal_printer_set_row_spacing_action_to_code(
     var = cg.new_Pvariable(action_id, template_arg)
     await cg.register_parented(var, config[CONF_ID])
     templ = await cg.templatable(config[CONF_ROW_SPACING], args, cg.uint8)
-    cg.add(var.set_lines(templ))
+    cg.add(var.set_spacing(templ))
     return var
 
 
