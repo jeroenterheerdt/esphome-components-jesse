@@ -405,7 +405,7 @@ void ThermalPrinterDisplay::print_image(std::string image, int width) {
   this->init_();
   const char *tag = "print_image";
   std::vector<uint8_t> bitmap_data;
-  if (!decode_base64(image, bitmap_data)) {
+  if (!this->decode_base64(image, bitmap_data)) {
     ESP_LOGW(tag, "Failed to decode base64 image");
     return;
   }
@@ -550,7 +550,9 @@ std::string ThermalPrinterDisplay::toUpperCase(const std::string &input) {
 }
 
 // Method to try to convert to base64
-bool decode_base64(const std::string &input, std::vector<uint8_t> &output) { return base64::decode(input, output); }
+bool ThermalPrinterDisplay::decode_base64(const std::string &input, std::vector<uint8_t> &output) {
+  return base64::decode(input, output);
+}
 
 }  // namespace thermal_printer
 }  // namespace esphome
