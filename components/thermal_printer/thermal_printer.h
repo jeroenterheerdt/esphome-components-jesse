@@ -46,7 +46,7 @@ class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
   void print_text(std::string text, std::string align = "L", bool inverse = false, bool ninety_degree = false,
                   uint8_t underline_weight = 0, bool updown = false, bool bold = false, uint8_t font_width = 0,
                   uint8_t font_height = 0, std::string font = "A", bool strikethrough = false);
-  void set_tab_positions(std::vector<uint8_t> tab_positions);
+  void set_tab_positions(std::vector<int> tab_positions);
   void set_row_spacing(uint8_t spacing);
   void new_line(uint8_t lines);
   void print_barcode(std::string text,  // BarcodeType type = BarcodeType::EAN13
