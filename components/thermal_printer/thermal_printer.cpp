@@ -407,7 +407,7 @@ void ThermalPrinterDisplay::print_image(std::string image, int width) {
   const char *tag = "print_image";
   this->write_array(LOAD_BITMAP_CMD, sizeof(LOAD_BITMAP_CMD));
   // width
-  this->write_byte(0xFA);  // hardcoded width of 250 for now, should be dynamic
+  this->write_byte(0x31);  // hardcoded width 49 (0x31) or 250 (0xFA) for now, should be dynamic
   this->write_byte(0x00);  // height
 
   unsigned char show[] = {
