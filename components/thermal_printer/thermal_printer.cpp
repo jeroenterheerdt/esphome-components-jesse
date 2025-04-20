@@ -219,11 +219,11 @@ void ThermalPrinterDisplay::print_text(std::string text, std::string align, bool
   this->write_str(text.c_str());
 }
 
-void ThermalPrinterDisplay::set_tab_positions(std::vector<int> tab_positions) {
+void ThermalPrinterDisplay::set_tab_positions(std::vector<uint8_t> tab_positions) {
   std::vector<uint8_t> cmd;
-  for (int pos : tab_positions) {
+  for (uint8_t pos : tab_positions) {
     if (pos >= 1 && pos <= 255)
-      cmd.push_back(static_cast<uint8_t>(pos));
+      cmd.push_back(pos);
   }
 
   cmd.push_back(0x00);  // End with NUL
@@ -401,10 +401,10 @@ void ThermalPrinterDisplay::cut(std::string cut_type) {
   }
 }
 
-void ThermalPrinterDisplay::print_image(Image *image) {
+void ThermalPrinterDisplay::print_image(std::string image) {
   this->init_();
   const char *tag = "print_image";
-  if (image->get_width() > this->get_width_internal() || image->get_height() > this->get_height_internal()) {
+  /*if (image->get_width() > this->get_width_internal() || image->get_height() > this->get_height_internal()) {
     ESP_LOGW(tag, "Image is too large");
     return;
   }
@@ -434,7 +434,7 @@ void ThermalPrinterDisplay::print_image(Image *image) {
   }
   this->write_byte('\n');
   // reset line spacing
-  this->write_array(SET_ROW_SPACING_CMD, sizeof(SET_ROW_SPACING_CMD));
+  this->write_array(SET_ROW_SPACING_CMD, sizeof(SET_ROW_SPACING_CMD));*/
 }
 
 void ThermalPrinterDisplay::queue_data_(std::vector<uint8_t> data) {

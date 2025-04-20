@@ -1,7 +1,6 @@
 #pragma once
 
 #include "esphome/core/helpers.h"
-#include "esphome/components/image/image.h"
 #include "esphome/components/display/display_buffer.h"
 #include "esphome/components/uart/uart.h"
 
@@ -47,7 +46,7 @@ class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
   void print_text(std::string text, std::string align = "L", bool inverse = false, bool ninety_degree = false,
                   uint8_t underline_weight = 0, bool updown = false, bool bold = false, uint8_t font_width = 0,
                   uint8_t font_height = 0, std::string font = "A", bool strikethrough = false);
-  void set_tab_positions(std::vector<int> tab_positions);
+  void set_tab_positions(std::vector<uint8_t> tab_positions);
   void set_row_spacing(uint8_t spacing);
   void new_line(uint8_t lines);
   void print_barcode(std::string text,  // BarcodeType type = BarcodeType::EAN13
@@ -62,7 +61,7 @@ class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
                      // QRCodeErrorCorrectionLevel error_correction_level = QRCodeErrorCorrectionLevel::LEVEL_L,
                      std::string error_correction_level = "LEVEL_L", uint8_t size = 3);
   void cut(std::string cut_type = "Full");
-  void print_image(image::Image *image);
+  void print_image(std::string image);
   void set_send_wakeup(bool send_wakeup) {
     ESP_LOGD("set_send_wakeup", "send_wakeup: %s", send_wakeup ? "true" : "false");
     this->send_wakeup_ = send_wakeup;
@@ -143,7 +142,7 @@ class ThermalPrinterPrintTextActionFWFH : public Action<Ts...>, public Parented<
 template<typename... Ts>
 class ThermalPrinterTabPositionsAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:
-  TEMPLATABLE_VALUE(std::vector<int>, tabs)
+  TEMPLATABLE_VALUE(std::vector<uint8_t>, tabs)
 
   void play(Ts... x) override { this->parent_->set_tab_positions(this->tabs_.value(x...)); }
 };
