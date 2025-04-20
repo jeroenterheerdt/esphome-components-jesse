@@ -407,8 +407,10 @@ void ThermalPrinterDisplay::print_image(std::string image, int width) {
   const char *tag = "print_image";
   this->write_array(LOAD_BITMAP_CMD, sizeof(LOAD_BITMAP_CMD));
   // width
-  this->write_byte(0x31);  // hardcoded width 49 (0x31) or 250 (0xFA) for now, should be dynamic
-  this->write_byte(0xFA);  // height (250)
+  uint8_t bytes_per_line = 48;              // 48 bytes per line (384 pixels)
+  this->write_byte(bytes_per_line & 0xFF);  // hardcoded width 49 (0x31) or 250 (0xFA) for now, should be dynamic
+  this->write_byte((bytes_per_line >> 8) & 0xFF);
+  // this->write_byte(0xFA);  // height (250)
 
   unsigned char show[] = {
       // 'esphome_logo_49x250_inverted_rotated_flipped', 49x250px
