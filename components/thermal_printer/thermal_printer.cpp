@@ -24,10 +24,10 @@
 *22 - bold (also settable through 16)
 *24 - upside down (also settable through 16, keep in mind that this also inverts the meaning of the l/r alignment
 *25 - underline (can't be combined with 90 degree rotation. if both set, underline is ignored)
-36 - print bitmap
+36 - print bitmap ~ wip
 *46 - print barcode
 *XX - print qr code (in basic and advanced datasheet)
-XX - cut (full/partial) - from advanced datasheet
+#XX - cut (full/partial) - from advanced datasheet - didn't work for my printer
 XX - partial cut
 # basic datasheet: https://dfimg.dfrobot.com/nobody/wiki/0c0a789684349c93a55e754f49bdea18.pdf
 # advanced datasheet: https://wiki.dfrobot.com/Embedded%20Thermal%20Printer%20-%20TTL%20Serial%20SKU%3A%20DFR0503-EN
