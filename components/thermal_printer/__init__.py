@@ -1,1 +1,1 @@
-AUTO_LOAD = ["image"]
+DEPENDENCIES = ["image"]

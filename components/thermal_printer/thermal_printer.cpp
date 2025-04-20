@@ -1,5 +1,4 @@
 #include "thermal_printer.h"
-
 #include <cinttypes>
 
 /* Commands (* means done)
@@ -402,7 +401,7 @@ void ThermalPrinterDisplay::cut(std::string cut_type) {
   }
 }
 
-void ThermalPrinterDisplay::print_image(image::Image *image) {
+void ThermalPrinterDisplay::print_image(Image *image) {
   this->init_();
   const char *tag = "print_image";
   if (image->get_width() > this->get_width_internal() || image->get_height() > this->get_height_internal()) {
