@@ -405,7 +405,7 @@ void ThermalPrinterDisplay::cut(std::string cut_type) {
 void ThermalPrinterDisplay::print_image(std::string image, int width) {
   this->init_();
   const char *tag = "print_image";
-  int width = 384;   // 384 /8 = 48 pixels;
+  width = 384;       // 384 /8 = 48 pixels;
   int height = 250;  // 250 pixels
   int bytes_per_line = width / 8;
 
