@@ -406,23 +406,8 @@ void ThermalPrinterDisplay::cut(std::string cut_type) {
 void ThermalPrinterDisplay::print_image(std::string image, int width) {
   this->init_();
   const char *tag = "print_image";
-  width = 384;       // 384 /8 = 48 pixels;
-  int height = 250;  // 250 pixels
-  int bytes_per_line = width / 8;
+  // use image2cpp!!
 
-  for (int y = 0; y < height; y++) {
-    this->write(0x1B);                                      // ESC
-    this->write('*');                                       // bit image mode
-    this->write(0);                                         // mode: 8-dot single density
-    this->write((uint8_t) (bytes_per_line & 0xFF));         // nL
-    this->write((uint8_t) ((bytes_per_line >> 8) & 0xFF));  // nH
-
-    for (int x = 0; x < bytes_per_line; x++) {
-      this->write(test_bitmap_data[y * bytes_per_line + x]);
-    }
-
-    this->write(0x0A);  // line feed
-  }
   // this is the example code from the wiki
   /*this->write_array(show, sizeof(show));
   // 0x1B, 0x33, 0x00, // Set line spacing to 0 dots
