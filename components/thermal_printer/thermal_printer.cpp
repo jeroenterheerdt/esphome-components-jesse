@@ -405,7 +405,10 @@ void ThermalPrinterDisplay::print_image(std::string image, int width) {
   this->init_();
   const char *tag = "print_image";
   std::vector<uint8_t> bitmap_data;
-  bitmap_data = base64_decode(image);
+  if (!decode_base64(image, bitmap_data)) {
+    ESP_LOGW(tag, "Failed to decode base64 image");
+    return;
+  }
 
   const int bytes_per_line = width / 8;
   const int total_lines = bitmap_data.size() / bytes_per_line;
@@ -544,6 +547,16 @@ std::string ThermalPrinterDisplay::toUpperCase(const std::string &input) {
   std::string result = input;  // Make a copy of the input string
   std::transform(result.begin(), result.end(), result.begin(), [](unsigned char c) { return std::toupper(c); });
   return result;  // Return the transformed string
+}
+
+// Method to try to convert to base64
+bool decode_base64(const std::string &input, std::vector<uint8_t> &output) {
+  try {
+    output = base64::decode(input);
+    return true;
+  } catch (...) {
+    return false;
+  }
 }
 
 }  // namespace thermal_printer
