@@ -259,7 +259,7 @@ async def thermal_printer_set_tab_positions_action_to_code(
     templ = await cg.templatable(
         config[CONF_TAB_POSITIONS], args, cg.std_vector(cg.int_)
     )
-    cg.add(var.set_tabs(templ))
+    # cg.add(var.set_tabs(templ))
     return var
 
 
