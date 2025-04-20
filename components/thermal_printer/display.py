@@ -38,6 +38,10 @@ ThermalPrinterQRCodeAction = thermal_printer_ns.class_(
 ThermalPrinterCutAction = thermal_printer_ns.class_(
     "ThermalPrinterCutAction", automation.Action
 )
+ThermalPrinterPrintImageAction = thermal_printer_ns.class_(
+    "ThermalPrinterPrintImageAction", automation.Action
+)
+
 CONF_FONT_SIZE_FACTOR = "font_size_factor"
 CONF_TEXT = "text"
 CONF_SEND_WAKEUP = "send_wakeup"
@@ -66,6 +70,8 @@ CONF_QRCODE_MODEL = "qrcode_model"
 CONF_QRCODE_ERROR_CORRECTION_LEVEL = "qrcode_error_correction_level"
 CONF_QRCODE_SIZE = "qrcode_size"
 CONF_CUT_TYPE = "cut_type"
+CONF_IMAGE_DATA = "image_data"
+CONF_IMAGE_WIDTH = "image_width"
 
 CONFIG_SCHEMA = (
     display.FULL_DISPLAY_SCHEMA.extend(
@@ -430,5 +436,33 @@ async def thermal_printer_cut_action_to_code(config, action_id, template_arg, ar
     await cg.register_parented(var, config[CONF_ID])
     templ = await cg.templatable(config[CONF_CUT_TYPE], args, cg.std_string)
     cg.add(var.set_cut_type(templ))
+
+    return var
+
+
+# PRINT_IMAGE()
+@automation.register_action(
+    "thermal_printer.print_image",
+    ThermalPrinterPrintImageAction,
+    cv.maybe_simple_value(
+        cv.Schema(
+            {
+                cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
+                cv.Required(CONF_IMAGE_DATA): cv.templatable(cv.string),
+                cv.Required(CONF_IMAGE_WIDTH): cv.templatable(cv.uint16_t),
+            }
+        ),
+        key=CONF_IMAGE_DATA,
+    ),
+)
+async def thermal_printer_print_image_action_to_code(
+    config, action_id, template_arg, args
+):
+    var = cg.new_Pvariable(action_id, template_arg)
+    await cg.register_parented(var, config[CONF_ID])
+    templ = await cg.templatable(config[CONF_IMAGE_DATA], args, cg.std_string)
+    cg.add(var.set_image_data(templ))
+    templ = await cg.templatable(config[CONF_IMAGE_WIDTH], args, cg.uint16)
+    cg.add(var.set_image_width(templ))
 
     return var
