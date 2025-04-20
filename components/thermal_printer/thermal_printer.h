@@ -1,7 +1,7 @@
 #pragma once
 
 #include "esphome/core/helpers.h"
-
+#include "esphome/components/image/image.h"
 #include "esphome/components/display/display_buffer.h"
 #include "esphome/components/uart/uart.h"
 
