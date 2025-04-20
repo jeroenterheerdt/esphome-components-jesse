@@ -219,11 +219,11 @@ void ThermalPrinterDisplay::print_text(std::string text, std::string align, bool
   this->write_str(text.c_str());
 }
 
-void ThermalPrinterDisplay::set_tab_positions(std::vector<uint8_t> tab_positions) {
+void ThermalPrinterDisplay::set_tab_positions(std::vector<int> tab_positions) {
   std::vector<uint8_t> cmd;
-  for (uint8_t pos : tab_positions) {
+  for (int pos : tab_positions) {
     if (pos >= 1 && pos <= 255)
-      cmd.push_back(pos);
+      cmd.push_back((uint8_t) pos);
   }
 
   cmd.push_back(0x00);  // End with NUL

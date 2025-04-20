@@ -142,7 +142,7 @@ class ThermalPrinterPrintTextActionFWFH : public Action<Ts...>, public Parented<
 template<typename... Ts>
 class ThermalPrinterTabPositionsAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:
-  TEMPLATABLE_VALUE(std::vector<uint8_t>, tabs)
+  TEMPLATABLE_VALUE(std::vector<int>, tabs)
 
   void play(Ts... x) override { this->parent_->set_tab_positions(this->tabs_.value(x...)); }
 };

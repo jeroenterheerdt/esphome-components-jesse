@@ -244,7 +244,7 @@ async def thermal_printer_print_text_FW_FH_action_to_code(
             {
                 cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
                 cv.Required(CONF_TAB_POSITIONS): cv.templatable(
-                    cv.ensure_list(cv.uint8_t)
+                    cv.ensure_list(cv.int_)
                 ),
             }
         ),
@@ -257,7 +257,7 @@ async def thermal_printer_set_tab_positions_action_to_code(
     var = cg.new_Pvariable(action_id, template_arg)
     await cg.register_parented(var, config[CONF_ID])
     templ = await cg.templatable(
-        config[CONF_TAB_POSITIONS], args, cg.std_vector(cg.uint8)
+        config[CONF_TAB_POSITIONS], args, cg.std_vector(cg.int_)
     )
     cg.add(var.set_tabs(templ))
     return var
