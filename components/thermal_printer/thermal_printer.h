@@ -3,6 +3,7 @@
 #include "esphome/core/helpers.h"
 
 #include "esphome/components/display/display_buffer.h"
+#include "esphome/components/image/image.h"
 #include "esphome/components/uart/uart.h"
 
 #include <cinttypes>
@@ -62,7 +63,7 @@ class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
                      // QRCodeErrorCorrectionLevel error_correction_level = QRCodeErrorCorrectionLevel::LEVEL_L,
                      std::string error_correction_level = "LEVEL_L", uint8_t size = 3);
   void cut(std::string cut_type = "Full");
-
+  void print_image(image::Image *image);
   void set_send_wakeup(bool send_wakeup) {
     ESP_LOGD("set_send_wakeup", "send_wakeup: %s", send_wakeup ? "true" : "false");
     this->send_wakeup_ = send_wakeup;

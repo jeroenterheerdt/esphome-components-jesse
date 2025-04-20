@@ -27,10 +27,10 @@
 36 - print bitmap
 *46 - print barcode
 *XX - print qr code (in basic and advanced datasheet)
-XX - full cut
+XX - cut (full/partial) - from advanced datasheet
 XX - partial cut
-# also check what else the printer can do, maybe cut paper as well? (see datasheet linked here:
-https://wiki.dfrobot.com/Embedded%20Thermal%20Printer%20-%20TTL%20Serial%20SKU%3A%20DFR0503-EN)
+# basic datasheet: https://dfimg.dfrobot.com/nobody/wiki/0c0a789684349c93a55e754f49bdea18.pdf
+# advanced datasheet: https://wiki.dfrobot.com/Embedded%20Thermal%20Printer%20-%20TTL%20Serial%20SKU%3A%20DFR0503-EN
 */
 namespace esphome {
 namespace thermal_printer {
@@ -75,6 +75,8 @@ static const uint8_t QR_CODE_PRINT_CMD[] = {GS, QR_FN, QR_MOD, 0x03, 0x00, 0x31,
 static const uint8_t CUT_FULL_CMD[] = {ESC, 0x69};     // ESC i
 static const uint8_t CUT_PARTIAL_CMD[] = {ESC, 0x6D};  // ESC m
 
+// Bitmap print commands
+static const uint8_t PRINT_BITMAP_CMD[] = {ESC, 0x2A, 0x21};  // ESC * 33
 // Other
 static const uint8_t BYTES_PER_LOOP = 120;
 
@@ -398,6 +400,42 @@ void ThermalPrinterDisplay::cut(std::string cut_type) {
   } else {
     ESP_LOGW(TAG, "Invalid cut type: %s", cut_type.c_str());
   }
+}
+
+void ThermalPrinterDisplay::print_image(image::Image *image) {
+  this->init_();
+  const char *tag = "print_image";
+  if (image->get_width() > this->get_width_internal() || image->get_height() > this->get_height_internal()) {
+    ESP_LOGW(tag, "Image is too large");
+    return;
+  }
+  for (int y = 0; y < image->get_height(); y += 24) {
+    // set line spacing to 24 dots
+    this->write_array(SET_ROW_SPACING_CMD, sizeof(SET_ROW_SPACING_CMD));
+    this->write_byte(24);
+    // begin bit image mode
+    this->write_array(PRINT_BITMAP_CMD, sizeof(PRINT_BITMAP_CMD));
+    this->write_byte((uint8_t) (image->get_width() & 0xFF));
+    this->write_byte((uint8_t) ((image->get_width() >> 8) & 0xFF));
+    for (int x = 0; x < image->get_width(); ++x) {
+      for (int k = 0; k < 3; ++k) {
+        uint8_t b = 0;
+        for (int bit = 0; bit < 8; ++bit) {
+          int yy = y + k * 8 + bit;
+          if (yy < image->get_height()) {
+            Color color = image->get_pixel(x, yy);
+            if (color.is_on()) {
+              b |= (1 << (7 - bit));
+            }
+          }
+        }
+        this->write_byte(b);
+      }
+    }
+  }
+  this->write_byte('\n');
+  // reset line spacing
+  this->write_array(SET_ROW_SPACING_CMD, sizeof(SET_ROW_SPACING_CMD));
 }
 
 void ThermalPrinterDisplay::queue_data_(std::vector<uint8_t> data) {
