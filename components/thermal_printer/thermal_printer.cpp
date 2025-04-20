@@ -582,10 +582,5 @@ std::string ThermalPrinterDisplay::toUpperCase(const std::string &input) {
   return result;  // Return the transformed string
 }
 
-// Method to try to convert to base64
-bool ThermalPrinterDisplay::decode_base64(const std::string &input, std::vector<uint8_t> &output) {
-  return base64::decode(input, output);
-}
-
 }  // namespace thermal_printer
 }  // namespace esphome
