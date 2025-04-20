@@ -206,10 +206,12 @@ template<typename... Ts> class ThermalPrinterCutAction : public Action<Ts...>, p
 template<typename... Ts>
 class ThermalPrinterPrintImageAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:
-  TEMPLATABLE_VALUE(std::string, image)
-  TEMPLATABLE_VALUE(int, width)
+  TEMPLATABLE_VALUE(std::string, image_data)
+  TEMPLATABLE_VALUE(int, image_width)
 
-  void play(Ts... x) override { this->parent_->print_image(this->image_.value(x...), this->width_.value(x...)); }
+  void play(Ts... x) override {
+    this->parent_->print_image(this->image_data_.value(x...), this->image_width_.value(x...));
+  }
 };
 
 }  // namespace thermal_printer
