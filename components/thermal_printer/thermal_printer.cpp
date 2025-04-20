@@ -401,9 +401,38 @@ void ThermalPrinterDisplay::cut(std::string cut_type) {
   }
 }
 
-void ThermalPrinterDisplay::print_image(std::string image) {
+void ThermalPrinterDisplay::print_image(std::string image, int width) {
   this->init_();
   const char *tag = "print_image";
+  std::vector<uint8_t> bitmap_data;
+  bitmap_data = base64_decode(image);
+
+  const int bytes_per_line = width / 8;
+  const int total_lines = bitmap_data.size() / bytes_per_line;
+  for (int line = 0; line < total_lines; line += 24) {
+    this->write_array(SET_ROW_SPACING_CMD, sizeof(SET_ROW_SPACING_CMD));
+    this->write_byte(24);
+    this->write_array(PRINT_BITMAP_CMD, sizeof(PRINT_BITMAP_CMD));
+    this->write_byte((uint8_t) (bytes_per_line & 0xFF));
+    this->write_byte(0x00);
+
+    for (int x = 0; x < bytes_per_line; ++x) {
+      for (int k = 0; k < 3; ++k) {
+        int index = (line + k * 8) * bytes_per_line + x;
+        if (index < bitmap_data.size()) {
+          uint8_t b = bitmap_data[index];
+          this->write_byte(b);
+        } else {
+          this->write_byte(0x00);
+        }
+      }
+    }
+    this->write_byte('\n');
+  }
+  // reset line spacing
+  this->write_array(SET_ROW_SPACING_CMD, sizeof(SET_ROW_SPACING_CMD));
+  this->write_byte(32);
+
   /*if (image->get_width() > this->get_width_internal() || image->get_height() > this->get_height_internal()) {
     ESP_LOGW(tag, "Image is too large");
     return;

@@ -7,6 +7,7 @@
 #include <cinttypes>
 #include <queue>
 #include <vector>
+#include <base64.h>
 
 namespace esphome {
 namespace thermal_printer {
@@ -61,7 +62,8 @@ class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
                      // QRCodeErrorCorrectionLevel error_correction_level = QRCodeErrorCorrectionLevel::LEVEL_L,
                      std::string error_correction_level = "LEVEL_L", uint8_t size = 3);
   void cut(std::string cut_type = "Full");
-  void print_image(std::string image);
+  void print_image(std::string image, int width);
+
   void set_send_wakeup(bool send_wakeup) {
     ESP_LOGD("set_send_wakeup", "send_wakeup: %s", send_wakeup ? "true" : "false");
     this->send_wakeup_ = send_wakeup;
@@ -198,6 +200,15 @@ template<typename... Ts> class ThermalPrinterCutAction : public Action<Ts...>, p
  public:
   TEMPLATABLE_VALUE(std::string, cut_type)
   void play(Ts... x) override { this->parent_->cut(this->cut_type_.value(x...)); }
+};
+
+template<typename... Ts>
+class ThermalPrinterPrintImageAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
+ public:
+  TEMPLATABLE_VALUE(std::string, image)
+  TEMPLATABLE_VALUE(int, width)
+
+  void play(Ts... x) override { this->parent_->print_image(this->image_.value(x...), this->width_.value(x...)); }
 };
 
 }  // namespace thermal_printer
