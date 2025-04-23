@@ -500,9 +500,11 @@ bool ThermalPrinterDisplay::has_paper() {
   this->write_array(GET_STATUS_CMD);
 
   int status = -1;
+  int data = -1;
   for (uint8_t i = 0; i < 10; i++) {
-    if (this->stream_->available()) {
-      status = this->stream_->read();
+    this->read_byte(data);
+    if (data != nullptr) {
+      status = data;
       break;
     }
 

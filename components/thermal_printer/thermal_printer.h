@@ -93,7 +93,6 @@ class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
 
  private:
   std::string toUpperCase(const std::string &input);
-  bool decode_base64(const std::string &input, std::vector<uint8_t> &output);
 };
 
 template<typename... Ts>
