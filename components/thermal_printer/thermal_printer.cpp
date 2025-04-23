@@ -434,6 +434,7 @@ bool ThermalPrinterDisplay::has_paper() {
   }
   ESP_LOGD(TAG, "status: %d", status & 0b00000100);
   return !(status & 0b00000100);*/
+  return true;
 }
 
 void ThermalPrinterDisplay::queue_data_(std::vector<uint8_t> data) {
