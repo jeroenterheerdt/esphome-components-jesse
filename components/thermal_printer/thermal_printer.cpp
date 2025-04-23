@@ -411,7 +411,7 @@ void ThermalPrinterDisplay::cut(std::string cut_type) {
 }
 
 void ThermalPrinterDisplay::print_image(std::string image, int width) {
-  this->init_();
+  // this->init_();
   const char *tag = "print_image";
   // use image2cpp!!
   this->write_array(test_bitmap, sizeof(test_bitmap));
@@ -500,7 +500,7 @@ bool ThermalPrinterDisplay::has_paper() {
   this->write_array(GET_STATUS_CMD);
 
   int status = -1;
-  int data = -1;
+  uin8t_t *data = -1;
   for (uint8_t i = 0; i < 10; i++) {
     this->read_byte(data);
     if (data != nullptr) {
@@ -529,7 +529,7 @@ void ThermalPrinterDisplay::queue_data_(const uint8_t *data, size_t size) {
 }
 
 void ThermalPrinterDisplay::loop() {
-  this->has_paper = this->has_paper();
+  this->haspaper_ = this->has_paper();
   if (this->queue_.empty()) {
     return;
   }

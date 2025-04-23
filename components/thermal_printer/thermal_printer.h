@@ -87,7 +87,7 @@ class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
   bool ready_{false};
   bool send_wakeup_{false};
   double font_size_factor_{1.0};
-  bool has_paper_{true};
+  bool haspaper_{true};
   uint8_t spacing{32};
   std::vector<uint8_t> tab_positions{};
 
