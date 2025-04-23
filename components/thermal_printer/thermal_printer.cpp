@@ -414,7 +414,7 @@ void ThermalPrinterDisplay::print_image(std::string image, int width) {
   // this->init_();
   const char *tag = "print_image";
   // use image2cpp!!
-  this->write_array(show, sizeof(show));
+  this->write_array(test_bitmap, sizeof(test_bitmap));
   this->write_byte('\n');
 }
 
