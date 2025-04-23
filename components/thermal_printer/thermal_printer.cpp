@@ -499,12 +499,12 @@ void ThermalPrinterDisplay::print_image(std::string image, int width) {
 bool ThermalPrinterDisplay::has_paper() {
   this->write_array(GET_STATUS_CMD, sizeof(GET_STATUS_CMD));
 
-  int status = -1;
+  uint8_t status = -1;
   uint8_t *data = nullptr;
   for (uint8_t i = 0; i < 10; i++) {
     this->read_byte(data);
     if (data != nullptr) {
-      status = data;
+      status = static_cast<int>(*data);
       break;
     }
 
