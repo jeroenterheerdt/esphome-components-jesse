@@ -27,8 +27,9 @@
 36 - print bitmap ~ wip
 *46 - print barcode
 *XX - print qr code (in basic and advanced datasheet)
-#XX - cut (full/partial) - from advanced datasheet - didn't work for my printer
-XX - partial cut
+*XX - cut (full/partial) - from advanced datasheet - didn't work for my printer
+*XX - partial cut
+*XX - check printer has paper
 # basic datasheet: https://dfimg.dfrobot.com/nobody/wiki/0c0a789684349c93a55e754f49bdea18.pdf
 # advanced datasheet: https://wiki.dfrobot.com/Embedded%20Thermal%20Printer%20-%20TTL%20Serial%20SKU%3A%20DFR0503-EN
 */
@@ -407,6 +408,7 @@ void ThermalPrinterDisplay::print_image(std::string image, int width) {
   this->init_();
   const char *tag = "print_image";
   // use image2cpp!!
+  this->write_array(test_bitmap, sizeof(test_bitmap));
 
   // this is the example code from the wiki
   /*this->write_array(show, sizeof(show));
