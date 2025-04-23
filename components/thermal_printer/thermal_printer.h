@@ -75,6 +75,7 @@ class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
   }
 
  protected:
+  bool has_paper();
   void draw_absolute_pixel_internal(int x, int y, Color color) override;
   size_t get_buffer_length_() { return size_t(this->get_width_internal()) * size_t(this->get_height_internal()) / 8; }
   void queue_data_(std::vector<uint8_t> data);
@@ -86,6 +87,7 @@ class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
   bool ready_{false};
   bool send_wakeup_{false};
   double font_size_factor_{1.0};
+  bool has_paper_{true};
   uint8_t spacing{32};
   std::vector<uint8_t> tab_positions{};
 

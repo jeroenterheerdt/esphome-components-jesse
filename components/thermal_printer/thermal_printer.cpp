@@ -29,7 +29,8 @@
 *XX - print qr code (in basic and advanced datasheet)
 *XX - cut (full/partial) - from advanced datasheet - didn't work for my printer
 *XX - partial cut
-*XX - check printer has paper
+XX - check printer has paper
+XX - print test page
 # basic datasheet: https://dfimg.dfrobot.com/nobody/wiki/0c0a789684349c93a55e754f49bdea18.pdf
 # advanced datasheet: https://wiki.dfrobot.com/Embedded%20Thermal%20Printer%20-%20TTL%20Serial%20SKU%3A%20DFR0503-EN
 */
@@ -44,6 +45,7 @@ static const uint8_t TAB = '\t';  // Horizontal tab
 
 static const uint8_t INIT_PRINTER_CMD[] = {ESC, 0x40};
 static const uint8_t WAKEUP_CMD[] = {ESC, 0x38, 0, 0};
+
 static const uint8_t SET_ALIGNMENT_CMD[] = {ESC, 0x61};
 static const uint8_t SET_INVERSE_CMD[] = {GS, 0x42};
 static const uint8_t SET_90_DEGREE_CMD[] = {ESC, 0x56};
@@ -79,6 +81,10 @@ static const uint8_t CUT_PARTIAL_CMD[] = {ESC, 0x6D};  // ESC m
 // Bitmap print commands
 static const uint8_t LOAD_BITMAP_CMD[] = {ESC, 0x2A, 0x20};  // ESC * 32
 static const uint8_t PRINT_BITMAP_CMD[] = {GS, 0x2F};        // GS /
+
+// Get status command
+static const uint8_t GET_STATUS_CMD[] = {ESC, 0x76, 0x00};  // ESC v 0
+
 // Other
 static const uint8_t BYTES_PER_LOOP = 120;
 
@@ -489,6 +495,22 @@ void ThermalPrinterDisplay::print_image(std::string image, int width) {
   this->write_array(SET_ROW_SPACING_CMD, sizeof(SET_ROW_SPACING_CMD));*/
 }
 
+bool ThermalPrinterDisplay::has_paper() {
+  this->write_array(GET_STATUS_CMD);
+
+  int status = -1;
+  for (uint8_t i = 0; i < 10; i++) {
+    if (this->stream_->available()) {
+      status = this->stream_->read();
+      break;
+    }
+
+    delay(100);
+  }
+
+  return !(status & 0b00000100);
+}
+
 void ThermalPrinterDisplay::queue_data_(std::vector<uint8_t> data) {
   for (size_t i = 0; i < data.size(); i += BYTES_PER_LOOP) {
     std::vector<uint8_t> chunk(data.begin() + i, data.begin() + std::min(i + BYTES_PER_LOOP, data.size()));
@@ -504,6 +526,7 @@ void ThermalPrinterDisplay::queue_data_(const uint8_t *data, size_t size) {
 }
 
 void ThermalPrinterDisplay::loop() {
+  this->has_paper = this->has_paper();
   if (this->queue_.empty()) {
     return;
   }
