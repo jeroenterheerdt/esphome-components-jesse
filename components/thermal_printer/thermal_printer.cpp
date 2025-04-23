@@ -510,7 +510,7 @@ bool ThermalPrinterDisplay::has_paper() {
 
     delay(100);
   }
-
+  ESP_LOGD(TAG, "status: %d", status & 0b00000100);
   return !(status & 0b00000100);
 }
 
