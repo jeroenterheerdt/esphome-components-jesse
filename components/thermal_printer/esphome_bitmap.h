@@ -1,5 +1,5 @@
 #pragma once
-unsigned char esphome_bitmap[] = {
+unsigned char esphome_logo[] = {
     0x1B, 0x2A, 0x20, 0xFA,
     0x00,  // Bitmap size: 24*250, revise parameter with the reference of general instruction set 34 and 35.
     // 'esphome_logo', 24x250px, 90 degrees turned and horizontally mirrored and inverted the colors

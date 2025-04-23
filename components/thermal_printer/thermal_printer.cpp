@@ -463,7 +463,7 @@ void ThermalPrinterDisplay::print_image(std::string image, int width) {
   };*/
 
   // this->write_array(test_bitmap, sizeof(test_bitmap));
-  this->write_array(esphome_bitmap, sizeof(esphome_bitmap));
+  this->write_array(esphome_logo, sizeof(esphome_logo));
   this->write_byte('\n');
   this->write_byte('\n');
   this->write_byte('\n');
