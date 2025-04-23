@@ -1,4 +1,5 @@
 #include "thermal_printer.h"
+#include "esphome_bitmap.h"
 #include <cinttypes>
 
 /* Commands (* means done)
@@ -413,7 +414,7 @@ void ThermalPrinterDisplay::print_image(std::string image, int width) {
   // this->init_();
   const char *tag = "print_image";
   // use image2cpp!!
-  unsigned char test_bitmap[] = {
+  /*unsigned char test_bitmap[] = {
       0x1B, 0x2A, 0x20, 0xFA, 0x00,  // Bitmap size: 24*250, revise parameter with the reference of general instruction
                                      // set 34 and 35.
       0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -459,10 +460,11 @@ void ThermalPrinterDisplay::print_image(std::string image, int width) {
       0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,  // Print a division line
       0x1B, 0x33, 0x00, 0x0A, 0x1D, 0x2F, 0x30                           // Print bitmap instruction
 
-  };
+  };*/
 
-  this->write_array(test_bitmap, sizeof(test_bitmap));
-  this->write_byte('\n');
+  // this->write_array(test_bitmap, sizeof(test_bitmap));
+  this->write_array(esphome_bitmap, sizeof(esphome_bitmap));
+  this->write_byte('\n\n\n\n');
 }
 
 bool ThermalPrinterDisplay::has_paper() {
