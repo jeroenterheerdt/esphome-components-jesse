@@ -464,7 +464,10 @@ void ThermalPrinterDisplay::print_image(std::string image, int width) {
 
   // this->write_array(test_bitmap, sizeof(test_bitmap));
   this->write_array(esphome_bitmap, sizeof(esphome_bitmap));
-  this->write_byte('\n\n\n\n');
+  this->write_byte('\n');
+  this->write_byte('\n');
+  this->write_byte('\n');
+  this->write_byte('\n');
 }
 
 bool ThermalPrinterDisplay::has_paper() {
