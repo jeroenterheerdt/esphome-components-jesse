@@ -1,2 +1,2 @@
 #pragma once
-extern unsigned char esphome_logo;
+extern unsigned uint8_t esphome_logo;
