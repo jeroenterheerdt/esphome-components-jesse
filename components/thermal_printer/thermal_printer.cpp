@@ -455,12 +455,24 @@ void ThermalPrinterDisplay::demo() {
   // void ThermalPrinterDisplay::print_text(std::string text,
   // std::string align, bool inverse, bool ninety_degree,  uint8_t underline_weight, bool updown, bool bold, uint8_t
   // font_width,  uint8_t font_height, std::string font, bool strikethrough)
+  this->print_image("x", 24, 250);
   this->print_text("HOT OFF THE PRESS", "C", false, false, 0, false, true, 2, 2);
   this->print_text("This printer is so fast, it leaves rumors in the dust.", "L", false, false, 0, false, true, 2, 2);
+  this->print_text("It doesn't just print—", "L", false, false, 0, false, false);
+  this->print_text("it sizzles.", "L", false, false, 2, false, false);
+  this->print_text("Need a list?", "L", false, false, 0, false, false, 2);
+  this->print_text("It's on a roll.", "L", false, false, 0, false, true, 2);
+  this->print_text("Even your coffee’s jealous.", "R", true);
+  this->print_text("Pixel-perfect puns?", "C", false, false, 0, false, true, 1, 1, "B");
+  this->print_text("You bet your bitmaps.", "C", false, false, 0, false, true, 1, 1, "B");
+  this->print_text("This printer turns heads—literally.", "C", false, true);
+  this->print_text("This joke’s going south…", "C", false, false, 0, true);
+  this->print_text("THERMAL IS HOTTER THAN INK!", "C", false, false, 2, false, true, 2, 2);
+  this->print_qr_code("esphome.io", "MODEL_2", "LEVEL_L", 3);
+}
+/*
 
-  /*
-
-  [Center Aligned, Bold, Double Height]
+[Center Aligned, Bold, Double Height]
 HOT OFF THE PRESS
 
 [Left Align, Bold]
@@ -492,7 +504,7 @@ This joke’s going south…
 
 [Bold On, Double Height & Width, Center Align]
 THERMAL IS HOTTER THAN INK!*/
-  // end with qr code to esphome.io
+// end with qr code to esphome.io
 }
 void ThermalPrinterDisplay::queue_data_(std::vector<uint8_t> data) {
   for (size_t i = 0; i < data.size(); i += BYTES_PER_LOOP) {
