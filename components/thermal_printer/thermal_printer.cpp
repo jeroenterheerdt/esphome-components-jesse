@@ -431,11 +431,8 @@ void ThermalPrinterDisplay::print_image(std::string image, int height, int width
   // rotating
   // inverting colors
   // determine width or accept width param
-  std::vector<uint8_t> rotatedBitmap;
 
-  rotateAndInvertBitmap(test_bitmap, rotatedBitmap, width, height);
-
-  this->write_array(rotatedBitmap.data(), sizeof(rotatedBitmap.data()));
+  this->write_array(test_bitmap.data(), sizeof(test_bitmap.data()));
   this->write_byte('\n');
 
   // this is the example code from the wiki
@@ -515,12 +512,6 @@ void ThermalPrinterDisplay::print_image(std::string image, int height, int width
   this->write_byte('\n');
   // reset line spacing
   this->write_array(SET_ROW_SPACING_CMD, sizeof(SET_ROW_SPACING_CMD));*/
-}
-
-void ThermalPrinterDisplay::rotateAndInvertBitmap(const std::vector<uint8_t> &bitmap) {
-  for (auto &byte : bitmap) {
-    byte = static_cast<uint8_t>(~byte);  // Bitwise NOT to flip all bits
-  }
 }
 
 bool ThermalPrinterDisplay::has_paper() {
