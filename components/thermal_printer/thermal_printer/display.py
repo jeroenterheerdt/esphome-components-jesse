@@ -1,0 +1,472 @@
+import logging
+from esphome import automation
+import esphome.codegen as cg
+from esphome.components import display, uart
+import esphome.config_validation as cv
+from esphome.const import CONF_HEIGHT, CONF_ID, CONF_LAMBDA
+
+DEPENDENCIES = ["uart"]
+
+_LOGGER = logging.getLogger(__name__)
+
+thermal_printer_ns = cg.esphome_ns.namespace("thermal_printer")
+
+ThermalPrinterDisplay = thermal_printer_ns.class_(
+    "ThermalPrinterDisplay", display.DisplayBuffer, uart.UARTDevice
+)
+ThermalPrinterPrintTextActionDWDH = thermal_printer_ns.class_(
+    "ThermalPrinterPrintTextActionDWDH", automation.Action
+)
+ThermalPrinterPrintTextActionFWFH = thermal_printer_ns.class_(
+    "ThermalPrinterPrintTextActionFWFH", automation.Action
+)
+ThermalPrinterTabPositionsAction = thermal_printer_ns.class_(
+    "ThermalPrinterTabPositionsAction", automation.Action
+)
+ThermalPrinterRowSpacingAction = thermal_printer_ns.class_(
+    "ThermalPrinterRowSpacingAction", automation.Action
+)
+ThermalPrinterNewLineAction = thermal_printer_ns.class_(
+    "ThermalPrinterNewLineAction", automation.Action
+)
+ThermalPrinterBarcodeAction = thermal_printer_ns.class_(
+    "ThermalPrinterBarcodeAction", automation.Action
+)
+ThermalPrinterQRCodeAction = thermal_printer_ns.class_(
+    "ThermalPrinterQRCodeAction", automation.Action
+)
+ThermalPrinterCutAction = thermal_printer_ns.class_(
+    "ThermalPrinterCutAction", automation.Action
+)
+ThermalPrinterPrintImageAction = thermal_printer_ns.class_(
+    "ThermalPrinterPrintImageAction", automation.Action
+)
+
+CONF_FONT_SIZE_FACTOR = "font_size_factor"
+CONF_TEXT = "text"
+CONF_SEND_WAKEUP = "send_wakeup"
+CONF_LINES = "lines"
+CONF_ALIGN = "align"
+CONF_INVERSE = "inverse"
+CONF_90_DEGREE = "ninety_degree"
+CONF_UNDERLINE_WEIGHT = "underline_weight"
+CONF_UPDOWN = "upside_down"
+CONF_BOLD = "bold"
+CONF_DOUBLE_WIDTH = "double_width"
+CONF_DOUBLE_HEIGHT = "double_height"
+CONF_FONT_WIDTH = "font_width"
+CONF_FONT_HEIGHT = "font_height"
+CONF_FONT = "font"
+CONF_STRIKETHROUGH = "strikethrough"
+CONF_TAB_POSITIONS = "tab_positions"
+CONF_ROW_SPACING = "row_spacing"
+CONF_BARCODE_TEXT = "barcode_text"
+CONF_BARCODE_TYPE = "barcode_type"
+CONF_BARCODE_WIDTH = "width"
+CONF_BARCODE_HEIGHT = "height"
+CONF_BARCODE_TEXT_POSITION = "text_position"
+CONF_QRCODE_TEXT = "qrcode_text"
+CONF_QRCODE_MODEL = "qrcode_model"
+CONF_QRCODE_ERROR_CORRECTION_LEVEL = "qrcode_error_correction_level"
+CONF_QRCODE_SIZE = "qrcode_size"
+CONF_CUT_TYPE = "cut_type"
+CONF_IMAGE_DATA = "image_data"
+CONF_IMAGE_WIDTH = "image_width"
+CONF_IMAGE_HEIGHT = "image_height"
+
+CONFIG_SCHEMA = (
+    display.FULL_DISPLAY_SCHEMA.extend(
+        {
+            cv.GenerateID(): cv.declare_id(ThermalPrinterDisplay),
+            cv.Required(CONF_HEIGHT): cv.uint16_t,
+            cv.Optional(CONF_SEND_WAKEUP, default=False): cv.boolean,
+            cv.Optional(CONF_FONT_SIZE_FACTOR, default=1.0): cv.float_,
+        }
+    )
+    .extend(
+        cv.polling_component_schema("never")
+    )  # This component should always be manually updated with actions
+    .extend(uart.UART_DEVICE_SCHEMA)
+)
+
+
+async def to_code(config):
+    var = cg.new_Pvariable(config[CONF_ID])
+    await display.register_display(var, config)
+    await uart.register_uart_device(var, config)
+
+    cg.add(var.set_height(config[CONF_HEIGHT]))
+    _LOGGER.debug("wakeup: %s", config[CONF_SEND_WAKEUP])
+    cg.add(var.set_send_wakeup(config[CONF_SEND_WAKEUP]))
+    # _LOGGER.debug("font size factor: %s", config[CONF_FONT_SIZE_FACTOR])
+    # cg.add(var.set_font_size_factor(config[CONF_FONT_SIZE_FACTOR]))
+
+    if lambda_config := config.get(CONF_LAMBDA):
+        lambda_ = await cg.process_lambda(
+            lambda_config, [(display.DisplayRef, "it")], return_type=cg.void
+        )
+        cg.add(var.set_writer(lambda_))
+
+
+# PRINT_TEXT() width double height and width bools
+@automation.register_action(
+    "thermal_printer.print_text",
+    ThermalPrinterPrintTextActionDWDH,
+    cv.maybe_simple_value(
+        cv.Schema(
+            {
+                cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
+                cv.Required(CONF_TEXT): cv.templatable(cv.string),
+                cv.Optional(CONF_ALIGN, default="L"): cv.templatable(
+                    cv.one_of("Left", "Center", "Right")
+                ),
+                cv.Optional(CONF_INVERSE, default=False): cv.templatable(cv.boolean),
+                cv.Optional(CONF_90_DEGREE, default=False): cv.templatable(cv.boolean),
+                cv.Optional(CONF_UNDERLINE_WEIGHT, default=0): cv.templatable(
+                    cv.int_range(0, 2)
+                ),
+                cv.Optional(CONF_UPDOWN, default=False): cv.templatable(cv.boolean),
+                cv.Optional(CONF_BOLD, default=False): cv.templatable(cv.boolean),
+                cv.Optional(CONF_DOUBLE_WIDTH, default=False): cv.templatable(
+                    cv.boolean
+                ),
+                cv.Optional(CONF_DOUBLE_HEIGHT, default=False): cv.templatable(
+                    cv.boolean
+                ),
+                cv.Optional(CONF_FONT, default="A"): cv.templatable(
+                    cv.one_of("A", "B")
+                ),
+                cv.Optional(CONF_STRIKETHROUGH, default=False): cv.templatable(
+                    cv.boolean
+                ),
+            }
+        ),
+        key=CONF_TEXT,
+    ),
+)
+async def thermal_printer_print_text_DW_DH_action_to_code(
+    config, action_id, template_arg, args
+):
+    var = cg.new_Pvariable(action_id, template_arg)
+    await cg.register_parented(var, config[CONF_ID])
+    templ = await cg.templatable(config[CONF_TEXT], args, cg.std_string)
+    cg.add(var.set_text(templ))
+    templ = await cg.templatable(config[CONF_ALIGN], args, cg.std_string)
+    cg.add(var.set_align(templ))
+    templ = await cg.templatable(config[CONF_INVERSE], args, cg.bool_)
+    cg.add(var.set_inverse(templ))
+    templ = await cg.templatable(config[CONF_90_DEGREE], args, cg.bool_)
+    cg.add(var.set_ninety_degree(templ))
+    templ = await cg.templatable(config[CONF_UNDERLINE_WEIGHT], args, cg.uint8)
+    cg.add(var.set_underline_weight(templ))
+    templ = await cg.templatable(config[CONF_UPDOWN], args, cg.bool_)
+    cg.add(var.set_updown(templ))
+    templ = await cg.templatable(config[CONF_BOLD], args, cg.bool_)
+    cg.add(var.set_bold(templ))
+    templ = await cg.templatable(config[CONF_DOUBLE_WIDTH], args, cg.bool_)
+    cg.add(var.set_double_width(templ))
+    templ = await cg.templatable(config[CONF_DOUBLE_HEIGHT], args, cg.bool_)
+    cg.add(var.set_double_height(templ))
+    templ = await cg.templatable(config[CONF_FONT], args, cg.std_string)
+    cg.add(var.set_font(templ))
+    templ = await cg.templatable(config[CONF_STRIKETHROUGH], args, cg.bool_)
+    cg.add(var.set_strikethrough(templ))
+
+    return var
+
+
+# PRINT_TEXT() width font height and width ints
+@automation.register_action(
+    "thermal_printer.print_text",
+    ThermalPrinterPrintTextActionFWFH,
+    cv.maybe_simple_value(
+        cv.Schema(
+            {
+                cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
+                cv.Required(CONF_TEXT): cv.templatable(cv.string),
+                cv.Optional(CONF_ALIGN, default="L"): cv.templatable(
+                    cv.one_of("Left", "Center", "Right")
+                ),
+                cv.Optional(CONF_INVERSE, default=False): cv.templatable(cv.boolean),
+                cv.Optional(CONF_90_DEGREE, default=False): cv.templatable(cv.boolean),
+                cv.Optional(CONF_UNDERLINE_WEIGHT, default=0): cv.templatable(
+                    cv.int_range(0, 2)
+                ),
+                cv.Optional(CONF_UPDOWN, default=False): cv.templatable(cv.boolean),
+                cv.Optional(CONF_BOLD, default=False): cv.templatable(cv.boolean),
+                cv.Optional(CONF_FONT_WIDTH, default=1): cv.templatable(
+                    cv.int_range(1, 8)
+                ),
+                cv.Optional(CONF_FONT_HEIGHT, default=1): cv.templatable(
+                    cv.int_range(1, 8)
+                ),
+                cv.Optional(CONF_FONT, default="A"): cv.templatable(
+                    cv.one_of("A", "B")
+                ),
+                cv.Optional(CONF_STRIKETHROUGH, default=False): cv.templatable(
+                    cv.boolean
+                ),
+            }
+        ),
+        key=CONF_TEXT,
+    ),
+)
+async def thermal_printer_print_text_FW_FH_action_to_code(
+    config, action_id, template_arg, args
+):
+    var = cg.new_Pvariable(action_id, template_arg)
+    await cg.register_parented(var, config[CONF_ID])
+    templ = await cg.templatable(config[CONF_TEXT], args, cg.std_string)
+    cg.add(var.set_text(templ))
+    templ = await cg.templatable(config[CONF_ALIGN], args, cg.std_string)
+    cg.add(var.set_align(templ))
+    templ = await cg.templatable(config[CONF_INVERSE], args, cg.bool_)
+    cg.add(var.set_inverse(templ))
+    templ = await cg.templatable(config[CONF_90_DEGREE], args, cg.bool_)
+    cg.add(var.set_ninety_degree(templ))
+    templ = await cg.templatable(config[CONF_UNDERLINE_WEIGHT], args, cg.uint8)
+    cg.add(var.set_underline_weight(templ))
+    templ = await cg.templatable(config[CONF_UPDOWN], args, cg.bool_)
+    cg.add(var.set_updown(templ))
+    templ = await cg.templatable(config[CONF_BOLD], args, cg.bool_)
+    cg.add(var.set_bold(templ))
+    templ = await cg.templatable(config[CONF_FONT_WIDTH], args, cg.uint8)
+    cg.add(var.set_font_width(templ))
+    templ = await cg.templatable(config[CONF_FONT_HEIGHT], args, cg.uint8)
+    cg.add(var.set_font_height(templ))
+    templ = await cg.templatable(config[CONF_FONT], args, cg.std_string)
+    cg.add(var.set_font(templ))
+    templ = await cg.templatable(config[CONF_STRIKETHROUGH], args, cg.bool_)
+    cg.add(var.set_strikethrough(templ))
+
+    return var
+
+
+# SET TAB POSITIONS()
+@automation.register_action(
+    "thermal_printer.set_tab_positions",
+    ThermalPrinterTabPositionsAction,
+    cv.maybe_simple_value(
+        cv.Schema(
+            {
+                cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
+                cv.Required(CONF_TAB_POSITIONS): cv.templatable(
+                    cv.ensure_list(cv.int_)
+                ),
+            }
+        ),
+        key=CONF_TAB_POSITIONS,
+    ),
+)
+async def thermal_printer_set_tab_positions_action_to_code(
+    config, action_id, template_arg, args
+):
+    var = cg.new_Pvariable(action_id, template_arg)
+    await cg.register_parented(var, config[CONF_ID])
+    templ = await cg.templatable(
+        config[CONF_TAB_POSITIONS], args, cg.std_vector(cg.int_)
+    )
+    # cg.add(var.set_tabs(templ))
+    return var
+
+
+# SET_ROW_SPACING()
+@automation.register_action(
+    "thermal_printer.set_row_spacing",
+    ThermalPrinterRowSpacingAction,
+    cv.maybe_simple_value(
+        cv.Schema(
+            {
+                cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
+                cv.Required(CONF_ROW_SPACING): cv.templatable(cv.int_),
+            }
+        ),
+        key=CONF_ROW_SPACING,
+    ),
+)
+async def thermal_printer_set_row_spacing_action_to_code(
+    config, action_id, template_arg, args
+):
+    var = cg.new_Pvariable(action_id, template_arg)
+    await cg.register_parented(var, config[CONF_ID])
+    templ = await cg.templatable(config[CONF_ROW_SPACING], args, cg.uint8)
+    cg.add(var.set_spacing(templ))
+    return var
+
+
+# NEW_LINE()
+@automation.register_action(
+    "thermal_printer.new_line",
+    ThermalPrinterNewLineAction,
+    cv.maybe_simple_value(
+        cv.Schema(
+            {
+                cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
+                cv.Required(CONF_LINES): cv.templatable(cv.int_),
+            }
+        ),
+        key=CONF_LINES,
+    ),
+)
+async def thermal_printer_new_line_action_to_code(
+    config, action_id, template_arg, args
+):
+    var = cg.new_Pvariable(action_id, template_arg)
+    await cg.register_parented(var, config[CONF_ID])
+    templ = await cg.templatable(config[CONF_LINES], args, cg.uint8)
+    cg.add(var.set_lines(templ))
+    return var
+
+
+# PRINT_BARCODE()
+@automation.register_action(
+    "thermal_printer.print_barcode",
+    ThermalPrinterBarcodeAction,
+    cv.maybe_simple_value(
+        cv.Schema(
+            {
+                cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
+                cv.Required(CONF_BARCODE_TEXT): cv.templatable(cv.string),
+                cv.Required(CONF_BARCODE_TYPE): cv.templatable(
+                    cv.one_of(
+                        "UPC_A", "UPC_E", "EAN_13", "EAN_8", "CODE_39", "ITF", "CODABAR"
+                    )
+                ),
+                cv.Optional(CONF_ALIGN, default="Left"): cv.templatable(
+                    cv.one_of("Left", "Center", "Right")
+                ),
+                cv.Optional(CONF_BARCODE_HEIGHT, default=50): cv.templatable(
+                    cv.int_range(1, 255)
+                ),
+                cv.Optional(CONF_BARCODE_WIDTH, default=2): cv.templatable(
+                    cv.int_range(1, 8)
+                ),
+                cv.Optional(
+                    CONF_BARCODE_TEXT_POSITION, default="Below"
+                ): cv.templatable(cv.one_of("None", "Above", "Below", "Both")),
+            }
+        ),
+        key=CONF_BARCODE_TEXT,
+    ),
+)
+async def thermal_printer_print_barcode_action_to_code(
+    config, action_id, template_arg, args
+):
+    var = cg.new_Pvariable(action_id, template_arg)
+    await cg.register_parented(var, config[CONF_ID])
+    templ = await cg.templatable(config[CONF_BARCODE_TEXT], args, cg.std_string)
+    cg.add(var.set_barcode_text(templ))
+    templ = await cg.templatable(config[CONF_BARCODE_TYPE], args, cg.std_string)
+    cg.add(var.set_barcode_type(templ))
+    templ = await cg.templatable(config[CONF_ALIGN], args, cg.std_string)
+    cg.add(var.set_barcode_align(templ))
+    templ = await cg.templatable(config[CONF_BARCODE_HEIGHT], args, cg.uint8)
+    cg.add(var.set_barcode_height(templ))
+    templ = await cg.templatable(config[CONF_BARCODE_WIDTH], args, cg.uint8)
+    cg.add(var.set_barcode_width(templ))
+    templ = await cg.templatable(
+        config[CONF_BARCODE_TEXT_POSITION], args, cg.std_string
+    )
+    cg.add(var.set_barcode_text_pos(templ))
+
+    return var
+
+
+# PRINT_QRCODE()
+@automation.register_action(
+    "thermal_printer.print_qrcode",
+    ThermalPrinterQRCodeAction,
+    cv.maybe_simple_value(
+        cv.Schema(
+            {
+                cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
+                cv.Required(CONF_QRCODE_TEXT): cv.templatable(cv.string),
+                cv.Optional(CONF_QRCODE_MODEL, default="Model_2"): cv.templatable(
+                    cv.one_of("Model_1", "Model_2")
+                ),
+                cv.Optional(
+                    CONF_QRCODE_ERROR_CORRECTION_LEVEL, default="Level_L"
+                ): cv.templatable(
+                    cv.one_of("Level_L", "Level_M", "Level_Q", "Level_H")
+                ),
+                cv.Optional(CONF_QRCODE_SIZE, default=3): cv.templatable(
+                    cv.int_range(1, 16)
+                ),
+            }
+        ),
+        key=CONF_QRCODE_TEXT,
+    ),
+)
+async def thermal_printer_print_qrcode_action_to_code(
+    config, action_id, template_arg, args
+):
+    var = cg.new_Pvariable(action_id, template_arg)
+    await cg.register_parented(var, config[CONF_ID])
+    templ = await cg.templatable(config[CONF_QRCODE_TEXT], args, cg.std_string)
+    cg.add(var.set_qr_code_text(templ))
+    templ = await cg.templatable(config[CONF_QRCODE_MODEL], args, cg.std_string)
+    cg.add(var.set_qr_code_model(templ))
+    templ = await cg.templatable(
+        config[CONF_QRCODE_ERROR_CORRECTION_LEVEL], args, cg.std_string
+    )
+    cg.add(var.set_qr_code_error_correction_level(templ))
+    templ = await cg.templatable(config[CONF_QRCODE_SIZE], args, cg.uint8)
+    cg.add(var.set_qr_code_size(templ))
+
+    return var
+
+
+# CUT()
+@automation.register_action(
+    "thermal_printer.cut",
+    ThermalPrinterCutAction,
+    cv.maybe_simple_value(
+        cv.Schema(
+            {
+                cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
+                cv.Optional(CONF_CUT_TYPE, default="Full"): cv.templatable(
+                    cv.one_of("Partial", "Full")
+                ),
+            }
+        ),
+        key=CONF_CUT_TYPE,
+    ),
+)
+async def thermal_printer_cut_action_to_code(config, action_id, template_arg, args):
+    var = cg.new_Pvariable(action_id, template_arg)
+    await cg.register_parented(var, config[CONF_ID])
+    templ = await cg.templatable(config[CONF_CUT_TYPE], args, cg.std_string)
+    cg.add(var.set_cut_type(templ))
+
+    return var
+
+
+# PRINT_IMAGE()
+@automation.register_action(
+    "thermal_printer.print_image",
+    ThermalPrinterPrintImageAction,
+    cv.maybe_simple_value(
+        cv.Schema(
+            {
+                cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
+                cv.Required(CONF_IMAGE_DATA): cv.templatable(cv.string),
+                cv.Required(CONF_IMAGE_HEIGHT): cv.templatable(cv.uint16_t),
+                cv.Required(CONF_IMAGE_WIDTH): cv.templatable(cv.uint16_t),
+            }
+        ),
+        key=CONF_IMAGE_DATA,
+    ),
+)
+async def thermal_printer_print_image_action_to_code(
+    config, action_id, template_arg, args
+):
+    var = cg.new_Pvariable(action_id, template_arg)
+    await cg.register_parented(var, config[CONF_ID])
+    templ = await cg.templatable(config[CONF_IMAGE_DATA], args, cg.std_string)
+    cg.add(var.set_image_data(templ))
+    templ = await cg.templatable(config[CONF_IMAGE_HEIGHT], args, cg.uint16)
+    cg.add(var.set_image_height(templ))
+    templ = await cg.templatable(config[CONF_IMAGE_WIDTH], args, cg.uint16)
+    cg.add(var.set_image_width(templ))
+
+    return var
