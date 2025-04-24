@@ -432,7 +432,7 @@ void ThermalPrinterDisplay::print_image(std::string image, int height, int width
   // inverting colors
   // determine width or accept width param
 
-  this->write_array(test_bitmap.data(), sizeof(test_bitmap.data()));
+  this->write_array(test_bitmap, sizeof(test_bitmap));
   this->write_byte('\n');
 }
 
