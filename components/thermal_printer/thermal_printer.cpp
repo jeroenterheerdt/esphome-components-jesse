@@ -79,8 +79,7 @@ static const uint8_t CUT_FULL_CMD[] = {ESC, 0x69};     // ESC i
 static const uint8_t CUT_PARTIAL_CMD[] = {ESC, 0x6D};  // ESC m
 
 // Bitmap print commands
-static const uint8_t LOAD_BITMAP_CMD[] = {ESC, 0x2A, 0x20};  // ESC * 32
-static const uint8_t PRINT_BITMAP_CMD[] = {GS, 0x2F};        // GS /
+static const uint8_t PRINT_BITMAP_CMD[] = {ESC, 0x2A, 0x20};  // ESC * 32
 
 // Get status command
 static const uint8_t GET_STATUS_CMD[] = {ESC, 0x76, 0x00};  // ESC v 0
@@ -414,6 +413,14 @@ void ThermalPrinterDisplay::print_image(std::string image, int width) {
   this->init_();
   const char *tag = "print_image";
   // use image2cpp!!
+  this->write_array(PRINT_BITMAP_CMD, sizeof(PRINT_BITMAP_CMD));
+  this->write_byte(width);
+
+  // this is hardcoded but should be automatically:
+  // rotating
+  // inverting colors
+  // determine width or accept width param
+
   this->write_array(test_bitmap, sizeof(test_bitmap));
   this->write_byte('\n');
 
