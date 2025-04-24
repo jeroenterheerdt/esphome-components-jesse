@@ -450,6 +450,50 @@ bool ThermalPrinterDisplay::has_paper() {
   return true;
 }
 
+void ThermalPrinterDisplay::demo() {
+  // print esphome logo
+  // void ThermalPrinterDisplay::print_text(std::string text,
+  // std::string align, bool inverse, bool ninety_degree,  uint8_t underline_weight, bool updown, bool bold, uint8_t
+  // font_width,  uint8_t font_height, std::string font, bool strikethrough)
+  this->print_text("HOT OFF THE PRESS", "C", false, false, 0, false, true, 2, 2);
+  this->print_text("This printer is so fast, it leaves rumors in the dust.", "L", false, false, 0, false, true, 2, 2);
+
+  /*
+
+  [Center Aligned, Bold, Double Height]
+HOT OFF THE PRESS
+
+[Left Align, Bold]
+This printer is so fast, it leaves rumors in the dust.
+
+[Normal Weight]
+It doesn't just print—
+[Underline On]it sizzles.[Underline Off]
+
+[Double Width, Normal Height]
+Need a list?
+[Bold On]It's on a roll.[Bold Off]
+
+[Right Align, Inverse On]
+Even your coffee’s jealous.
+[Inverse Off, Left Align]
+
+[Font B, Bold]
+Pixel-perfect puns?
+You bet your bitmaps.
+
+[90 Degree Rotation]
+This printer turns heads—literally.
+[Rotation Off]
+
+[Upside Down Mode On]
+This joke’s going south…
+[Upside Down Off]
+
+[Bold On, Double Height & Width, Center Align]
+THERMAL IS HOTTER THAN INK!*/
+  // end with qr code to esphome.io
+}
 void ThermalPrinterDisplay::queue_data_(std::vector<uint8_t> data) {
   for (size_t i = 0; i < data.size(); i += BYTES_PER_LOOP) {
     std::vector<uint8_t> chunk(data.begin() + i, data.begin() + std::min(i + BYTES_PER_LOOP, data.size()));

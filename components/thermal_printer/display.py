@@ -41,6 +41,9 @@ ThermalPrinterCutAction = thermal_printer_ns.class_(
 ThermalPrinterPrintImageAction = thermal_printer_ns.class_(
     "ThermalPrinterPrintImageAction", automation.Action
 )
+ThermalPrinterDemoAction = thermal_printer_ns.class_(
+    "ThermalPrinterDemoAction", automation.Action
+)
 
 CONF_FONT_SIZE_FACTOR = "font_size_factor"
 CONF_TEXT = "text"
@@ -469,4 +472,22 @@ async def thermal_printer_print_image_action_to_code(
     templ = await cg.templatable(config[CONF_IMAGE_WIDTH], args, cg.uint16)
     cg.add(var.set_image_width(templ))
 
+    return var
+
+
+# DEMO()
+@automation.register_action(
+    "thermal_printer.demo",
+    ThermalPrinterDemoAction,
+    cv.maybe_simple_value(
+        cv.Schema(
+            {
+                cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
+            }
+        )
+    ),
+)
+async def thermal_printer_demo_action_to_code(config, action_id, template_arg, args):
+    var = cg.new_Pvariable(action_id, template_arg)
+    await cg.register_parented(var, config[CONF_ID])
     return var
