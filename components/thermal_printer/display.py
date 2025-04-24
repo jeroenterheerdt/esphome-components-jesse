@@ -72,6 +72,7 @@ CONF_QRCODE_SIZE = "qrcode_size"
 CONF_CUT_TYPE = "cut_type"
 CONF_IMAGE_DATA = "image_data"
 CONF_IMAGE_WIDTH = "image_width"
+CONF_IMAGE_HEIGHT = "image_height"
 
 CONFIG_SCHEMA = (
     display.FULL_DISPLAY_SCHEMA.extend(
@@ -449,6 +450,7 @@ async def thermal_printer_cut_action_to_code(config, action_id, template_arg, ar
             {
                 cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
                 cv.Required(CONF_IMAGE_DATA): cv.templatable(cv.string),
+                cv.Required(CONF_IMAGE_HEIGHT): cv.templatable(cv.uint16_t),
                 cv.Required(CONF_IMAGE_WIDTH): cv.templatable(cv.uint16_t),
             }
         ),
@@ -462,6 +464,8 @@ async def thermal_printer_print_image_action_to_code(
     await cg.register_parented(var, config[CONF_ID])
     templ = await cg.templatable(config[CONF_IMAGE_DATA], args, cg.std_string)
     cg.add(var.set_image_data(templ))
+    templ = await cg.templatable(config[CONF_IMAGE_HEIGHT], args, cg.uint16)
+    cg.add(var.set_image_height(templ))
     templ = await cg.templatable(config[CONF_IMAGE_WIDTH], args, cg.uint16)
     cg.add(var.set_image_width(templ))
 

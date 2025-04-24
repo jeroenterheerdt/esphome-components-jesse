@@ -62,7 +62,7 @@ class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
                      // QRCodeErrorCorrectionLevel error_correction_level = QRCodeErrorCorrectionLevel::LEVEL_L,
                      std::string error_correction_level = "LEVEL_L", uint8_t size = 3);
   void cut(std::string cut_type = "Full");
-  void print_image(std::string image, int width);
+  void print_image(std::string image, int height, int width);
 
   void set_send_wakeup(bool send_wakeup) {
     ESP_LOGD("set_send_wakeup", "send_wakeup: %s", send_wakeup ? "true" : "false");
@@ -93,6 +93,7 @@ class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
 
  private:
   std::string toUpperCase(const std::string &input);
+  void rotateAndInvertBitmap(const std::vector<uint8_t> &input, std::vector<uint8_t> &output, int width, int height);
 };
 
 template<typename... Ts>
@@ -208,10 +209,12 @@ template<typename... Ts>
 class ThermalPrinterPrintImageAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:
   TEMPLATABLE_VALUE(std::string, image_data)
+  TEMPLATABLE_VALUE(int, image_height)
   TEMPLATABLE_VALUE(int, image_width)
 
   void play(Ts... x) override {
-    this->parent_->print_image(this->image_data_.value(x...), this->image_width_.value(x...));
+    this->parent_->print_image(this->image_data_.value(x...),
+                               this->image_height_.value(x...), ->image_width_.value(x...));
   }
 };
 

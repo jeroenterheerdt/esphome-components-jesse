@@ -2,6 +2,10 @@
 #include "esphome_bitmap.h"
 #include <cinttypes>
 
+#include <iostream>
+#include <vector>
+#include <bitset>
+
 /* Commands (* means done)
 03 - horizontal tab ~ is just \t in text
 04 - set tab locations ~ kind of done but issue in display.py when adding the templ.
@@ -409,13 +413,14 @@ void ThermalPrinterDisplay::cut(std::string cut_type) {
   }
 }
 
-void ThermalPrinterDisplay::print_image(std::string image, int width) {
+void ThermalPrinterDisplay::print_image(std::string image, int height, int width) {
   this->init_();
   const char *tag = "print_image";
   if (width <= 0 && width > 384) {
     ESP_LOGW(tag, "Invalid width: %d", width);
     return;
   }
+  ESP_LOGD(tag, "width: %d", width);
   // use image2cpp!!
   this->write_array(PRINT_BITMAP_CMD, sizeof(PRINT_BITMAP_CMD));
   this->write_byte(width);
@@ -425,8 +430,11 @@ void ThermalPrinterDisplay::print_image(std::string image, int width) {
   // rotating
   // inverting colors
   // determine width or accept width param
+  std::vector<uint8_t> rotatedBitmap;
 
-  this->write_array(test_bitmap, sizeof(test_bitmap));
+  rotateAndInvertBitmap(test_bitmap, rotatedBitmap, width, height);
+
+  this->write_array(rotatedBitmap, sizeof(rotatedBitmap));
   this->write_byte('\n');
 
   // this is the example code from the wiki
@@ -506,6 +514,31 @@ void ThermalPrinterDisplay::print_image(std::string image, int width) {
   this->write_byte('\n');
   // reset line spacing
   this->write_array(SET_ROW_SPACING_CMD, sizeof(SET_ROW_SPACING_CMD));*/
+}
+
+void ThermalPrinterDisplay::rotateAndInvertBitmap(const std::vector<uint8_t> &input, std::vector<uint8_t> &output,
+                                                  int width, int height) {
+  int newWidth = height;
+  int newHeight = width;
+  output.resize((newWidth * newHeight + 7) / 8, 0);  // Allocate space for rotated image
+
+  for (int y = 0; y < height; ++y) {
+    for (int x = 0; x < width; ++x) {
+      int oldIndex = (y * width + x) / 8;
+      int oldBit = (y * width + x) % 8;
+
+      bool pixel = (input[oldIndex] >> oldBit) & 1;  // Extract bit
+
+      int newX = height - 1 - y;
+      int newY = x;
+      int newIndex = (newY * newWidth + newX) / 8;
+      int newBit = (newY * newWidth + newX) % 8;
+
+      if (!pixel) {                         // Inverting the color (flip 1 to 0 and 0 to 1)
+        output[newIndex] |= (1 << newBit);  // Set bit in the new position
+      }
+    }
+  }
 }
 
 bool ThermalPrinterDisplay::has_paper() {
