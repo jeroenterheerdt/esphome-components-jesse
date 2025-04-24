@@ -430,7 +430,7 @@ void ThermalPrinterDisplay::print_image(std::string image, int height, int width
   // this is hardcoded but should be automatically:
   // rotating
   // inverting colors
-  // determine width or accept width param
+  // determine height  and pass that along.
 
   this->write_array(test_bitmap, sizeof(test_bitmap));
   this->write_byte('\n');
