@@ -530,7 +530,7 @@ void ThermalPrinterDisplay::queue_data_(const uint8_t *data, size_t size) {
 }
 
 void ThermalPrinterDisplay::loop() {
-  this->has_paper = this->has_paper();
+  this->paper_ = this->has_paper();
   if (this->queue_.empty()) {
     return;
   }
