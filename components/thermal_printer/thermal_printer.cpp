@@ -497,7 +497,7 @@ void ThermalPrinterDisplay::print_image(std::string image, int width) {
 }
 
 bool ThermalPrinterDisplay::has_paper() {
-  this->write_array(GET_STATUS_CMD);
+  /*this->write_array(GET_STATUS_CMD);
 
   int status = -1;
   int data = -1;
@@ -511,7 +511,8 @@ bool ThermalPrinterDisplay::has_paper() {
     delay(100);
   }
 
-  return !(status & 0b00000100);
+  return !(status & 0b00000100);*/
+  return true;
 }
 
 void ThermalPrinterDisplay::queue_data_(std::vector<uint8_t> data) {
