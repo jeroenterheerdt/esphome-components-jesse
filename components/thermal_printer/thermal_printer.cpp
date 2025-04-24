@@ -421,6 +421,7 @@ void ThermalPrinterDisplay::print_image(std::string image, int height, int width
     return;
   }
   ESP_LOGD(tag, "width: %d", width);
+  ESP_LOGD(tag, "height: %d", height);
   // use image2cpp!!
   this->write_array(PRINT_BITMAP_CMD, sizeof(PRINT_BITMAP_CMD));
   this->write_byte(width);
@@ -434,7 +435,7 @@ void ThermalPrinterDisplay::print_image(std::string image, int height, int width
 
   rotateAndInvertBitmap(test_bitmap, rotatedBitmap, width, height);
 
-  this->write_array(rotatedBitmap, sizeof(rotatedBitmap));
+  this->write_array(rotatedBitmap.data(), sizeof(rotatedBitmap.data()));
   this->write_byte('\n');
 
   // this is the example code from the wiki
