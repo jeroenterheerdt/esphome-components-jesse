@@ -517,28 +517,9 @@ void ThermalPrinterDisplay::print_image(std::string image, int height, int width
   this->write_array(SET_ROW_SPACING_CMD, sizeof(SET_ROW_SPACING_CMD));*/
 }
 
-void ThermalPrinterDisplay::rotateAndInvertBitmap(const std::vector<uint8_t> &input, std::vector<uint8_t> &output,
-                                                  int width, int height) {
-  int newWidth = height;
-  int newHeight = width;
-  output.resize((newWidth * newHeight + 7) / 8, 0);  // Allocate space for rotated image
-
-  for (int y = 0; y < height; ++y) {
-    for (int x = 0; x < width; ++x) {
-      int oldIndex = (y * width + x) / 8;
-      int oldBit = (y * width + x) % 8;
-
-      bool pixel = (input[oldIndex] >> oldBit) & 1;  // Extract bit
-
-      int newX = height - 1 - y;  // rotation
-      int newY = width - 1 - x;   // flip vertically
-      int newIndex = (newY * newWidth + newX) / 8;
-      int newBit = (newY * newWidth + newX) % 8;
-
-      if (!pixel) {                         // Inverting the color (flip 1 to 0 and 0 to 1)
-        output[newIndex] |= (1 << newBit);  // Set bit in the new position
-      }
-    }
+void ThermalPrinterDisplay::rotateAndInvertBitmap(const std::vector<uint8_t> &bitmap) {
+  for (auto &byte : bitmap) {
+    byte = static_cast<uint8_t>(~byte);  // Bitwise NOT to flip all bits
   }
 }
 

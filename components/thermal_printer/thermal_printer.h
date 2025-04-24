@@ -93,7 +93,7 @@ class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
 
  private:
   std::string toUpperCase(const std::string &input);
-  void rotateAndInvertBitmap(const std::vector<uint8_t> &input, std::vector<uint8_t> &output, int width, int height);
+  void rotateAndInvertBitmap(const std::vector<uint8_t> &bitmap);
 };
 
 template<typename... Ts>
