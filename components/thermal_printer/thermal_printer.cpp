@@ -427,9 +427,14 @@ void ThermalPrinterDisplay::print_image(std::string image, int height, int width
   // rotating
   // inverting colors
   // determine height  and pass that along.
-  invertBitmapColors(test_bitmap);
-  this->write_array(test_bitmap, sizeof(test_bitmap));
+  int size = sizeof(test_bitmap) / sizeof(test_bitmap[0]);  // Calculate size
+  uint8_t bitmap[size];                                     // Create writable array
+  memcpy(bitmap, test_bitmap, size);                        // Copy contents
+
+  invertBitmapColors(bitmap);
+  this->write_array(bitmap, sizeof(bitmap));
   this->write_byte('\n');
+  delete[] bitmap;
 }
 
 void ThermalPrinterDisplay::invertBitmapColors(uint8_t *bitmap) {
