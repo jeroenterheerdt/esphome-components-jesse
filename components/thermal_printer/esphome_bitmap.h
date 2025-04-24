@@ -1,4 +1,4 @@
-const uint8_t test_bitmap[] = {
+uint8_t test_bitmap[] = {
     // 0x1B, 0x2A, 0x20, 0xFA,  // 1B = 27, 2A = 42, 20 = 32 = the mode, FA = 250
     // 0x00,  // not sure what this is maybe end of the command? // Bitmap size: 24*250, revise parameter with the
     // reference of general instruction set 34 and 35.
