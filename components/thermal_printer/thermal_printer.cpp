@@ -530,8 +530,8 @@ void ThermalPrinterDisplay::rotateAndInvertBitmap(const std::vector<uint8_t> &in
 
       bool pixel = (input[oldIndex] >> oldBit) & 1;  // Extract bit
 
-      int newX = height - 1 - y;
-      int newY = x;
+      int newX = height - 1 - y;  // rotation
+      int newY = width - 1 - x;   // flip vertically
       int newIndex = (newY * newWidth + newX) / 8;
       int newBit = (newY * newWidth + newX) % 8;
 
