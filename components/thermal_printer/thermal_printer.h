@@ -7,7 +7,6 @@
 #include <cinttypes>
 #include <queue>
 #include <vector>
-#include "base64_decode.h"
 
 namespace esphome {
 namespace thermal_printer {

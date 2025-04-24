@@ -2,10 +2,6 @@
 #include "esphome_bitmap.h"
 #include <cinttypes>
 
-#include <iostream>
-#include <vector>
-#include <bitset>
-
 /* Commands (* means done)
 03 - horizontal tab ~ is just \t in text
 04 - set tab locations ~ kind of done but issue in display.py when adding the templ.
