@@ -213,8 +213,8 @@ class ThermalPrinterPrintImageAction : public Action<Ts...>, public Parented<The
   TEMPLATABLE_VALUE(int, image_width)
 
   void play(Ts... x) override {
-    this->parent_->print_image(this->image_data_.value(x...),
-                               this->image_height_.value(x...), ->image_width_.value(x...));
+    this->parent_->print_image(this->image_data_.value(x...), this->image_height_.value(x...),
+                               this->image_width_.value(x...));
   }
 };
 
