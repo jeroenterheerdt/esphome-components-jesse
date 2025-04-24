@@ -412,9 +412,14 @@ void ThermalPrinterDisplay::cut(std::string cut_type) {
 void ThermalPrinterDisplay::print_image(std::string image, int width) {
   this->init_();
   const char *tag = "print_image";
+  if (width <= 0 && width > 384) {
+    ESP_LOGW(tag, "Invalid width: %d", width);
+    return;
+  }
   // use image2cpp!!
   this->write_array(PRINT_BITMAP_CMD, sizeof(PRINT_BITMAP_CMD));
   this->write_byte(width);
+  this->write_byte(0x00);  //??
 
   // this is hardcoded but should be automatically:
   // rotating
