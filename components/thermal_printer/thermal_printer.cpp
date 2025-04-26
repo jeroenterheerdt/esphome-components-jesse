@@ -409,7 +409,7 @@ void ThermalPrinterDisplay::cut(std::string cut_type) {
   }
 }
 
-void ThermalPrinterDisplay::print_image(uint8_t image[], int height, int width) {
+void ThermalPrinterDisplay::print_image(const uint8_t image[], int height, int width) {
   this->init_();
   const char *tag = "print_image";
   if (width <= 0 && width > 384) {
