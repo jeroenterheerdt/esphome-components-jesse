@@ -409,7 +409,7 @@ void ThermalPrinterDisplay::cut(std::string cut_type) {
   }
 }
 
-void ThermalPrinterDisplay::print_image(const uint8_t image[], int height, int width) {
+void ThermalPrinterDisplay::print_image(std::string image, int height, int width) {
   this->init_();
   const char *tag = "print_image";
   if (width <= 0 && width > 384) {
@@ -424,10 +424,11 @@ void ThermalPrinterDisplay::print_image(const uint8_t image[], int height, int w
   this->write_byte(0x00);  //??
 
   // this is hardcoded but should be automatically:
+  // accept image
   // rotating
   // inverting colors
   // determine height  and pass that along.
-  this->write_array(image, sizeof(image));
+  this->write_array(esphome_logo, sizeof(esphome_logo));
   this->write_byte('\n');
 }
 
@@ -455,7 +456,7 @@ void ThermalPrinterDisplay::demo() {
   // void ThermalPrinterDisplay::print_text(std::string text,
   // std::string align, bool inverse, bool ninety_degree,  uint8_t underline_weight, bool updown, bool bold, uint8_t
   // font_width,  uint8_t font_height, std::string font, bool strikethrough)
-  this->print_image(esphome_logo, 24, 250);
+  this->print_image("x", 24, 250);
   this->print_text("Normal", "A", 0, 0, "L", false, false, 0, false, false, false);
   this->print_text(" Bold", "A", 0, 0, "L", false, false, 0, false, true, false);
   // something with line spacing as well

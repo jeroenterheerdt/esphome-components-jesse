@@ -61,7 +61,7 @@ class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
                      // QRCodeErrorCorrectionLevel error_correction_level = QRCodeErrorCorrectionLevel::LEVEL_L,
                      std::string error_correction_level = "LEVEL_L", uint8_t size = 3);
   void cut(std::string cut_type = "Full");
-  void print_image(const uint8_t image[], int height, int width);
+  void print_image(std::string image, int height, int width);
   void demo();
 
   void set_send_wakeup(bool send_wakeup) {
