@@ -43,9 +43,9 @@ class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
   void print_text(std::string text, std::string align = "L", bool inverse = false, bool ninety_degree = false,
                   uint8_t underline_weight = 0, bool updown = false, bool bold = false, bool double_width = false,
                   bool double_height = false, std::string font = "A", bool strikethrough = false);
-  void print_text(std::string text, std::string font = "A", uint8_t font_width = 0, uint8_t font_height = 0,
-                  std::string align = "L", bool inverse = false, bool ninety_degree = false,
-                  uint8_t underline_weight = 0, bool updown = false, bool bold = false, bool strikethrough = false);
+  void print_text(std::string text, std::string align = "L", bool inverse = false, bool ninety_degree = false,
+                  uint8_t underline_weight = 0, bool updown = false, bool bold = false, uint8_t font_width = 0,
+                  uint8_t font_height = 0, std::string font = "A", bool strikethrough = false);
   void set_tab_positions(std::vector<int> tab_positions);
   void set_row_spacing(uint8_t spacing);
   void new_line(uint8_t lines);
@@ -223,6 +223,7 @@ template<typename... Ts> class ThermalPrinterDemoAction : public Action<Ts...>, 
   void play(Ts... x) override { this->parent_->demo(); }
 };
 
-}  // namespace thermal_printer
+}  // namespace display
 
+}  // namespace thermal_printer
 }  // namespace esphome

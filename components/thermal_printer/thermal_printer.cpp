@@ -112,9 +112,9 @@ void ThermalPrinterDisplay::print_text(std::string text, std::string align, bool
   this->print_text(text, align, inverse, ninety_degree, underline_weight, updown, bold, font_width, font_height, font,
                    strikethrough);
 }
-void ThermalPrinterDisplay::print_text(std::string text, std::string font, uint8_t font_width, uint8_t font_height,
-                                       std::string align, bool inverse, bool ninety_degree, uint8_t underline_weight,
-                                       bool updown, bool bold, bool strikethrough) {
+void ThermalPrinterDisplay::print_text(std::string text, std::string align, bool inverse, bool ninety_degree,
+                                       uint8_t underline_weight, bool updown, bool bold, uint8_t font_width,
+                                       uint8_t font_height, std::string font, bool strikethrough) {
   this->init_();
   const char *tag = "print_text";
 
@@ -424,7 +424,6 @@ void ThermalPrinterDisplay::print_image(std::string image, int height, int width
   this->write_byte(0x00);  //??
 
   // this is hardcoded but should be automatically:
-  // accept image
   // rotating
   // inverting colors
   // determine height  and pass that along.
@@ -456,12 +455,9 @@ void ThermalPrinterDisplay::demo() {
   // void ThermalPrinterDisplay::print_text(std::string text,
   // std::string align, bool inverse, bool ninety_degree,  uint8_t underline_weight, bool updown, bool bold, uint8_t
   // font_width,  uint8_t font_height, std::string font, bool strikethrough)
-  // this->print_image("x", 24, 250);
-  this->print_text("Normal", "A", 0, 0, "L", false, false, 0, false, false, false);
-  this->print_text(" Bold", "A", 0, 0, "L", false, false, 0, false, true, false);
-  // something with line spacing as well
-  /*
-  this->print_text("HOT OFF THE PRESS", "C", false, false, 0, false, true, 2, 2);
+  // line spacing!
+  this->print_image("x", 24, 250);
+  /*this->print_text("HOT OFF THE PRESS", "C", false, false, 0, false, true, 2, 2);
   this->print_text("This printer is so fast, it leaves rumors in the dust.", "L", false, false, 0, false, true, 2, 2);
   this->print_text("It doesn't just print—", "L", false, false, 0, false, false);
   this->print_text("it sizzles.", "L", false, false, 2, false, false);
@@ -472,8 +468,8 @@ void ThermalPrinterDisplay::demo() {
   this->print_text("You bet your bitmaps.", "C", false, false, 0, false, true, 1, 1, "B");
   this->print_text("This printer turns heads—literally.", "C", false, true);
   this->print_text("This joke’s going south…", "C", false, false, 0, true);
-  this->print_text("THERMAL IS HOTTER THAN INK!", "C", false, false, 2, false, true, 2, 2);
-  * / this->print_qr_code("esphome.io", "MODEL_2", "LEVEL_L", 3);
+  this->print_text("THERMAL IS HOTTER THAN INK!", "C", false, false, 2, false, true, 2, 2);*/
+  this->print_qr_code("esphome.io", "MODEL_2", "LEVEL_L", 3);
 }
 /*
 
@@ -509,8 +505,8 @@ This joke’s going south…
 
 [Bold On, Double Height & Width, Center Align]
 THERMAL IS HOTTER THAN INK!*/
-  // end with qr code to esphome.io
-}
+// end with qr code to esphome.io
+
 void ThermalPrinterDisplay::queue_data_(std::vector<uint8_t> data) {
   for (size_t i = 0; i < data.size(); i += BYTES_PER_LOOP) {
     std::vector<uint8_t> chunk(data.begin() + i, data.begin() + std::min(i + BYTES_PER_LOOP, data.size()));
