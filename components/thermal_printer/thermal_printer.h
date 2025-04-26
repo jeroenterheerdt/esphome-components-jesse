@@ -41,11 +41,11 @@ class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
   display::DisplayType get_display_type() override { return display::DisplayType::DISPLAY_TYPE_BINARY; }
 
   void print_text(std::string text, std::string align = "L", bool inverse = false, bool ninety_degree = false,
-                  uint8_t underline_weight = 0, bool updown = false, bool bold = false, bool double_width = false,
-                  bool double_height = false, std::string font = "A", bool strikethrough = false);
-  void print_text(std::string text, std::string align = "L", bool inverse = false, bool ninety_degree = false,
-                  uint8_t underline_weight = 0, bool updown = false, bool bold = false, uint8_t font_width = 0,
-                  uint8_t font_height = 0, std::string font = "A", bool strikethrough = false);
+                  uint8_t underline_weight = 0, bool updown = false, bool bold = false, bool double_width,
+                  bool double_height, std::string font = "A", bool strikethrough = false);
+  void print_text(std::string text, std::string font = "A", uint8_t font_width = 0, uint8_t font_height = 0,
+                  std::string align = "L", bool inverse = false, bool ninety_degree = false,
+                  uint8_t underline_weight = 0, bool updown = false, bool bold = false, bool strikethrough = false);
   void set_tab_positions(std::vector<int> tab_positions);
   void set_row_spacing(uint8_t spacing);
   void new_line(uint8_t lines);
@@ -61,7 +61,7 @@ class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
                      // QRCodeErrorCorrectionLevel error_correction_level = QRCodeErrorCorrectionLevel::LEVEL_L,
                      std::string error_correction_level = "LEVEL_L", uint8_t size = 3);
   void cut(std::string cut_type = "Full");
-  void print_image(std::string image, int height, int width);
+  void print_image(uint8_t image[], int height, int width);
   void demo();
 
   void set_send_wakeup(bool send_wakeup) {
