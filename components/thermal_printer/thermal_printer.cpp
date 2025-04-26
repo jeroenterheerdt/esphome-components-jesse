@@ -458,6 +458,7 @@ void ThermalPrinterDisplay::demo() {
   this->print_image(esphome_logo, 24, 250);
   this->print_text("Normal", "A", 0, 0, "L", false, false, 0, false, false, false);
   this->print_text(" Bold", "A", 0, 0, "L", false, false, 0, false, true, false);
+  // something with line spacing as well
   /*
   this->print_text("HOT OFF THE PRESS", "C", false, false, 0, false, true, 2, 2);
   this->print_text("This printer is so fast, it leaves rumors in the dust.", "L", false, false, 0, false, true, 2, 2);

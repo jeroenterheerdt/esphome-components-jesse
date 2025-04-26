@@ -223,7 +223,6 @@ template<typename... Ts> class ThermalPrinterDemoAction : public Action<Ts...>, 
   void play(Ts... x) override { this->parent_->demo(); }
 };
 
-}  // namespace display
-
 }  // namespace thermal_printer
+
 }  // namespace esphome
