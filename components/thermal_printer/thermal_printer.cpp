@@ -456,7 +456,7 @@ void ThermalPrinterDisplay::demo() {
   // void ThermalPrinterDisplay::print_text(std::string text,
   // std::string align, bool inverse, bool ninety_degree,  uint8_t underline_weight, bool updown, bool bold, uint8_t
   // font_width,  uint8_t font_height, std::string font, bool strikethrough)
-  this->print_image("x", 24, 250);
+  // this->print_image("x", 24, 250);
   this->print_text("Normal", "A", 0, 0, "L", false, false, 0, false, false, false);
   this->print_text(" Bold", "A", 0, 0, "L", false, false, 0, false, true, false);
   // something with line spacing as well
