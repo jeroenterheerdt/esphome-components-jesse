@@ -132,7 +132,7 @@ void ThermalPrinterDisplay::print_text(std::string text, std::string align, bool
 
   // alignment
   //  Convert the alignment string to uppercase
-  align = this->toUpperCase(align)[0];
+/*align = this->toUpperCase(align)[0];
   if (align == "C") {
     this->write_array(SET_ALIGNMENT_CMD, sizeof(SET_ALIGNMENT_CMD));
     this->write_byte(0x01);  // Center
@@ -183,12 +183,14 @@ void ThermalPrinterDisplay::print_text(std::string text, std::string align, bool
     this->write_array(SET_BOLD_CMD, sizeof(SET_BOLD_CMD));
     this->write_byte(0x00);  // Normal
   }
+*/
   /*// double width
   if (double_width) {
     this->write_array(SET_DOUBLE_WIDTH_ON_CMD, sizeof(SET_DOUBLE_WIDTH_ON_CMD));
   } else {
     this->write_array(SET_DOUBLE_WIDTH_OFF_CMD, sizeof(SET_DOUBLE_WIDTH_OFF_CMD));
   }*/
+/*
   // font_width and font_height
   font_width = clamp<uint8_t>(font_width, 1, 8);
   font_height = clamp<uint8_t>(font_height, 1, 8);
@@ -222,7 +224,7 @@ void ThermalPrinterDisplay::print_text(std::string text, std::string align, bool
   // tab positions
   this->write_array(SET_TAB_POSITIONS_CMD, sizeof(SET_TAB_POSITIONS_CMD));
   this->write_array(this->tab_positions.data(), this->tab_positions.size());
-
+*/
   ESP_LOGD(tag, "printing now!");
   this->write_str(text.c_str());
 }
