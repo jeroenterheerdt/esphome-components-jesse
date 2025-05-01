@@ -62,7 +62,6 @@ class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
                      std::string error_correction_level = "LEVEL_L", uint8_t size = 3);
   void cut(std::string cut_type = "Full");
   void print_image(std::string image, int height, int width);
-  void demo();
 
   void set_send_wakeup(bool send_wakeup) {
     ESP_LOGD("set_send_wakeup", "send_wakeup: %s", send_wakeup ? "true" : "false");
@@ -217,13 +216,6 @@ class ThermalPrinterPrintImageAction : public Action<Ts...>, public Parented<The
                                this->image_width_.value(x...));
   }
 };
-
-template<typename... Ts> class ThermalPrinterDemoAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
- public:
-  void play(Ts... x) override { this->parent_->demo(); }
-};
-
-}  // namespace display
 
 }  // namespace thermal_printer
 }  // namespace esphome
