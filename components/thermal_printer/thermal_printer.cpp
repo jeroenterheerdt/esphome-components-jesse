@@ -427,7 +427,7 @@ void ThermalPrinterDisplay::print_image(std::string image, int height, int width
   // rotating
   // inverting colors
   // determine height  and pass that along.
-  this->write_array(test_bitmap, sizeof(test_bitmap));
+  this->write_array(esphome_logo, sizeof(esphome_logo));
   this->write_byte('\n');
 }
 
