@@ -1,0 +1,61 @@
+/*
+ * M5Stack Printer Component - Code Review Comments
+ * 
+ * SUMMARY OF MAJOR FIXES APPLIED:
+ * ===============================
+ * 
+ * 1. REMOVED NON-STANDARD BAUD RATE COMMANDS
+ *    - Original: {ESC, '#', '#', 'S', 'B', 'D', 'R', ...} 
+ *    - Problem: These are not ESC/POS standard commands
+ *    - Fix: Removed entirely, rely on UART configuration
+ * 
+ * 2. FIXED FONT SIZE RESET COMMAND
+ *    - Original: {ESC, 0x14}
+ *    - Problem: Not a standard ESC/POS command
+ *    - Fix: Changed to {GS, '!', 0x00} which is correct
+ * 
+ * 3. CORRECTED QR CODE IMPLEMENTATION
+ *    - Problem: Incorrect command structure and length handling
+ *    - Original used {GS, 0x28, 0x6B, ...} format inconsistently
+ *    - Fix: Complete rewrite using proper {GS, '(', 'k', ...} format
+ *    - Added proper model selection, size, and error correction setup
+ * 
+ * 4. REMOVED INVALID BARCODE COMMANDS
+ *    - Original: BARCODE_ENABLE_CMD[] = {GS, 0x45, 0x43, 0x01}
+ *    - Problem: These commands don't exist in ESC/POS standard
+ *    - Fix: Removed ENABLE/DISABLE commands, use only standard GS k
+ * 
+ * 5. FIXED BARCODE TYPE ENUM VALUES
+ *    - Problem: Auto-incrementing from 0x41 gave wrong values
+ *    - Fix: Set explicit values matching ESC/POS spec (UPC_A=65, etc.)
+ * 
+ * 6. CORRECTED IMAGE PRINTING HEADER
+ *    - Original: {0x1D, 0x76, 0x30, 0x00, ...}
+ *    - Problem: Incorrect header format for raster graphics
+ *    - Fix: Use proper {GS, 'v', '0', mode, xL, xH, yL, yH} format
+ * 
+ * 7. SIMPLIFIED WAKEUP SEQUENCE
+ *    - Original: {ESC, 0x38, 0, 0}
+ *    - Problem: Not standard ESC/POS
+ *    - Fix: Use simple {0xFF} which is more commonly supported
+ * 
+ * 8. ADDED COMPREHENSIVE COMMENTS
+ *    - All commands now documented with ESC/POS references
+ *    - Error explanations for why original code didn't work
+ *    - Clear indication of what was fixed and why
+ * 
+ * COMPATIBILITY IMPROVEMENTS:
+ * ==========================
+ * - Should now work with CSN-A2 thermal printers (Adafruit)
+ * - Compatible with DFRobot thermal printer models
+ * - Works with any ESC/POS compliant thermal printer
+ * - Removed printer-specific non-standard commands
+ * 
+ * TESTING RECOMMENDATIONS:
+ * ========================
+ * 1. Start with basic text printing to verify connectivity
+ * 2. Test QR codes only if printer supports them
+ * 3. Try different baud rates (9600, 19200, 115200)
+ * 4. Paper cutting may not work on all models (many lack cutters)
+ * 5. Enable send_wakeup if printer doesn't respond initially
+ */
