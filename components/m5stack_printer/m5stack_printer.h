@@ -12,18 +12,35 @@
 namespace esphome {
 namespace m5stack_printer {
 
+// Barcode types according to CSN-A2 datasheet GS k command table
+// These values correspond to format 1 (m=0-6) from the datasheet
 enum BarcodeType {
-  UPC_A = 0x41,
-  UPC_E,
-  EAN13,
-  EAN8,
-  CODE39,
-  ITF,
-  CODABAR,
-  CODE93,
-  CODE128,
+  UPC_A = 0,     // 11-12 characters, digits only
+  UPC_E = 1,     // 11-12 characters, digits only  
+  EAN13 = 2,     // 12-13 characters, digits only (was JAN13)
+  EAN8 = 3,      // 7-8 characters, digits only (was JAN8)
+  CODE39 = 4,    // Variable length, alphanumeric + special chars
+  ITF = 5,       // Variable even length, digits only
+  CODABAR = 6,   // Variable length, digits + A-D + special chars
+  CODE93 = 7,    // Variable length, full ASCII (uses format 2, m=72)
+  CODE128 = 8,   // Variable length, full ASCII (uses format 2, m=73)
 };
 
+/**
+ * M5Stack Thermal Printer Component
+ * 
+ * This component provides ESC/POS compatible thermal printing functionality
+ * for the M5Stack thermal printer module (CSN-A2 based).
+ * 
+ * Supported features:
+ * - Text printing with font size control (0-7)
+ * - QR code printing with error correction
+ * - 1D barcode printing (UPC, EAN, CODE39, CODE128, etc.)
+ * - Raster image printing via display buffer
+ * 
+ * Communication: UART (TTL/RS232) at 9600 baud by default
+ * Print width: 58mm (384 dots), 8 dots/mm resolution
+ */
 class M5StackPrinterDisplay : public display::DisplayBuffer, public uart::UARTDevice {
  public:
   void setup() override;
@@ -40,10 +57,30 @@ class M5StackPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
 
   display::DisplayType get_display_type() override { return display::DisplayType::DISPLAY_TYPE_BINARY; }
 
+  /**
+   * Print text with specified font size
+   * @param text Text string to print
+   * @param font_size Font size multiplier (0-7), affects both width and height
+   */
   void print_text(std::string text, uint8_t font_size = 0);
+  
+  /**
+   * Print newlines to advance paper
+   * @param lines Number of lines to advance (1-255)
+   */
   void new_line(uint8_t lines);
+  
+  /**
+   * Print QR code with error correction level L
+   * @param data String data to encode (max ~100 characters recommended)
+   */
   void print_qrcode(std::string data);
 
+  /**
+   * Print 1D barcode with validation
+   * @param barcode Barcode data string
+   * @param type Barcode format (UPC_A, EAN13, CODE128, etc.)
+   */
   void print_barcode(std::string barcode, BarcodeType type);
 
  protected:
