@@ -42,16 +42,22 @@ static const uint8_t DEFAULT_HRI_POSITION = 0; // No HRI characters
 static const uint8_t BYTES_PER_LOOP = 120;
 
 void M5StackPrinterDisplay::setup() {
+  ESP_LOGD(TAG, "Setting up M5Stack Printer Display");
+  
   this->init_internal_(this->get_buffer_length_());
-
+  ESP_LOGD(TAG, "Buffer length: %d bytes", this->get_buffer_length_());
+  
+  // Initialize printer with proper sequence
   this->init_();
+  ESP_LOGD(TAG, "M5Stack Printer initialized successfully");
+  
+  // Note: Commented baud rate change - keep default 9600 baud for stability
+  // Some printer modules don't handle baud rate changes reliably
   // this->write_array(BAUD_RATE_115200_CMD, sizeof(BAUD_RATE_115200_CMD));
   // delay(10);
   // this->parent_->set_baud_rate(115200);
   // this->parent_->load_settings();
   // delay(10);
-
-  // this->write_array(INIT_PRINTER_CMD, sizeof(INIT_PRINTER_CMD));
 }
 
 void M5StackPrinterDisplay::init_() { 
@@ -81,6 +87,17 @@ void M5StackPrinterDisplay::print_text(std::string text, uint8_t font_size) {
 }
 
 void M5StackPrinterDisplay::new_line(uint8_t lines) {
+  if (lines == 0) {
+    ESP_LOGW(TAG, "new_line called with 0 lines, ignoring");
+    return;
+  }
+  
+  if (lines > 10) {
+    ESP_LOGW(TAG, "new_line called with %d lines (>10), clamping to 10", lines);
+    lines = 10;
+  }
+  
+  ESP_LOGD(TAG, "Adding %d new lines", lines);
   for (uint8_t i = 0; i < lines; i++) {
     this->write_byte('\n');
   }
@@ -192,36 +209,56 @@ void M5StackPrinterDisplay::loop() {
 
   std::vector<uint8_t> data = this->queue_.front();
   this->queue_.pop();
+  
+  ESP_LOGV(TAG, "Writing %d bytes from queue (%d items remaining)", 
+           data.size(), this->queue_.size());
   this->write_array(data.data(), data.size());
 }
 
 static uint16_t count = 0;
 
 void M5StackPrinterDisplay::update() {
+  ESP_LOGD(TAG, "Display update triggered");
   this->do_update_();
   this->write_to_device_();
-  ESP_LOGD(TAG, "count: %d;", count);
+  ESP_LOGD(TAG, "Display update complete, pixels drawn: %d", count);
   count = 0;
 }
 
 void M5StackPrinterDisplay::write_to_device_() {
   if (this->buffer_ == nullptr) {
+    ESP_LOGW(TAG, "Buffer is null, cannot write to device");
     return;
   }
 
+  ESP_LOGD(TAG, "Writing raster image to device: %dx%d pixels", this->get_width(), this->get_height());
+  
+  // Raster bit-image command: GS v 0 m xL xH yL yH [data]
+  // Based on datasheet: GS v 30 00 xL xH yL yH data
   uint8_t header[] = {0x1D, 0x76, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00};
 
-  uint16_t width = this->get_width() / 8;
+  uint16_t width_bytes = this->get_width() / 8;  // Convert pixels to bytes
   uint16_t height = this->get_height();
+  
+  // Validate dimensions
+  if (width_bytes == 0 || height == 0) {
+    ESP_LOGW(TAG, "Invalid image dimensions: %d bytes width, %d height", width_bytes, height);
+    return;
+  }
 
-  header[3] = 0;  // Mode
-  header[4] = width & 0xFF;
-  header[5] = (width >> 8) & 0xFF;
-  header[6] = height & 0xFF;
-  header[7] = (height >> 8) & 0xFF;
+  header[3] = 0;  // Mode (0 = normal)
+  header[4] = width_bytes & 0xFF;        // xL
+  header[5] = (width_bytes >> 8) & 0xFF; // xH  
+  header[6] = height & 0xFF;             // yL
+  header[7] = (height >> 8) & 0xFF;      // yH
+
+  ESP_LOGD(TAG, "Raster header: mode=%d, width_bytes=%d, height=%d", 
+           header[3], width_bytes, height);
 
   this->queue_data_(header, sizeof(header));
   this->queue_data_(this->buffer_, this->get_buffer_length_());
+  
+  ESP_LOGD(TAG, "Queued %d bytes of raster data", this->get_buffer_length_());
 }
 
 void M5StackPrinterDisplay::draw_absolute_pixel_internal(int x, int y, Color color) {

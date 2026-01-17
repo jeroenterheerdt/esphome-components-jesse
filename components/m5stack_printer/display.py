@@ -55,8 +55,8 @@ async def to_code(config):
             {
                 cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
                 cv.Required(CONF_TEXT): cv.templatable(cv.string),
-                cv.Optional(CONF_FONT_SIZE, default=1): cv.templatable(
-                    cv.int_range(min=0, max=7)
+                cv.Optional(CONF_FONT_SIZE, default=0): cv.templatable(
+                    cv.int_range(min=0, max=7)  # Font size range according to datasheet
                 ),
             }
         ),
