@@ -39,6 +39,60 @@ static const uint8_t DEFAULT_BARCODE_HEIGHT = 162; // Default height in dots
 static const uint8_t DEFAULT_BARCODE_WIDTH = 3; // Default width multiplier
 static const uint8_t DEFAULT_HRI_POSITION = 0; // No HRI characters
 
+// Paper cutting commands based on datasheet
+static const uint8_t PAPER_CUT_FULL_CMD[] = {ESC, 'i'}; // Full cut - ESC i
+static const uint8_t PAPER_CUT_PARTIAL_CMD[] = {GS, 'V', 1}; // Partial cut - GS V 1
+static const uint8_t PAPER_CUT_FEED_PREFIX[] = {GS, 'V'}; // GS V m [n] for cut with feed
+
+// Text formatting commands
+static const uint8_t TEXT_ALIGN_CMD[] = {ESC, 'a'}; // ESC a n - text alignment
+static const uint8_t LINE_SPACING_CMD[] = {ESC, '3'}; // ESC 3 n - line spacing
+static const uint8_t DEFAULT_LINE_SPACING_CMD[] = {ESC, '2'}; // ESC 2 - default spacing
+static const uint8_t PRINT_DENSITY_CMD[] = {0x12, '#'}; // DC2 # n - print density
+
+// Text style commands
+static const uint8_t BOLD_ON_CMD[] = {ESC, 'E', 1}; // ESC E 1 - bold on
+static const uint8_t BOLD_OFF_CMD[] = {ESC, 'E', 0}; // ESC E 0 - bold off
+static const uint8_t UNDERLINE_CMD[] = {ESC, '-'}; // ESC - n - underline
+static const uint8_t DOUBLE_WIDTH_ON_CMD[] = {ESC, 0x0E}; // ESC SO - double width on
+static const uint8_t DOUBLE_WIDTH_OFF_CMD[] = {ESC, 0x14}; // ESC DC4 - double width off
+static const uint8_t UPSIDE_DOWN_CMD[] = {ESC, '{'}; // ESC { n - upside down mode
+
+// Printer control commands
+static const uint8_t TEST_PAGE_CMD[] = {0x12, 'T'}; // DC2 T - print test page
+static const uint8_t STATUS_REQUEST_CMD[] = {ESC, 'v', 0}; // ESC v 0 - request status
+static const uint8_t SLEEP_MODE_CMD[] = {ESC, '8'}; // ESC 8 n1 n2 - sleep mode
+
+// Paper cutting commands based on datasheet
+static const uint8_t PAPER_CUT_FULL_CMD[] = {ESC, 'i'}; // Full cut - ESC i
+static const uint8_t PAPER_CUT_PARTIAL_CMD[] = {GS, 'V', 1}; // Partial cut - GS V 1
+static const uint8_t PAPER_CUT_FEED_PREFIX[] = {GS, 'V'}; // GS V m [n] for cut with feed
+
+// Text formatting commands
+static const uint8_t TEXT_ALIGN_CMD[] = {ESC, 'a'}; // ESC a n - text alignment
+static const uint8_t LINE_SPACING_CMD[] = {ESC, '3'}; // ESC 3 n - line spacing
+static const uint8_t DEFAULT_LINE_SPACING_CMD[] = {ESC, '2'}; // ESC 2 - default spacing
+static const uint8_t PRINT_DENSITY_CMD[] = {0x12, '#'}; // DC2 # n - print density
+
+// Text style commands
+static const uint8_t BOLD_ON_CMD[] = {ESC, 'E', 1}; // ESC E 1 - bold on
+static const uint8_t BOLD_OFF_CMD[] = {ESC, 'E', 0}; // ESC E 0 - bold off
+static const uint8_t UNDERLINE_CMD[] = {ESC, '-'}; // ESC - n - underline
+static const uint8_t DOUBLE_WIDTH_ON_CMD[] = {ESC, 0x0E}; // ESC SO - double width on
+static const uint8_t DOUBLE_WIDTH_OFF_CMD[] = {ESC, 0x14}; // ESC DC4 - double width off
+static const uint8_t UPSIDE_DOWN_CMD[] = {ESC, '{'}; // ESC { n - upside down mode
+
+// Printer control commands
+static const uint8_t TEST_PAGE_CMD[] = {0x12, 'T'}; // DC2 T - print test page
+static const uint8_t STATUS_REQUEST_CMD[] = {ESC, 'v', 0}; // ESC v 0 - request status
+static const uint8_t SLEEP_MODE_CMD[] = {ESC, '8'}; // ESC 8 n1 n2 - sleep mode
+
+// Additional text formatting commands  
+static const uint8_t ROTATE_90_CMD[] = {ESC, 'V'}; // ESC V n - 90 degree rotation
+static const uint8_t INVERSE_PRINT_CMD[] = {GS, 'B'}; // GS B n - white/black inverse
+static const uint8_t CHINESE_MODE_ON_CMD[] = {0x1C, 0x26}; // FS & - select Chinese/Japanese mode
+static const uint8_t CHINESE_MODE_OFF_CMD[] = {0x1C, 0x2E}; // FS . - cancel Chinese/Japanese mode
+
 static const uint8_t BYTES_PER_LOOP = 120;
 
 void M5StackPrinterDisplay::setup() {
@@ -188,6 +242,66 @@ void M5StackPrinterDisplay::print_barcode(std::string barcode, BarcodeType type)
   this->write_str(barcode.c_str());
 }
 
+void M5StackPrinterDisplay::cut_paper() {
+  ESP_LOGD(TAG, "Cutting paper (full cut)");
+  this->write_array(PAPER_CUT_FULL_CMD, sizeof(PAPER_CUT_FULL_CMD));
+}
+
+void M5StackPrinterDisplay::cut_paper(uint8_t mode, uint8_t feed_lines) {
+  ESP_LOGD(TAG, "Cutting paper with mode %d, feed lines %d", mode, feed_lines);
+  
+  if (mode == 0) {
+    // Full cut
+    this->write_array(PAPER_CUT_FULL_CMD, sizeof(PAPER_CUT_FULL_CMD));
+  } else if (mode == 1) {
+    // Partial cut
+    this->write_array(PAPER_CUT_PARTIAL_CMD, sizeof(PAPER_CUT_PARTIAL_CMD));
+  } else if (mode == 66) {
+    // Cut with feed - GS V 66 n
+    this->write_array(PAPER_CUT_FEED_PREFIX, sizeof(PAPER_CUT_FEED_PREFIX));
+    this->write_byte(66);
+    this->write_byte(feed_lines);
+  } else {
+    ESP_LOGW(TAG, "Invalid cut mode: %d", mode);
+  }
+}
+
+void M5StackPrinterDisplay::set_text_alignment(uint8_t alignment) {
+  if (alignment > 2) {
+    ESP_LOGW(TAG, "Invalid alignment %d, clamping to 2", alignment);
+    alignment = 2;
+  }
+  
+  ESP_LOGD(TAG, "Setting text alignment to %d (0=left, 1=center, 2=right)", alignment);
+  this->write_array(TEXT_ALIGN_CMD, sizeof(TEXT_ALIGN_CMD));
+  this->write_byte(alignment);
+}
+
+void M5StackPrinterDisplay::set_line_spacing(uint8_t spacing) {
+  if (spacing == 0) {
+    // Reset to default line spacing
+    ESP_LOGD(TAG, "Resetting to default line spacing");
+    this->write_array(DEFAULT_LINE_SPACING_CMD, sizeof(DEFAULT_LINE_SPACING_CMD));
+  } else {
+    ESP_LOGD(TAG, "Setting line spacing to %d dots", spacing);
+    this->write_array(LINE_SPACING_CMD, sizeof(LINE_SPACING_CMD));
+    this->write_byte(spacing);
+  }
+}
+
+void M5StackPrinterDisplay::set_print_density(uint8_t density, uint8_t break_time) {
+  // Validate ranges according to datasheet
+  density = clamp<uint8_t>(density, 0, 31); // D4-D0 bits
+  break_time = clamp<uint8_t>(break_time, 0, 7); // D7-D5 bits
+  
+  uint8_t density_byte = density | (break_time << 5);
+  ESP_LOGD(TAG, "Setting print density %d, break time %d (combined byte: 0x%02X)", 
+           density, break_time, density_byte);
+  
+  this->write_array(PRINT_DENSITY_CMD, sizeof(PRINT_DENSITY_CMD));
+  this->write_byte(density_byte);
+}
+
 void M5StackPrinterDisplay::queue_data_(std::vector<uint8_t> data) {
   for (size_t i = 0; i < data.size(); i += BYTES_PER_LOOP) {
     std::vector<uint8_t> chunk(data.begin() + i, data.begin() + std::min(i + BYTES_PER_LOOP, data.size()));
@@ -279,6 +393,30 @@ void M5StackPrinterDisplay::draw_absolute_pixel_internal(int x, int y, Color col
     this->buffer_[index] &= ~(1 << (7 - bit));
   }
   count++;
+}
+
+void M5StackPrinterDisplay::set_90_degree_rotation(bool enable) {
+  ESP_LOGD(TAG, "Setting 90-degree rotation: %s", enable ? "enabled" : "disabled");
+  
+  this->write_array(ROTATE_90_CMD, sizeof(ROTATE_90_CMD));
+  this->write_byte(enable ? 1 : 0);
+}
+
+void M5StackPrinterDisplay::set_inverse_printing(bool enable) {
+  ESP_LOGD(TAG, "Setting inverse printing: %s", enable ? "enabled" : "disabled");
+  
+  this->write_array(INVERSE_PRINT_CMD, sizeof(INVERSE_PRINT_CMD));
+  this->write_byte(enable ? 1 : 0);
+}
+
+void M5StackPrinterDisplay::set_chinese_mode(bool enable) {
+  ESP_LOGD(TAG, "Setting Chinese/Japanese character mode: %s", enable ? "enabled" : "disabled");
+  
+  if (enable) {
+    this->write_array(CHINESE_MODE_ON_CMD, sizeof(CHINESE_MODE_ON_CMD));
+  } else {
+    this->write_array(CHINESE_MODE_OFF_CMD, sizeof(CHINESE_MODE_OFF_CMD));
+  }
 }
 
 }  // namespace m5stack_printer

@@ -82,6 +82,85 @@ class M5StackPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
    * @param type Barcode format (UPC_A, EAN13, CODE128, etc.)
    */
   void print_barcode(std::string barcode, BarcodeType type);
+  
+  /**
+   * Cut paper (full cut)
+   * Requires printer with cutting mechanism
+   */
+  void cut_paper();
+  
+  /**
+   * Cut paper with specified mode
+   * @param mode 0=full cut, 1=partial cut, 66=cut and feed
+   * @param feed_lines Additional lines to feed before cutting (mode 66 only)
+   */
+  void cut_paper(uint8_t mode, uint8_t feed_lines = 0);
+  
+  /**
+   * Set text alignment
+   * @param alignment 0=left, 1=center, 2=right
+   */
+  void set_text_alignment(uint8_t alignment);
+  
+  /**
+   * Set line spacing
+   * @param spacing Line spacing in dots (0-255)
+   */
+  void set_line_spacing(uint8_t spacing);
+  
+  /**
+   * Set print density and break time
+   * @param density Print density (0-31, affects darkness)
+   * @param break_time Break time between dots (0-7)
+   */
+  void set_print_density(uint8_t density, uint8_t break_time = 0);
+  
+  /**
+   * Set text style modes
+   * @param bold Enable bold/emphasized text
+   * @param underline Underline mode (0=off, 1=1dot, 2=2dot)
+   * @param double_width Enable double width text
+   * @param upside_down Enable upside down text
+   */
+  void set_text_style(bool bold = false, uint8_t underline = 0, bool double_width = false, bool upside_down = false);
+  
+  /**
+   * Print test page
+   * Useful for checking printer functionality
+   */
+  void print_test_page();
+  
+  /**
+   * Check printer status
+   * @return Status byte with paper/voltage/temperature flags
+   */
+  uint8_t get_printer_status();
+  
+  /**
+   * Enter sleep mode after timeout
+   * @param timeout_seconds Time to wait before sleep (0=disable)
+   * Useful for battery-powered applications
+   */
+  void set_sleep_mode(uint16_t timeout_seconds);
+  
+  /**
+   * Set 90-degree clockwise rotation mode
+   * @param enable True to enable rotation, false to disable
+   */
+  void set_90_degree_rotation(bool enable);
+  
+  /**
+   * Set white/black inverse printing mode
+   * @param enable True to enable inverse (white text on black), false for normal
+   */
+  void set_inverse_printing(bool enable);
+  
+  /**
+   * Enable Chinese/Japanese character mode
+   * When enabled, processes multi-byte characters for Asian text
+   * @param enable True to enable Asian character mode, false for ASCII mode
+   */
+  void set_chinese_mode(bool enable);
 
  protected:
   void draw_absolute_pixel_internal(int x, int y, Color color) override;
@@ -101,6 +180,53 @@ class M5StackPrinterPrintTextAction : public Action<Ts...>, public Parented<M5St
   TEMPLATABLE_VALUE(uint8_t, font_size)
 
   void play(Ts... x) override { this->parent_->print_text(this->text_.value(x...), this->font_size_.value(x...)); }
+};
+
+template<typename... Ts>
+class M5StackPrinterCutPaperAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+ public:
+  TEMPLATABLE_VALUE(uint8_t, cut_mode)
+  TEMPLATABLE_VALUE(uint8_t, feed_lines)
+
+  void play(Ts... x) override { 
+    if (this->cut_mode_.value(x...) == 0 && this->feed_lines_.value(x...) == 0) {
+      this->parent_->cut_paper(); 
+    } else {
+      this->parent_->cut_paper(this->cut_mode_.value(x...), this->feed_lines_.value(x...)); 
+    }
+  }
+};
+
+template<typename... Ts>
+class M5StackPrinterSetAlignmentAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+ public:
+  TEMPLATABLE_VALUE(uint8_t, alignment)
+
+  void play(Ts... x) override { this->parent_->set_text_alignment(this->alignment_.value(x...)); }
+};
+
+template<typename... Ts>
+class M5StackPrinterSetStyleAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+ public:
+  TEMPLATABLE_VALUE(bool, bold)
+  TEMPLATABLE_VALUE(uint8_t, underline)
+  TEMPLATABLE_VALUE(bool, double_width)
+  TEMPLATABLE_VALUE(bool, upside_down)
+
+  void play(Ts... x) override { 
+    this->parent_->set_text_style(
+      this->bold_.value(x...), 
+      this->underline_.value(x...), 
+      this->double_width_.value(x...), 
+      this->upside_down_.value(x...)
+    ); 
+  }
+};
+
+template<typename... Ts>
+class M5StackPrinterPrintTestPageAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+ public:
+  void play(Ts... x) override { this->parent_->print_test_page(); }
 };
 
 }  // namespace m5stack_printer
