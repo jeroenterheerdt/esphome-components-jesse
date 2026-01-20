@@ -33,6 +33,10 @@ M5StackPrinterPrintTestPageAction = m5stack_printer_ns.class_(
     "M5StackPrinterPrintTestPageAction", automation.Action
 )
 
+M5StackPrinterRunDemoAction = m5stack_printer_ns.class_(
+    "M5StackPrinterRunDemoAction", automation.Action
+)
+
 CONF_FONT_SIZE = "font_size"
 CONF_TEXT = "text"
 CONF_CUT_MODE = "cut_mode"
@@ -42,6 +46,11 @@ CONF_BOLD = "bold"
 CONF_UNDERLINE = "underline"
 CONF_DOUBLE_WIDTH = "double_width"
 CONF_UPSIDE_DOWN = "upside_down"
+CONF_SHOW_QR_CODE = "show_qr_code"
+CONF_SHOW_BARCODE = "show_barcode"
+CONF_SHOW_TEXT_STYLES = "show_text_styles"
+CONF_SHOW_INVERSE = "show_inverse"
+CONF_SHOW_ROTATION = "show_rotation"
 
 CONFIG_SCHEMA = (
     display.FULL_DISPLAY_SCHEMA.extend(
@@ -177,4 +186,36 @@ async def m5stack_printer_set_style_action_to_code(config, action_id, template_a
 async def m5stack_printer_print_test_page_action_to_code(config, action_id, template_arg, args):
     var = cg.new_Pvariable(action_id, template_arg)
     await cg.register_parented(var, config[CONF_ID])
+    return var
+
+
+@automation.register_action(
+    "m5stack_printer.run_demo",
+    M5StackPrinterRunDemoAction,
+    cv.Schema(
+        {
+            cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
+            cv.Optional(CONF_SHOW_QR_CODE, default=False): cv.templatable(cv.boolean),
+            cv.Optional(CONF_SHOW_BARCODE, default=False): cv.templatable(cv.boolean),
+            cv.Optional(CONF_SHOW_TEXT_STYLES, default=False): cv.templatable(cv.boolean),
+            cv.Optional(CONF_SHOW_INVERSE, default=False): cv.templatable(cv.boolean),
+            cv.Optional(CONF_SHOW_ROTATION, default=False): cv.templatable(cv.boolean),
+        }
+    ),
+)
+async def m5stack_printer_run_demo_action_to_code(config, action_id, template_arg, args):
+    var = cg.new_Pvariable(action_id, template_arg)
+    await cg.register_parented(var, config[CONF_ID])
+    
+    templ = await cg.templatable(config[CONF_SHOW_QR_CODE], args, cg.bool_)
+    cg.add(var.set_show_qr_code(templ))
+    templ = await cg.templatable(config[CONF_SHOW_BARCODE], args, cg.bool_)
+    cg.add(var.set_show_barcode(templ))
+    templ = await cg.templatable(config[CONF_SHOW_TEXT_STYLES], args, cg.bool_)
+    cg.add(var.set_show_text_styles(templ))
+    templ = await cg.templatable(config[CONF_SHOW_INVERSE], args, cg.bool_)
+    cg.add(var.set_show_inverse(templ))
+    templ = await cg.templatable(config[CONF_SHOW_ROTATION], args, cg.bool_)
+    cg.add(var.set_show_rotation(templ))
+    
     return var

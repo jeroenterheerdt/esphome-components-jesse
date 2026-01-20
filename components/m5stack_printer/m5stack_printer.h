@@ -161,6 +161,18 @@ class M5StackPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
    * @param enable True to enable Asian character mode, false for ASCII mode
    */
   void set_chinese_mode(bool enable);
+  
+  /**
+   * Run demo/debug function to showcase all printer capabilities
+   * Features Hitchhiker's Guide to the Galaxy themed content
+   * @param show_qr_code Print QR code demo (default: false, true when no params)
+   * @param show_barcode Print barcode demo (default: false, true when no params)  
+   * @param show_text_styles Print various text formatting demos (default: false, true when no params)
+   * @param show_inverse Print inverse text demo (default: false, true when no params)
+   * @param show_rotation Print 90-degree rotated text demo (default: false, true when no params)
+   */
+  void run_demo(bool show_qr_code = false, bool show_barcode = false, 
+                bool show_text_styles = false, bool show_inverse = false, bool show_rotation = false);
 
  protected:
   void draw_absolute_pixel_internal(int x, int y, Color color) override;
@@ -227,6 +239,31 @@ template<typename... Ts>
 class M5StackPrinterPrintTestPageAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
  public:
   void play(Ts... x) override { this->parent_->print_test_page(); }
+};
+
+template<typename... Ts>
+class M5StackPrinterRunDemoAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+ public:
+  TEMPLATABLE_VALUE(bool, show_qr_code)
+  TEMPLATABLE_VALUE(bool, show_barcode)
+  TEMPLATABLE_VALUE(bool, show_text_styles)
+  TEMPLATABLE_VALUE(bool, show_inverse)
+  TEMPLATABLE_VALUE(bool, show_rotation)
+
+  void play(Ts... x) override {
+    bool qr = this->show_qr_code_.value(x...);
+    bool bc = this->show_barcode_.value(x...);
+    bool txt = this->show_text_styles_.value(x...);
+    bool inv = this->show_inverse_.value(x...);
+    bool rot = this->show_rotation_.value(x...);
+    
+    // If no specific flags set, run full demo
+    if (!qr && !bc && !txt && !inv && !rot) {
+      this->parent_->run_demo(true, true, true, true, true);
+    } else {
+      this->parent_->run_demo(qr, bc, txt, inv, rot);
+    }
+  }
 };
 
 }  // namespace m5stack_printer

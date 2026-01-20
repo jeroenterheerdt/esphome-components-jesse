@@ -419,5 +419,237 @@ void M5StackPrinterDisplay::set_chinese_mode(bool enable) {
   }
 }
 
+void M5StackPrinterDisplay::run_demo(bool show_qr_code, bool show_barcode, 
+                                     bool show_text_styles, bool show_inverse, bool show_rotation) {
+  ESP_LOGD(TAG, "Running printer demo with flags: QR=%s, barcode=%s, text=%s, inverse=%s, rotation=%s",
+           show_qr_code ? "yes" : "no", show_barcode ? "yes" : "no", 
+           show_text_styles ? "yes" : "no", show_inverse ? "yes" : "no", show_rotation ? "yes" : "no");
+
+  this->init_();
+  
+  // Reset printer to default state
+  this->write_array(PRINT_MODE_RESET_CMD, sizeof(PRINT_MODE_RESET_CMD));
+  this->set_text_alignment(1); // Center align for header
+  this->new_line(1);
+  
+  // Header with title
+  this->set_text_style(true, 0, true, false); // Bold, double width
+  this->print_text("DON'T PANIC", 2);
+  this->new_line(1);
+  this->set_text_style(false, 1, false, false); // Normal, underlined
+  this->print_text("M5Stack Printer Demo", 1);
+  this->new_line(2);
+  
+  // Reset formatting and left align
+  this->set_text_style(false, 0, false, false);
+  this->set_text_alignment(0);
+  
+  // Display what features will be tested
+  this->print_text("The Answer to the Ultimate");
+  this->new_line(1);
+  this->print_text("Question of Thermal Printing:");
+  this->new_line(1);
+  this->set_text_style(true, 0, false, false); // Bold
+  this->print_text("42 functions tested below", 1);
+  this->set_text_style(false, 0, false, false); // Reset
+  this->new_line(2);
+  
+  if (show_text_styles) {
+    ESP_LOGD(TAG, "Demo: Text styles");
+    
+    this->set_text_alignment(1); // Center
+    this->set_text_style(true, 0, false, false); // Bold
+    this->print_text("=== TEXT STYLES ===", 1);
+    this->set_text_style(false, 0, false, false);
+    this->set_text_alignment(0); // Left
+    this->new_line(1);
+    
+    // Font sizes demo
+    this->print_text("Font sizes (Zaphod approved):");
+    this->new_line(1);
+    for (uint8_t size = 0; size <= 3; size++) {
+      char size_text[32];
+      snprintf(size_text, sizeof(size_text), "Size %d: Hoopy!", size);
+      this->print_text(size_text, size);
+      this->new_line(1);
+    }
+    this->new_line(1);
+    
+    // Style combinations
+    this->print_text("Text styles:");
+    this->new_line(1);
+    
+    this->set_text_style(true, 0, false, false); // Bold
+    this->print_text("Bold: Vogon poetry");
+    this->new_line(1);
+    
+    this->set_text_style(false, 2, false, false); // Underlined (2 dots)
+    this->print_text("Underlined: Babel fish");
+    this->new_line(1);
+    
+    this->set_text_style(false, 0, true, false); // Double width
+    this->print_text("Wide: Heart of Gold");
+    this->new_line(1);
+    
+    this->set_text_style(true, 1, true, false); // Bold + underline + wide
+    this->print_text("All styles: Infinite");
+    this->new_line(1);
+    
+    this->set_text_style(false, 0, false, false); // Reset
+    this->new_line(1);
+    
+    // Alignment demo
+    this->print_text("Text alignment test:");
+    this->new_line(1);
+    this->set_text_alignment(0); // Left
+    this->print_text("Left: Earth (mostly harmless)");
+    this->new_line(1);
+    this->set_text_alignment(1); // Center
+    this->print_text("Center: Restaurant");
+    this->new_line(1);
+    this->set_text_alignment(2); // Right
+    this->print_text("Right: Magrathea");
+    this->new_line(1);
+    this->set_text_alignment(0); // Reset to left
+    this->new_line(1);
+  }
+  
+  if (show_inverse) {
+    ESP_LOGD(TAG, "Demo: Inverse printing");
+    
+    this->set_text_alignment(1); // Center
+    this->set_text_style(true, 0, false, false);
+    this->print_text("=== INVERSE MODE ===", 1);
+    this->set_text_style(false, 0, false, false);
+    this->set_text_alignment(0);
+    this->new_line(1);
+    
+    this->print_text("Normal: So long and thanks");
+    this->new_line(1);
+    
+    this->set_inverse_printing(true);
+    this->print_text("Inverse: for all the fish!");
+    this->new_line(1);
+    this->print_text("Black background mode");
+    this->new_line(1);
+    this->set_inverse_printing(false);
+    
+    this->print_text("Back to normal printing");
+    this->new_line(2);
+  }
+  
+  if (show_rotation) {
+    ESP_LOGD(TAG, "Demo: 90-degree rotation");
+    
+    this->set_text_alignment(1); // Center
+    this->set_text_style(true, 0, false, false);
+    this->print_text("=== ROTATION ===", 1);
+    this->set_text_style(false, 0, false, false);
+    this->set_text_alignment(0);
+    this->new_line(1);
+    
+    this->print_text("Normal orientation:");
+    this->new_line(1);
+    this->print_text("Hitchhiker's Guide");
+    this->new_line(1);
+    
+    this->set_90_degree_rotation(true);
+    this->print_text("90 deg: Mostly Harmless");
+    this->new_line(1);
+    this->print_text("Rotated text mode");
+    this->new_line(1);
+    this->set_90_degree_rotation(false);
+    
+    this->print_text("Rotation disabled");
+    this->new_line(2);
+  }
+  
+  if (show_qr_code) {
+    ESP_LOGD(TAG, "Demo: QR codes");
+    
+    this->set_text_alignment(1); // Center  
+    this->set_text_style(true, 0, false, false);
+    this->print_text("=== QR CODES ===", 1);
+    this->set_text_style(false, 0, false, false);
+    this->new_line(1);
+    
+    this->print_text("The Ultimate Answer:");
+    this->new_line(1);
+    
+    // QR code with the answer to everything
+    this->print_qrcode("42");
+    this->new_line(1);
+    
+    this->print_text("Scan this for the Answer!");
+    this->new_line(1);
+    
+    // QR with a longer message
+    this->print_text("Hitchhiker's wisdom:");
+    this->new_line(1);
+    this->print_qrcode("Don't Panic! Always carry a towel.");
+    this->new_line(1);
+    
+    this->print_text("Essential travel advice");
+    this->new_line(2);
+  }
+  
+  if (show_barcode) {
+    ESP_LOGD(TAG, "Demo: Barcodes");
+    
+    this->set_text_alignment(1); // Center
+    this->set_text_style(true, 0, false, false);
+    this->print_text("=== BARCODES ===", 1);
+    this->set_text_style(false, 0, false, false);
+    this->new_line(1);
+    
+    this->print_text("Universal Product Codes:");
+    this->new_line(1);
+    
+    // CODE128 barcode - most versatile
+    this->print_text("CODE128: Towel SKU");
+    this->new_line(1);
+    this->print_barcode("TOWEL42", CODE128);
+    this->new_line(1);
+    
+    // CODE39 for alphanumeric
+    this->print_text("CODE39: Babel Fish ID");  
+    this->new_line(1);
+    this->print_barcode("BABEL42", CODE39);
+    this->new_line(1);
+    
+    // EAN13 for numeric (needs 12-13 digits)
+    this->print_text("EAN13: Guide Edition");
+    this->new_line(1);
+    this->print_barcode("424242424242", EAN13);
+    this->new_line(2);
+  }
+  
+  // Footer with completion message
+  this->set_text_alignment(1); // Center
+  this->set_text_style(true, 0, true, false); // Bold + double width
+  this->print_text("Demo Complete!", 2);
+  this->new_line(1);
+  this->set_text_style(false, 0, false, false);
+  
+  this->print_text("Thank you for printing");
+  this->new_line(1);
+  this->print_text("with M5Stack Printer!");
+  this->new_line(1);
+  
+  this->set_text_style(false, 1, false, false); // Underlined
+  this->print_text("github.com/jesserockz/");
+  this->new_line(1);
+  this->print_text("esphome-components");
+  this->new_line(3);
+  
+  // Reset all settings to defaults
+  this->set_text_style(false, 0, false, false);
+  this->set_text_alignment(0);
+  this->set_inverse_printing(false);
+  this->set_90_degree_rotation(false);
+  
+  ESP_LOGD(TAG, "Demo completed successfully");
+}
+
 }  // namespace m5stack_printer
 }  // namespace esphome
