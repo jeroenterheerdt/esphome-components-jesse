@@ -21,7 +21,7 @@ api:
         qrcode: string
       then:
         - m5stack_printer.print_qrcode:
-            qrcode: !lambda 'return qrcode.value_or(std::string("https://esphome.io"));'
+            qrcode: !lambda "return qrcode;"
     # Print 1D barcodes with validation
     # barcode: String data for the barcode (content varies by type)
     # type: Barcode format - UPC_A (11-12 digits), UPC_E (11-12 digits), EAN13 (12-13 digits),
@@ -33,8 +33,8 @@ api:
         type: string
       then:
         - m5stack_printer.print_barcode:
-            barcode: !lambda 'return barcode.value_or(std::string("123456789012"));'
-            type: !lambda 'return type.value_or(std::string("EAN13"));'
+            barcode: !lambda "return barcode;"
+            type: !lambda "return type;"
     # Add line breaks to advance paper
     # lines: Number of lines to advance (1-255)
     - service: new_line
@@ -42,7 +42,7 @@ api:
         lines: int
       then:
         - m5stack_printer.new_line:
-            lines: !lambda "return lines.value_or(1);"
+            lines: !lambda "return lines;"
     # Print text with comprehensive styling control (applies styles then prints)
     # text: String to print
     # font_size: Font size multiplier (0-7), affects both width and height
@@ -101,8 +101,8 @@ api:
         feed_lines: int
       then:
         - m5stack_printer.cut_paper:
-            cut_mode: !lambda "return cut_mode.value_or(0);"
-            feed_lines: !lambda "return feed_lines.value_or(0);"
+            cut_mode: !lambda "return cut_mode;"
+            feed_lines: !lambda "return feed_lines;"
     # Set text alignment for subsequent text printing
     # alignment: 0=left aligned, 1=center aligned, 2=right aligned
     - service: set_alignment
@@ -110,7 +110,7 @@ api:
         alignment: int
       then:
         - m5stack_printer.set_alignment:
-            alignment: !lambda "return alignment.value_or(0);"
+            alignment: !lambda "return alignment;"
     # Set text styling modes without printing (styles persist until changed)
     # bold: Enable bold/emphasized text (true/false)
     # underline: Underline mode (0=off, 1=single 1-dot line, 2=double 2-dot line)
@@ -173,11 +173,11 @@ api:
         show_rotation: bool
       then:
         - m5stack_printer.run_demo:
-            show_qr_code: !lambda "return show_qr_code.value_or(true);"
-            show_barcode: !lambda "return show_barcode.value_or(true);"
-            show_text_styles: !lambda "return show_text_styles.value_or(true);"
-            show_inverse: !lambda "return show_inverse.value_or(true);"
-            show_rotation: !lambda "return show_rotation.value_or(true);"
+            show_qr_code: !lambda "return show_qr_code;"
+            show_barcode: !lambda "return show_barcode;"
+            show_text_styles: !lambda "return show_text_styles;"
+            show_inverse: !lambda "return show_inverse;"
+            show_rotation: !lambda "return show_rotation;"
     # Set horizontal tab stop positions for tabular formatting (ESC D command)
     # positions: Comma or space separated character positions (e.g., "8,16,24,32" or "10 20 30")
     # Maximum 32 tab stops, positions are in character widths from left margin
@@ -186,7 +186,7 @@ api:
         positions: string
       then:
         - m5stack_printer.set_tab_positions:
-            positions: !lambda 'return positions.value_or(std::string("8,16,24,32"));'
+            positions: !lambda "return positions;"
     # Jump to next horizontal tab position (HT/0x09 command, no parameters)
     # Use after setting tab positions with set_tab_positions service
     # If no tab positions set or past last tab, moves to next 8-character boundary
@@ -201,7 +201,7 @@ api:
         position: int
       then:
         - m5stack_printer.set_horizontal_position:
-            position: !lambda "return position.value_or(0);"
+            position: !lambda "return position;"
 
 # Enable OTA updates
 ota:
