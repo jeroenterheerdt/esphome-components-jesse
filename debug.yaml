@@ -74,24 +74,24 @@ api:
         break_time: int
       then:
         - m5stack_printer.set_text_style:
-            bold: !lambda "return bold.value_or(false);"
-            underline: !lambda "return underline.value_or(0);"
-            double_width: !lambda "return double_width.value_or(false);"
-            upside_down: !lambda "return upside_down.value_or(false);"
+            bold: !lambda "return bold;"
+            underline: !lambda "return underline;"
+            double_width: !lambda "return double_width;"
+            upside_down: !lambda "return upside_down;"
         - m5stack_printer.set_90_degree_rotation:
-            enable: !lambda "return rotation.value_or(false);"
+            enable: !lambda "return rotation;"
         - m5stack_printer.set_inverse_printing:
-            enable: !lambda "return inverse.value_or(false);"
+            enable: !lambda "return inverse;"
         - m5stack_printer.set_chinese_mode:
-            enable: !lambda "return chinese_mode.value_or(false);"
+            enable: !lambda "return chinese_mode;"
         - m5stack_printer.set_line_spacing:
-            spacing: !lambda "return line_spacing.value_or(30);"
+            spacing: !lambda "return line_spacing;"
         - m5stack_printer.set_print_density:
-            density: !lambda "return print_density.value_or(15);"
-            break_time: !lambda "return break_time.value_or(2);"
+            density: !lambda "return print_density;"
+            break_time: !lambda "return break_time;"
         - m5stack_printer.print_text:
-            text: !lambda 'return text_to_print.value_or(std::string("Hello, World!"));'
-            font_size: !lambda "return font_size.value_or(0);"
+            text: !lambda "return text_to_print;"
+            font_size: !lambda "return font_size;"
     # Cut paper with optional feeding (requires printer with cutting mechanism)
     # cut_mode: 0=full cut (ESC i), 1=partial cut (GS V 1), 66=cut with feed (GS V 66)
     # feed_lines: Additional lines to feed before cutting (0-255, only used with mode 66)
@@ -138,21 +138,21 @@ api:
         break_time: int
       then:
         - m5stack_printer.set_text_style:
-            bold: !lambda "return bold.value_or(false);"
-            underline: !lambda "return underline.value_or(0);"
-            double_width: !lambda "return double_width.value_or(false);"
-            upside_down: !lambda "return upside_down.value_or(false);"
+            bold: !lambda "return bold;"
+            underline: !lambda "return underline;"
+            double_width: !lambda "return double_width;"
+            upside_down: !lambda "return upside_down;"
         - m5stack_printer.set_90_degree_rotation:
-            enable: !lambda "return rotation.value_or(false);"
+            enable: !lambda "return rotation;"
         - m5stack_printer.set_inverse_printing:
-            enable: !lambda "return inverse.value_or(false);"
+            enable: !lambda "return inverse;"
         - m5stack_printer.set_chinese_mode:
-            enable: !lambda "return chinese_mode.value_or(false);"
+            enable: !lambda "return chinese_mode;"
         - m5stack_printer.set_line_spacing:
-            spacing: !lambda "return line_spacing.value_or(30);"
+            spacing: !lambda "return line_spacing;"
         - m5stack_printer.set_print_density:
-            density: !lambda "return print_density.value_or(15);"
-            break_time: !lambda "return break_time.value_or(2);"
+            density: !lambda "return print_density;"
+            break_time: !lambda "return break_time;"
     # Print built-in test page (no parameters, prints printer diagnostics and sample patterns)
     - service: print_test_page
       then:

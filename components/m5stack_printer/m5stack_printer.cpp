@@ -65,8 +65,8 @@ static const uint8_t STATUS_REQUEST_CMD[] = {ESC, 'v', 0}; // ESC v 0 - request 
 static const uint8_t SLEEP_MODE_CMD[] = {ESC, '8'}; // ESC 8 n1 n2 - sleep mode
 
 // Additional text formatting commands
-static const uint8_t ROTATE_90_CMD[] = {ESC, 'V'}; // ESC V n - 90 degree rotation
-static const uint8_t INVERSE_PRINT_CMD[] = {GS, 'B'}; // GS B n - white/black inverse
+static const uint8_t ROTATE_90_CMD[] = {ESC, 'R'}; // ESC R n - 90 degree rotation (alternative)
+static const uint8_t INVERSE_PRINT_CMD[] = {ESC, 'B'}; // ESC B n - white/black inverse (alternative)
 static const uint8_t CHINESE_MODE_ON_CMD[] = {0x1C, 0x26}; // FS & - select Chinese/Japanese mode
 static const uint8_t CHINESE_MODE_OFF_CMD[] = {0x1C, 0x2E}; // FS . - cancel Chinese/Japanese mode
 
@@ -250,8 +250,14 @@ void M5StackPrinterDisplay::set_text_alignment(uint8_t alignment) {
   }
 
   ESP_LOGD(TAG, "Setting text alignment to %d (0=left, 1=center, 2=right)", alignment);
+
+  // Send alignment command immediately
   this->write_array(TEXT_ALIGN_CMD, sizeof(TEXT_ALIGN_CMD));
   this->write_byte(alignment);
+
+  // Also try alternative alignment command for some printer models
+  uint8_t alt_align_cmd[] = {0x1B, 0x61, alignment};
+  this->write_array(alt_align_cmd, sizeof(alt_align_cmd));
 }
 
 void M5StackPrinterDisplay::set_line_spacing(uint8_t spacing) {
@@ -375,15 +381,36 @@ void M5StackPrinterDisplay::draw_absolute_pixel_internal(int x, int y, Color col
 void M5StackPrinterDisplay::set_90_degree_rotation(bool enable) {
   ESP_LOGD(TAG, "Setting 90-degree rotation: %s", enable ? "enabled" : "disabled");
 
-  this->write_array(ROTATE_90_CMD, sizeof(ROTATE_90_CMD));
-  this->write_byte(enable ? 1 : 0);
+  // Try different rotation commands for better compatibility
+  // Method 1: ESC R n - Character rotation
+  uint8_t rotate_cmd[] = {0x1B, 0x52, enable ? 1 : 0};
+  this->write_array(rotate_cmd, sizeof(rotate_cmd));
+
+  // Method 2: Also try GS V n format
+  uint8_t rotate_cmd2[] = {0x1D, 0x56, enable ? 1 : 0};
+  this->write_array(rotate_cmd2, sizeof(rotate_cmd2));
 }
 
 void M5StackPrinterDisplay::set_inverse_printing(bool enable) {
   ESP_LOGD(TAG, "Setting inverse printing: %s", enable ? "enabled" : "disabled");
 
-  this->write_array(INVERSE_PRINT_CMD, sizeof(INVERSE_PRINT_CMD));
-  this->write_byte(enable ? 1 : 0);
+  // Try multiple inverse printing commands for compatibility
+  // Method 1: ESC B n - Character color inversion
+  uint8_t inverse_cmd1[] = {0x1B, 0x42, enable ? 1 : 0};
+  this->write_array(inverse_cmd1, sizeof(inverse_cmd1));
+
+  // Method 2: GS B n - Black/white reverse printing
+  uint8_t inverse_cmd2[] = {0x1D, 0x42, enable ? 1 : 0};
+  this->write_array(inverse_cmd2, sizeof(inverse_cmd2));
+
+  // Method 3: DC2 # n for some printers
+  if (enable) {
+    uint8_t inverse_cmd3[] = {0x12, 0x23, 0x01};
+    this->write_array(inverse_cmd3, sizeof(inverse_cmd3));
+  } else {
+    uint8_t inverse_cmd3[] = {0x12, 0x23, 0x00};
+    this->write_array(inverse_cmd3, sizeof(inverse_cmd3));
+  }
 }
 
 void M5StackPrinterDisplay::set_chinese_mode(bool enable) {
@@ -411,10 +438,10 @@ void M5StackPrinterDisplay::run_demo(bool show_qr_code, bool show_barcode,
 
   // Header with title
   this->set_text_style(true, 0, true, false); // Bold, double width
-  this->print_text("DON'T PANIC", 2);
+  this->print_text("DON'T PANIC", 1);  // Reduced from 2 to 1
   this->new_line(1);
   this->set_text_style(false, 1, false, false); // Normal, underlined
-  this->print_text("M5Stack Printer Demo", 1);
+  this->print_text("M5Stack Printer Demo", 0);  // Reduced from 1 to 0
   this->new_line(2);
 
   // Reset formatting and left align
@@ -427,7 +454,7 @@ void M5StackPrinterDisplay::run_demo(bool show_qr_code, bool show_barcode,
   this->print_text("Question of Thermal Printing:");
   this->new_line(1);
   this->set_text_style(true, 0, false, false); // Bold
-  this->print_text("42 functions tested below", 1);
+  this->print_text("42 functions tested below", 0);  // Reduced from 1 to 0
   this->set_text_style(false, 0, false, false); // Reset
   this->new_line(2);
 
@@ -436,7 +463,7 @@ void M5StackPrinterDisplay::run_demo(bool show_qr_code, bool show_barcode,
 
     this->set_text_alignment(1); // Center
     this->set_text_style(true, 0, false, false); // Bold
-    this->print_text("=== TEXT STYLES ===", 1);
+    this->print_text("=== TEXT STYLES ===", 0);  // Reduced from 1 to 0
     this->set_text_style(false, 0, false, false);
     this->set_text_alignment(0); // Left
     this->new_line(1);
@@ -478,15 +505,19 @@ void M5StackPrinterDisplay::run_demo(bool show_qr_code, bool show_barcode,
     // Alignment demo
     this->print_text("Text alignment test:");
     this->new_line(1);
+
     this->set_text_alignment(0); // Left
     this->print_text("Left: Earth (mostly harmless)");
     this->new_line(1);
+
     this->set_text_alignment(1); // Center
     this->print_text("Center: Restaurant");
     this->new_line(1);
+
     this->set_text_alignment(2); // Right
     this->print_text("Right: Magrathea");
     this->new_line(1);
+
     this->set_text_alignment(0); // Reset to left
     this->new_line(1);
   }
@@ -496,7 +527,7 @@ void M5StackPrinterDisplay::run_demo(bool show_qr_code, bool show_barcode,
 
     this->set_text_alignment(1); // Center
     this->set_text_style(true, 0, false, false);
-    this->print_text("=== INVERSE MODE ===", 1);
+    this->print_text("=== INVERSE MODE ===", 0);  // Reduced from 1 to 0
     this->set_text_style(false, 0, false, false);
     this->set_text_alignment(0);
     this->new_line(1);
@@ -520,7 +551,7 @@ void M5StackPrinterDisplay::run_demo(bool show_qr_code, bool show_barcode,
 
     this->set_text_alignment(1); // Center
     this->set_text_style(true, 0, false, false);
-    this->print_text("=== ROTATION ===", 1);
+    this->print_text("=== ROTATION ===", 0);  // Reduced from 1 to 0
     this->set_text_style(false, 0, false, false);
     this->set_text_alignment(0);
     this->new_line(1);
@@ -546,7 +577,7 @@ void M5StackPrinterDisplay::run_demo(bool show_qr_code, bool show_barcode,
 
     this->set_text_alignment(1); // Center
     this->set_text_style(true, 0, false, false);
-    this->print_text("=== QR CODES ===", 1);
+    this->print_text("=== QR CODES ===", 0);  // Reduced from 1 to 0
     this->set_text_style(false, 0, false, false);
     this->new_line(1);
 
@@ -575,7 +606,7 @@ void M5StackPrinterDisplay::run_demo(bool show_qr_code, bool show_barcode,
 
     this->set_text_alignment(1); // Center
     this->set_text_style(true, 0, false, false);
-    this->print_text("=== BARCODES ===", 1);
+    this->print_text("=== BARCODES ===", 0);  // Reduced from 1 to 0
     this->set_text_style(false, 0, false, false);
     this->new_line(1);
 
@@ -604,7 +635,7 @@ void M5StackPrinterDisplay::run_demo(bool show_qr_code, bool show_barcode,
   // Footer with completion message
   this->set_text_alignment(1); // Center
   this->set_text_style(true, 0, true, false); // Bold + double width
-  this->print_text("Demo Complete!", 2);
+  this->print_text("Demo Complete!", 1);  // Reduced from 2 to 1
   this->new_line(1);
   this->set_text_style(false, 0, false, false);
 
@@ -629,36 +660,30 @@ void M5StackPrinterDisplay::run_demo(bool show_qr_code, bool show_barcode,
 }
 
 void M5StackPrinterDisplay::set_text_style(bool bold, uint8_t underline, bool double_width, bool upside_down) {
-  // ESC ! n - Set print modes
-  uint8_t mode = 0;
-  if (bold) mode |= 0x08;         // Bold
-  if (double_width) mode |= 0x20; // Double width
-  if (underline > 0) mode |= 0x80; // Underline (any non-zero value)
-  // Note: upside_down requires separate command (ESC {)
+  // Use individual commands for better compatibility
 
-  uint8_t cmd[] = {0x1B, 0x21, mode};
-  this->write_array(cmd, sizeof(cmd));
-
-  // Handle underline separately with ESC - n command
-  if (underline > 0) {
-    // Clamp underline to valid range (1-2)
-    uint8_t underline_mode = (underline > 2) ? 2 : underline;
-    uint8_t underline_cmd[] = {0x1B, 0x2D, underline_mode};
-    this->write_array(underline_cmd, sizeof(underline_cmd));
+  // Bold: ESC E n (0=off, 1=on)
+  if (bold) {
+    this->write_array(BOLD_ON_CMD, sizeof(BOLD_ON_CMD));
   } else {
-    // Turn off underline
-    uint8_t underline_cmd[] = {0x1B, 0x2D, 0};
-    this->write_array(underline_cmd, sizeof(underline_cmd));
+    this->write_array(BOLD_OFF_CMD, sizeof(BOLD_OFF_CMD));
   }
 
-  // Handle upside down (character rotation 180°) with ESC { n command
-  if (upside_down) {
-    uint8_t upside_cmd[] = {0x1B, 0x7B, 1};
-    this->write_array(upside_cmd, sizeof(upside_cmd));
+  // Underline: ESC - n (0=off, 1=single, 2=double)
+  uint8_t underline_mode = (underline > 2) ? 2 : underline;
+  this->write_array(UNDERLINE_CMD, sizeof(UNDERLINE_CMD));
+  this->write_byte(underline_mode);
+
+  // Double width: ESC SO (on) / ESC DC4 (off)
+  if (double_width) {
+    this->write_array(DOUBLE_WIDTH_ON_CMD, sizeof(DOUBLE_WIDTH_ON_CMD));
   } else {
-    uint8_t upside_cmd[] = {0x1B, 0x7B, 0};
-    this->write_array(upside_cmd, sizeof(upside_cmd));
+    this->write_array(DOUBLE_WIDTH_OFF_CMD, sizeof(DOUBLE_WIDTH_OFF_CMD));
   }
+
+  // Upside down (character rotation 180°): ESC { n
+  this->write_array(UPSIDE_DOWN_CMD, sizeof(UPSIDE_DOWN_CMD));
+  this->write_byte(upside_down ? 1 : 0);
 }
 
 void M5StackPrinterDisplay::print_test_page() {
