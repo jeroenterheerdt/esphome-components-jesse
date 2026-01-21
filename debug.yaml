@@ -1,0 +1,231 @@
+esphome:
+  name: thermalprinter
+  friendly_name: thermalprinter
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+# Enable logging
+logger:
+  level: DEBUG
+
+# Enable Home Assistant API
+api:
+  services:
+    # Print QR codes
+    # qrcode: String data to encode (max ~100 characters recommended for reliability)
+    - service: print_qrcode
+      variables:
+        qrcode: string
+      then:
+        - m5stack_printer.print_qrcode:
+            qrcode: !lambda "return qrcode;"
+    # Print 1D barcodes with validation
+    # barcode: String data for the barcode (content varies by type)
+    # type: Barcode format - UPC_A (11-12 digits), UPC_E (11-12 digits), EAN13 (12-13 digits),
+    #       EAN8 (7-8 digits), CODE39 (alphanumeric + special), ITF (even digits only),
+    #       CODABAR (digits + A-D), CODE93 (full ASCII), CODE128 (full ASCII)
+    - service: print_barcode
+      variables:
+        barcode: string
+        type: string
+      then:
+        - m5stack_printer.print_barcode:
+            barcode: !lambda "return barcode;"
+            type: !lambda "return type;"
+    # Add line breaks to advance paper
+    # lines: Number of lines to advance (1-255)
+    - service: new_line
+      variables:
+        lines: int
+      then:
+        - m5stack_printer.new_line:
+            lines: !lambda "return lines;"
+    # Print text with comprehensive styling control (applies styles then prints)
+    # text: String to print
+    # font_size: Font size multiplier (0-7), affects both width and height
+    # bold: Enable bold/emphasized text (true/false)
+    # underline: Underline mode (0=off, 1=single line, 2=double line)
+    # double_width: Enable double width characters (true/false)
+    # upside_down: Rotate text 180 degrees (true/false)
+    # strikethrough: Enable strikethrough line through text (true/false)
+    # rotation: Enable 90-degree clockwise rotation (true/false)
+    # inverse: Enable white text on black background (true/false)
+    # chinese_mode: Enable Chinese/Japanese multi-byte character support (true/false)
+    # line_spacing: Custom line spacing in dots (0-255, default ~30)
+    # print_density: Print darkness level (0-31, higher=darker, default ~15)
+    # break_time: Break time between dots in μs (0-7, affects print speed vs quality)
+    - service: print_text
+      variables:
+        text_to_print: string
+        font_size: int
+        bold: bool
+        underline: int
+        double_width: bool
+        upside_down: bool
+        strikethrough: bool
+        rotation: bool
+        inverse: bool
+        chinese_mode: bool
+        line_spacing: int
+        print_density: int
+        break_time: int
+      then:
+        - m5stack_printer.set_text_style:
+            bold: !lambda "return bold;"
+            underline: !lambda "return underline;"
+            double_width: !lambda "return double_width;"
+            upside_down: !lambda "return upside_down;"
+        - m5stack_printer.set_90_degree_rotation:
+            enable: !lambda "return rotation;"
+        - m5stack_printer.set_inverse_printing:
+            enable: !lambda "return inverse;"
+        - m5stack_printer.set_chinese_mode:
+            enable: !lambda "return chinese_mode;"
+        - m5stack_printer.set_line_spacing:
+            spacing: !lambda "return line_spacing;"
+        - m5stack_printer.set_print_density:
+            density: !lambda "return print_density;"
+            break_time: !lambda "return break_time;"
+        - m5stack_printer.print_text:
+            text: !lambda "return text_to_print;"
+            font_size: !lambda "return font_size;"
+    # Cut paper with optional feeding (requires printer with cutting mechanism)
+    # cut_mode: 0=full cut (ESC i), 1=partial cut (GS V 1), 66=cut with feed (GS V 66)
+    # feed_lines: Additional lines to feed before cutting (0-255, only used with mode 66)
+    - service: cut_paper
+      variables:
+        cut_mode: int
+        feed_lines: int
+      then:
+        - m5stack_printer.cut_paper:
+            cut_mode: !lambda "return cut_mode;"
+            feed_lines: !lambda "return feed_lines;"
+    # Set text alignment for subsequent text printing
+    # alignment: 0=left aligned, 1=center aligned, 2=right aligned
+    - service: set_alignment
+      variables:
+        alignment: int
+      then:
+        - m5stack_printer.set_alignment:
+            alignment: !lambda "return alignment;"
+    # Set text styling modes without printing (styles persist until changed)
+    # bold: Enable bold/emphasized text (true/false)
+    # underline: Underline mode (0=off, 1=single 1-dot line, 2=double 2-dot line)
+    # double_width: Enable double width characters (true/false)
+    # upside_down: Rotate individual characters 180 degrees (true/false)
+    # strikethrough: Enable line through middle of text (true/false)
+    # rotation: Enable 90-degree clockwise rotation of entire text (true/false)
+    # inverse: Enable white text on black background printing (true/false)
+    # chinese_mode: Enable processing of multi-byte Asian characters (true/false)
+    # line_spacing: Custom line spacing in dots (0-255, ESC 3 command)
+    # print_density: Print heat density (0-31, higher=darker but slower, affects print head life)
+    # break_time: Break time between printed dots (0-7, microsecond units, balances speed vs quality)
+    - service: set_text_style
+      variables:
+        bold: bool
+        underline: int
+        double_width: bool
+        upside_down: bool
+        strikethrough: bool
+        rotation: bool
+        inverse: bool
+        chinese_mode: bool
+        line_spacing: int
+        print_density: int
+        break_time: int
+      then:
+        - m5stack_printer.set_text_style:
+            bold: !lambda "return bold;"
+            underline: !lambda "return underline;"
+            double_width: !lambda "return double_width;"
+            upside_down: !lambda "return upside_down;"
+        - m5stack_printer.set_90_degree_rotation:
+            enable: !lambda "return rotation;"
+        - m5stack_printer.set_inverse_printing:
+            enable: !lambda "return inverse;"
+        - m5stack_printer.set_chinese_mode:
+            enable: !lambda "return chinese_mode;"
+        - m5stack_printer.set_line_spacing:
+            spacing: !lambda "return line_spacing;"
+        - m5stack_printer.set_print_density:
+            density: !lambda "return print_density;"
+            break_time: !lambda "return break_time;"
+    # Print built-in test page (no parameters, prints printer diagnostics and sample patterns)
+    - service: print_test_page
+      then:
+        - m5stack_printer.print_test_page
+    # Run comprehensive demo showcasing printer capabilities with Hitchhiker's Guide theme
+    # show_qr_code: Include QR code examples in demo (true/false)
+    # show_barcode: Include various barcode format examples (true/false)
+    # show_text_styles: Include bold, underline, sizing demonstrations (true/false)
+    # show_inverse: Include white-on-black text examples (true/false)
+    # show_rotation: Include 90-degree rotated text examples (true/false)
+    # Note: If all parameters are false, runs full demo with all features enabled
+    - service: run_demo
+      variables:
+        show_qr_code: bool
+        show_barcode: bool
+        show_text_styles: bool
+        show_inverse: bool
+        show_rotation: bool
+      then:
+        - m5stack_printer.run_demo:
+            show_qr_code: !lambda "return show_qr_code;"
+            show_barcode: !lambda "return show_barcode;"
+            show_text_styles: !lambda "return show_text_styles;"
+            show_inverse: !lambda "return show_inverse;"
+            show_rotation: !lambda "return show_rotation;"
+    # Set horizontal tab stop positions for tabular formatting (ESC D command)
+    # positions: Comma or space separated character positions (e.g., "8,16,24,32" or "10 20 30")
+    # Maximum 32 tab stops, positions are in character widths from left margin
+    - service: set_tab_positions
+      variables:
+        positions: string
+      then:
+        - m5stack_printer.set_tab_positions:
+            positions: !lambda "return positions;"
+    # Jump to next horizontal tab position (HT/0x09 command, no parameters)
+    # Use after setting tab positions with set_tab_positions service
+    # If no tab positions set or past last tab, moves to next 8-character boundary
+    - service: horizontal_tab
+      then:
+        - m5stack_printer.horizontal_tab
+    # Set absolute horizontal print position from left margin (ESC $ command)
+    # position: Horizontal position in dots from left margin (0-383 for 58mm paper)
+    # Useful for precise alignment, right-justifying text, or creating custom layouts
+    - service: set_horizontal_position
+      variables:
+        position: int
+      then:
+        - m5stack_printer.set_horizontal_position:
+            position: !lambda "return position;"
+
+# Enable OTA updates
+ota:
+  - platform: esphome
+
+# Enable WiFi
+wifi:
+  ssid: "YOUR_WIFI_SSID"
+  password: "YOUR_WIFI_PASSWORD"
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Thermalprinter Fallback Hotspot"
+    password: "12345678"
+
+captive_portal:
+
+uart:
+  tx_pin: GPIO17
+  rx_pin: GPIO16
+  baud_rate: 9600
+
+display:
+  platform: m5stack_printer
+  id: printer
+  height: 50
+  auto_clear_enabled: false

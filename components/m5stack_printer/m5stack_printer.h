@@ -208,7 +208,7 @@ class M5StackPrinterPrintBarcodeAction : public Action<Ts...>, public Parented<M
   TEMPLATABLE_VALUE(std::string, barcode)
   TEMPLATABLE_VALUE(std::string, type)
 
-  void play(Ts... x) override {
+  void play(const Ts &...x) override {
     // Convert string type to BarcodeType enum
     std::string type_str = this->type_.value(x...);
     BarcodeType barcode_type = CODE128; // Default
@@ -240,7 +240,7 @@ class M5StackPrinterCutPaperAction : public Action<Ts...>, public Parented<M5Sta
   TEMPLATABLE_VALUE(uint8_t, cut_mode)
   TEMPLATABLE_VALUE(uint8_t, feed_lines)
 
-  void play(Ts... x) override {
+  void play(const Ts &...x) override {
     if (this->cut_mode_.value(x...) == 0 && this->feed_lines_.value(x...) == 0) {
       this->parent_->cut_paper();
     } else {
@@ -265,7 +265,7 @@ class M5StackPrinterSetStyleAction : public Action<Ts...>, public Parented<M5Sta
   TEMPLATABLE_VALUE(bool, double_width)
   TEMPLATABLE_VALUE(bool, upside_down)
 
-  void play(Ts... x) override {
+  void play(const Ts &...x) override {
     this->parent_->set_text_style(
       this->bold_.value(x...),
       this->underline_.value(x...),
@@ -323,7 +323,7 @@ class M5StackPrinterSetTabPositionsAction : public Action<Ts...>, public Parente
  public:
   TEMPLATABLE_VALUE(std::string, positions)
 
-  void play(Ts... x) override {
+  void play(const Ts &...x) override {
     // Parse comma or space separated positions and call set_tab_positions
     // For now, just log - the actual implementation would parse the string
     ESP_LOGD("m5stack_printer", "Set tab positions: %s", this->positions_.value(x...).c_str());
