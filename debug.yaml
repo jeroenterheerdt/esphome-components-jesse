@@ -21,7 +21,7 @@ api:
         qrcode: string
       then:
         - m5stack_printer.print_qrcode:
-            qrcode: !lambda "return qrcode;"
+            qrcode: !lambda 'return qrcode.value_or(std::string("https://esphome.io"));'
     # Print 1D barcodes with validation
     # barcode: String data for the barcode (content varies by type)
     # type: Barcode format - UPC_A (11-12 digits), UPC_E (11-12 digits), EAN13 (12-13 digits),
@@ -33,8 +33,8 @@ api:
         type: string
       then:
         - m5stack_printer.print_barcode:
-            barcode: !lambda "return barcode;"
-            type: !lambda "return type;"
+            barcode: !lambda 'return barcode.value_or(std::string("123456789012"));'
+            type: !lambda 'return type.value_or(std::string("EAN13"));'
     # Add line breaks to advance paper
     # lines: Number of lines to advance (1-255)
     - service: new_line
@@ -42,7 +42,7 @@ api:
         lines: int
       then:
         - m5stack_printer.new_line:
-            lines: !lambda "return lines;"
+            lines: !lambda "return lines.value_or(1);"
     # Print text with comprehensive styling control (applies styles then prints)
     # text: String to print
     # font_size: Font size multiplier (0-7), affects both width and height
@@ -74,24 +74,24 @@ api:
         break_time: int
       then:
         - m5stack_printer.set_text_style:
-            bold: !lambda "return bold;"
-            underline: !lambda "return underline;"
-            double_width: !lambda "return double_width;"
-            upside_down: !lambda "return upside_down;"
+            bold: !lambda "return bold.value_or(false);"
+            underline: !lambda "return underline.value_or(0);"
+            double_width: !lambda "return double_width.value_or(false);"
+            upside_down: !lambda "return upside_down.value_or(false);"
         - m5stack_printer.set_90_degree_rotation:
-            enable: !lambda "return rotation;"
+            enable: !lambda "return rotation.value_or(false);"
         - m5stack_printer.set_inverse_printing:
-            enable: !lambda "return inverse;"
+            enable: !lambda "return inverse.value_or(false);"
         - m5stack_printer.set_chinese_mode:
-            enable: !lambda "return chinese_mode;"
+            enable: !lambda "return chinese_mode.value_or(false);"
         - m5stack_printer.set_line_spacing:
-            spacing: !lambda "return line_spacing;"
+            spacing: !lambda "return line_spacing.value_or(30);"
         - m5stack_printer.set_print_density:
-            density: !lambda "return print_density;"
-            break_time: !lambda "return break_time;"
+            density: !lambda "return print_density.value_or(15);"
+            break_time: !lambda "return break_time.value_or(2);"
         - m5stack_printer.print_text:
-            text: !lambda "return text_to_print;"
-            font_size: !lambda "return font_size;"
+            text: !lambda 'return text_to_print.value_or(std::string("Hello, World!"));'
+            font_size: !lambda "return font_size.value_or(0);"
     # Cut paper with optional feeding (requires printer with cutting mechanism)
     # cut_mode: 0=full cut (ESC i), 1=partial cut (GS V 1), 66=cut with feed (GS V 66)
     # feed_lines: Additional lines to feed before cutting (0-255, only used with mode 66)
@@ -101,8 +101,8 @@ api:
         feed_lines: int
       then:
         - m5stack_printer.cut_paper:
-            cut_mode: !lambda "return cut_mode;"
-            feed_lines: !lambda "return feed_lines;"
+            cut_mode: !lambda "return cut_mode.value_or(0);"
+            feed_lines: !lambda "return feed_lines.value_or(0);"
     # Set text alignment for subsequent text printing
     # alignment: 0=left aligned, 1=center aligned, 2=right aligned
     - service: set_alignment
@@ -110,7 +110,7 @@ api:
         alignment: int
       then:
         - m5stack_printer.set_alignment:
-            alignment: !lambda "return alignment;"
+            alignment: !lambda "return alignment.value_or(0);"
     # Set text styling modes without printing (styles persist until changed)
     # bold: Enable bold/emphasized text (true/false)
     # underline: Underline mode (0=off, 1=single 1-dot line, 2=double 2-dot line)
@@ -138,32 +138,32 @@ api:
         break_time: int
       then:
         - m5stack_printer.set_text_style:
-            bold: !lambda "return bold;"
-            underline: !lambda "return underline;"
-            double_width: !lambda "return double_width;"
-            upside_down: !lambda "return upside_down;"
+            bold: !lambda "return bold.value_or(false);"
+            underline: !lambda "return underline.value_or(0);"
+            double_width: !lambda "return double_width.value_or(false);"
+            upside_down: !lambda "return upside_down.value_or(false);"
         - m5stack_printer.set_90_degree_rotation:
-            enable: !lambda "return rotation;"
+            enable: !lambda "return rotation.value_or(false);"
         - m5stack_printer.set_inverse_printing:
-            enable: !lambda "return inverse;"
+            enable: !lambda "return inverse.value_or(false);"
         - m5stack_printer.set_chinese_mode:
-            enable: !lambda "return chinese_mode;"
+            enable: !lambda "return chinese_mode.value_or(false);"
         - m5stack_printer.set_line_spacing:
-            spacing: !lambda "return line_spacing;"
+            spacing: !lambda "return line_spacing.value_or(30);"
         - m5stack_printer.set_print_density:
-            density: !lambda "return print_density;"
-            break_time: !lambda "return break_time;"
+            density: !lambda "return print_density.value_or(15);"
+            break_time: !lambda "return break_time.value_or(2);"
     # Print built-in test page (no parameters, prints printer diagnostics and sample patterns)
     - service: print_test_page
       then:
         - m5stack_printer.print_test_page
     # Run comprehensive demo showcasing printer capabilities with Hitchhiker's Guide theme
-    # show_qr_code: Include QR code examples in demo (true/false)
-    # show_barcode: Include various barcode format examples (true/false)
-    # show_text_styles: Include bold, underline, sizing demonstrations (true/false)
-    # show_inverse: Include white-on-black text examples (true/false)
-    # show_rotation: Include 90-degree rotated text examples (true/false)
-    # Note: If all parameters are false, runs full demo with all features enabled
+    # All parameters are optional and default to true - call without any parameters to run full demo
+    # show_qr_code: Include QR code examples in demo (default: true)
+    # show_barcode: Include various barcode format examples (default: true)
+    # show_text_styles: Include bold, underline, sizing demonstrations (default: true)
+    # show_inverse: Include white-on-black text examples (default: true)
+    # show_rotation: Include 90-degree rotated text examples (default: true)
     - service: run_demo
       variables:
         show_qr_code: bool
@@ -173,11 +173,11 @@ api:
         show_rotation: bool
       then:
         - m5stack_printer.run_demo:
-            show_qr_code: !lambda "return show_qr_code;"
-            show_barcode: !lambda "return show_barcode;"
-            show_text_styles: !lambda "return show_text_styles;"
-            show_inverse: !lambda "return show_inverse;"
-            show_rotation: !lambda "return show_rotation;"
+            show_qr_code: !lambda "return show_qr_code.value_or(true);"
+            show_barcode: !lambda "return show_barcode.value_or(true);"
+            show_text_styles: !lambda "return show_text_styles.value_or(true);"
+            show_inverse: !lambda "return show_inverse.value_or(true);"
+            show_rotation: !lambda "return show_rotation.value_or(true);"
     # Set horizontal tab stop positions for tabular formatting (ESC D command)
     # positions: Comma or space separated character positions (e.g., "8,16,24,32" or "10 20 30")
     # Maximum 32 tab stops, positions are in character widths from left margin
@@ -186,7 +186,7 @@ api:
         positions: string
       then:
         - m5stack_printer.set_tab_positions:
-            positions: !lambda "return positions;"
+            positions: !lambda 'return positions.value_or(std::string("8,16,24,32"));'
     # Jump to next horizontal tab position (HT/0x09 command, no parameters)
     # Use after setting tab positions with set_tab_positions service
     # If no tab positions set or past last tab, moves to next 8-character boundary
@@ -201,23 +201,29 @@ api:
         position: int
       then:
         - m5stack_printer.set_horizontal_position:
-            position: !lambda "return position;"
+            position: !lambda "return position.value_or(0);"
 
 # Enable OTA updates
 ota:
   - platform: esphome
+    password: !secret OTA_password
 
 # Enable WiFi
 wifi:
-  ssid: "YOUR_WIFI_SSID"
-  password: "YOUR_WIFI_PASSWORD"
-
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
   # Enable fallback hotspot (captive portal) in case wifi connection fails
   ap:
     ssid: "Thermalprinter Fallback Hotspot"
-    password: "12345678"
+    password: !secret fallback_hotspot_password
 
 captive_portal:
+
+external_components:
+  # m5stack_printer debug
+  - source: github://jeroenterheerdt/esphome-components-jesse #@jesserockz-2025-036
+    components: [m5stack_printer]
+    refresh: 0s
 
 uart:
   tx_pin: GPIO17
