@@ -174,6 +174,27 @@ class M5StackPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
   void run_demo(bool show_qr_code = false, bool show_barcode = false,
                 bool show_text_styles = false, bool show_inverse = false, bool show_rotation = false);
 
+  /**
+   * Set horizontal tab stop positions
+   * @param positions Comma or space separated character positions (e.g., "8,16,24,32" or "10 20 30")
+   * Maximum 32 tab stops, positions are in character widths from left margin
+   */
+  void set_tab_positions(const std::string &positions);
+
+  /**
+   * Jump to next horizontal tab position
+   * Use after setting tab positions with set_tab_positions
+   * If no tab positions set or past last tab, moves to next 8-character boundary
+   */
+  void horizontal_tab();
+
+  /**
+   * Set absolute horizontal print position from left margin
+   * @param position Horizontal position in dots from left margin (0-383 for 58mm paper)
+   * Useful for precise alignment, right-justifying text, or creating custom layouts
+   */
+  void set_horizontal_position(uint16_t position);
+
  protected:
   void draw_absolute_pixel_internal(int x, int y, Color color) override;
   size_t get_buffer_length_() { return size_t(this->get_width_internal()) * size_t(this->get_height_internal()) / 8; }

@@ -1,6 +1,7 @@
 #include "m5stack_printer.h"
 
 #include <cinttypes>
+#include <sstream>
 
 namespace esphome {
 namespace m5stack_printer {
@@ -625,6 +626,197 @@ void M5StackPrinterDisplay::run_demo(bool show_qr_code, bool show_barcode,
   this->set_90_degree_rotation(false);
 
   ESP_LOGD(TAG, "Demo completed successfully");
+}
+
+void M5StackPrinterDisplay::set_text_style(bool bold, uint8_t underline, bool double_width, bool upside_down) {
+  // ESC ! n - Set print modes
+  uint8_t mode = 0;
+  if (bold) mode |= 0x08;         // Bold
+  if (double_width) mode |= 0x20; // Double width
+  if (underline > 0) mode |= 0x80; // Underline (any non-zero value)
+  // Note: upside_down requires separate command (ESC {)
+
+  uint8_t cmd[] = {0x1B, 0x21, mode};
+  this->write_array(cmd, sizeof(cmd));
+
+  // Handle underline separately with ESC - n command
+  if (underline > 0) {
+    // Clamp underline to valid range (1-2)
+    uint8_t underline_mode = (underline > 2) ? 2 : underline;
+    uint8_t underline_cmd[] = {0x1B, 0x2D, underline_mode};
+    this->write_array(underline_cmd, sizeof(underline_cmd));
+  } else {
+    // Turn off underline
+    uint8_t underline_cmd[] = {0x1B, 0x2D, 0};
+    this->write_array(underline_cmd, sizeof(underline_cmd));
+  }
+
+  // Handle upside down (character rotation 180°) with ESC { n command
+  if (upside_down) {
+    uint8_t upside_cmd[] = {0x1B, 0x7B, 1};
+    this->write_array(upside_cmd, sizeof(upside_cmd));
+  } else {
+    uint8_t upside_cmd[] = {0x1B, 0x7B, 0};
+    this->write_array(upside_cmd, sizeof(upside_cmd));
+  }
+}
+
+void M5StackPrinterDisplay::print_test_page() {
+  ESP_LOGD(TAG, "Printing test page");
+
+  // Print header
+  this->set_text_style(true, 0, true, false); // Bold + double width
+  this->print_text("=== TEST PAGE ===\n", 0);
+  this->set_text_style(false, 0, false, false); // Reset
+
+  // Test basic text
+  this->print_text("Basic text printing test\n", 0);
+
+  // Test font sizes
+  for (uint8_t size = 0; size <= 7; size++) {
+    this->print_text("Font size " + std::to_string(size) + "\n", size);
+  }
+
+  // Test text styles
+  this->set_text_style(true, 0, false, false); // Bold
+  this->print_text("Bold text\n", 0);
+
+  this->set_text_style(false, 1, false, false); // Underline
+  this->print_text("Underlined text\n", 0);
+
+  this->set_text_style(false, 0, true, false); // Double width
+  this->print_text("Double width\n", 0);
+
+  this->set_text_style(true, 1, true, false); // All styles
+  this->print_text("Bold+Under+Wide\n", 0);
+
+  // Reset styles
+  this->set_text_style(false, 0, false, false);
+
+  // Test alignment
+  this->set_text_alignment(0); // Left
+  this->print_text("Left aligned\n", 0);
+
+  this->set_text_alignment(1); // Center
+  this->print_text("Center aligned\n", 0);
+
+  this->set_text_alignment(2); // Right
+  this->print_text("Right aligned\n", 0);
+
+  this->set_text_alignment(0); // Reset to left
+
+  // Test QR code (small)
+  this->print_text("\nQR Test:\n", 0);
+  this->print_qrcode("ESP32");
+
+  // End of test page
+  this->print_text("\n=== END TEST ===\n", 0);
+  this->new_line(3); // Feed paper for clean tear
+
+  ESP_LOGD(TAG, "Test page completed");
+}
+
+uint8_t M5StackPrinterDisplay::get_printer_status() {
+  // Send real-time status request command (DLE EOT n)
+  uint8_t cmd[] = {0x10, 0x04, 1};  // Request status
+  this->write_array(cmd, sizeof(cmd));
+
+  // Wait for response (in a real implementation, this would need async handling)
+  uint8_t status = 0;
+  // For now, return a default "ready" status
+  // In a full implementation, you'd read from UART here
+  ESP_LOGD(TAG, "Printer status requested (async response expected)");
+  return status;
+}
+
+void M5StackPrinterDisplay::set_sleep_mode(uint16_t timeout_seconds) {
+  // ESC 8 n m - Set sleep mode timeout
+  // Convert seconds to appropriate units for the printer
+  uint8_t timeout_low = timeout_seconds & 0xFF;
+  uint8_t timeout_high = (timeout_seconds >> 8) & 0xFF;
+
+  uint8_t cmd[] = {0x1B, 0x38, timeout_low, timeout_high};
+  this->write_array(cmd, sizeof(cmd));
+
+  ESP_LOGD(TAG, "Sleep mode set to %d seconds", timeout_seconds);
+}
+
+void M5StackPrinterDisplay::set_tab_positions(const std::string &positions) {
+  // ESC D n1 n2 ... nk NUL - Set horizontal tab positions
+  std::vector<uint8_t> cmd;
+  cmd.push_back(0x1B);  // ESC
+  cmd.push_back(0x44);  // D
+
+  // Simple parsing of comma or space separated positions
+  std::string current_number;
+  int position_count = 0;
+
+  for (size_t i = 0; i < positions.length() && position_count < 32; i++) {
+    char c = positions[i];
+
+    if ((c >= '0' && c <= '9')) {
+      current_number += c;
+    } else if ((c == ',' || c == ' ' || c == '\t') && !current_number.empty()) {
+      // Parse the number using simple conversion to avoid exceptions
+      int pos = 0;
+      bool valid = true;
+      for (char digit : current_number) {
+        if (digit >= '0' && digit <= '9') {
+          pos = pos * 10 + (digit - '0');
+        } else {
+          valid = false;
+          break;
+        }
+      }
+
+      if (valid && pos >= 1 && pos <= 255) {
+        cmd.push_back(static_cast<uint8_t>(pos));
+        position_count++;
+      }
+      current_number.clear();
+    }
+  }
+
+  // Handle the last number if exists
+  if (!current_number.empty() && position_count < 32) {
+    int pos = 0;
+    bool valid = true;
+    for (char digit : current_number) {
+      if (digit >= '0' && digit <= '9') {
+        pos = pos * 10 + (digit - '0');
+      } else {
+        valid = false;
+        break;
+      }
+    }
+
+    if (valid && pos >= 1 && pos <= 255) {
+      cmd.push_back(static_cast<uint8_t>(pos));
+      position_count++;
+    }
+  }
+
+  cmd.push_back(0);  // NUL terminator
+
+  this->write_array(cmd.data(), cmd.size());
+  ESP_LOGD(TAG, "Set %d tab positions", position_count);
+}
+
+void M5StackPrinterDisplay::horizontal_tab() {
+  // Send horizontal tab character (HT = 0x09)
+  uint8_t cmd = 0x09;
+  this->write_array(&cmd, 1);
+}
+
+void M5StackPrinterDisplay::set_horizontal_position(uint16_t position) {
+  // ESC $ nL nH - Set absolute horizontal print position
+  uint8_t pos_low = position & 0xFF;
+  uint8_t pos_high = (position >> 8) & 0xFF;
+
+  uint8_t cmd[] = {0x1B, 0x24, pos_low, pos_high};
+  this->write_array(cmd, sizeof(cmd));
+
+  ESP_LOGD(TAG, "Set horizontal position to %d", position);
 }
 
 }  // namespace m5stack_printer
