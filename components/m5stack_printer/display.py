@@ -49,6 +49,10 @@ M5StackPrinterSetInversePrintingAction = m5stack_printer_ns.class_(
     "M5StackPrinterSetInversePrintingAction", automation.Action
 )
 
+M5StackPrinterSetStrikethroughAction = m5stack_printer_ns.class_(
+    "M5StackPrinterSetStrikethroughAction", automation.Action
+)
+
 M5StackPrinterSetChineseModeAction = m5stack_printer_ns.class_(
     "M5StackPrinterSetChineseModeAction", automation.Action
 )
@@ -79,6 +83,10 @@ M5StackPrinterPrintTestPageAction = m5stack_printer_ns.class_(
 
 M5StackPrinterRunDemoAction = m5stack_printer_ns.class_(
     "M5StackPrinterRunDemoAction", automation.Action
+)
+
+M5StackPrinterSendRawCommandAction = m5stack_printer_ns.class_(
+    "M5StackPrinterSendRawCommandAction", automation.Action
 )
 
 CONF_FONT_SIZE = "font_size"
@@ -268,6 +276,55 @@ async def m5stack_printer_set_inverse_printing_action_to_code(
     await cg.register_parented(var, config[CONF_ID])
     templ = await cg.templatable(config[CONF_ENABLE], args, cg.bool_)
     cg.add(var.set_enable(templ))
+    return var
+
+
+@automation.register_action(
+    "m5stack_printer.set_strikethrough",
+    M5StackPrinterSetStrikethroughAction,
+    cv.Schema(
+        {
+            cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
+            cv.Required(CONF_ENABLE): cv.templatable(cv.boolean),
+        }
+    ),
+)
+async def m5stack_printer_set_strikethrough_to_code(
+    config, action_id, template_arg, args
+):
+    var = cg.new_Pvariable(action_id, template_arg)
+    await cg.register_parented(var, config[CONF_ID])
+    templ = await cg.templatable(config[CONF_ENABLE], args, cg.bool_)
+    cg.add(var.set_enable(templ))
+    return var
+
+
+# Raw command action
+M5StackPrinterSendRawCommandAction = m5stack_printer_ns.class_(
+    "M5StackPrinterSendRawCommandAction", automation.Action
+)
+
+
+@automation.register_action(
+    "m5stack_printer.send_raw_command",
+    M5StackPrinterSendRawCommandAction,
+    cv.Schema(
+        {
+            cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
+            cv.Required("command"): cv.templatable(cv.string),
+        }
+    ),
+)
+async def m5stack_printer_send_raw_command_to_code(
+    config, action_id, template_arg, args
+):
+    var = cg.new_Pvariable(action_id, template_arg)
+    await cg.register_parented(var, config[CONF_ID])
+
+    # Set the templatable command string
+    command_template = await cg.templatable(config["command"], args, cg.std_string)
+    cg.add(var.set_command(command_template))
+
     return var
 
 

@@ -156,6 +156,19 @@ class M5StackPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
   void set_inverse_printing(bool enable);
 
   /**
+   * Set double-strike (strikethrough) mode
+   * @param enable True to enable double-strike printing, false to disable
+   */
+  void set_strikethrough(bool enable);
+
+  /**
+   * Send raw ESC/POS command bytes
+   * @param command Vector of bytes to send to the printer
+   * Useful for debugging and testing specific ESC/POS sequences
+   */
+  void send_raw_command(const std::vector<uint8_t> &command);
+
+  /**
    * Enable Chinese/Japanese character mode
    * When enabled, processes multi-byte characters for Asian text
    * @param enable True to enable Asian character mode, false for ASCII mode
@@ -201,9 +214,20 @@ class M5StackPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
   void queue_data_(std::vector<uint8_t> data);
   void queue_data_(const uint8_t *data, size_t size);
   void init_();
+  void build_formatting_prefix_(std::vector<uint8_t> &prefix);
 
   std::queue<std::vector<uint8_t>> queue_{};
   int height_{0};
+
+  // Formatting state variables (line-buffered printer requires bundled commands)
+  bool bold_state_{false};
+  uint8_t underline_state_{0};
+  bool double_width_state_{false};
+  bool upside_down_state_{false};
+  uint8_t alignment_state_{0};  // 0=left, 1=center, 2=right
+  bool inverse_state_{false};
+  bool rotation_state_{false};
+  bool strikethrough_state_{false};
 };
 
 template<typename... Ts>
@@ -313,6 +337,14 @@ class M5StackPrinterSetInversePrintingAction : public Action<Ts...>, public Pare
 };
 
 template<typename... Ts>
+class M5StackPrinterSetStrikethroughAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+ public:
+  TEMPLATABLE_VALUE(bool, enable)
+
+  void play(const Ts &...x) override { this->parent_->set_strikethrough(this->enable_.value(x...)); }
+};
+
+template<typename... Ts>
 class M5StackPrinterSetChineseModeAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
  public:
   TEMPLATABLE_VALUE(bool, enable)
@@ -402,6 +434,45 @@ class M5StackPrinterRunDemoAction : public Action<Ts...>, public Parented<M5Stac
     } else {
       this->parent_->run_demo(qr, bc, txt, inv, rot);
     }
+  }
+};
+
+template<typename... Ts>
+class M5StackPrinterSendRawCommandAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+ public:
+  TEMPLATABLE_VALUE(std::string, command)
+
+  void play(const Ts &...x) override {
+    // Parse comma-separated string into vector of bytes
+    std::vector<uint8_t> command_bytes;
+    std::string cmd = this->command_.value(x...);
+
+    // Remove spaces and parse comma-separated values
+    std::string::size_type pos = 0;
+    while (pos < cmd.length()) {
+      std::string::size_type comma_pos = cmd.find(',', pos);
+      std::string byte_str;
+      if (comma_pos == std::string::npos) {
+        byte_str = cmd.substr(pos);
+        pos = cmd.length();
+      } else {
+        byte_str = cmd.substr(pos, comma_pos - pos);
+        pos = comma_pos + 1;
+      }
+
+      // Trim whitespace and convert to int
+      byte_str.erase(0, byte_str.find_first_not_of(" \t"));
+      byte_str.erase(byte_str.find_last_not_of(" \t") + 1);
+
+      if (!byte_str.empty()) {
+        int byte_val = std::stoi(byte_str);
+        if (byte_val >= 0 && byte_val <= 255) {
+          command_bytes.push_back(static_cast<uint8_t>(byte_val));
+        }
+      }
+    }
+
+    this->parent_->send_raw_command(command_bytes);
   }
 };
 

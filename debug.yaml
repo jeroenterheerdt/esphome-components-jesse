@@ -54,6 +54,7 @@ api:
     # rotation: Enable 90-degree clockwise rotation (true/false)
     # inverse: Enable white text on black background (true/false)
     # chinese_mode: Enable Chinese/Japanese multi-byte character support (true/false)
+    # alignment: Text alignment (0=left, 1=center, 2=right)
     # line_spacing: Custom line spacing in dots (0-255, default ~30)
     # print_density: Print darkness level (0-31, higher=darker, default ~15)
     # break_time: Break time between dots in μs (0-7, affects print speed vs quality)
@@ -69,6 +70,7 @@ api:
         rotation: bool
         inverse: bool
         chinese_mode: bool
+        alignment: int
         line_spacing: int
         print_density: int
         break_time: int
@@ -78,10 +80,14 @@ api:
             underline: !lambda "return underline;"
             double_width: !lambda "return double_width;"
             upside_down: !lambda "return upside_down;"
+        - m5stack_printer.set_strikethrough:
+            enable: !lambda "return strikethrough;"
         - m5stack_printer.set_90_degree_rotation:
             enable: !lambda "return rotation;"
         - m5stack_printer.set_inverse_printing:
             enable: !lambda "return inverse;"
+        - m5stack_printer.set_alignment:
+            alignment: !lambda "return alignment;"
         - m5stack_printer.set_chinese_mode:
             enable: !lambda "return chinese_mode;"
         - m5stack_printer.set_line_spacing:
@@ -142,6 +148,8 @@ api:
             underline: !lambda "return underline;"
             double_width: !lambda "return double_width;"
             upside_down: !lambda "return upside_down;"
+        - m5stack_printer.set_strikethrough:
+            enable: !lambda "return strikethrough;"
         - m5stack_printer.set_90_degree_rotation:
             enable: !lambda "return rotation;"
         - m5stack_printer.set_inverse_printing:
@@ -203,6 +211,21 @@ api:
         - m5stack_printer.set_horizontal_position:
             position: !lambda "return position;"
 
+    # Send raw ESC/POS command bytes for debugging
+    # command: Comma-separated byte values (e.g., "27,69,1" for ESC E 1)
+    # Use this to test specific ESC/POS commands and find what works with your printer
+    # Examples:
+    #   Bold on: "27,69,1"         Bold off: "27,69,0"
+    #   Underline on: "27,45,1"    Underline off: "27,45,0"
+    #   Align center: "27,97,1"    Align left: "27,97,0"
+    #   Inverse on: "29,66,1"      Inverse off: "29,66,0"
+    - service: send_raw_command
+      variables:
+        command: string
+      then:
+        - m5stack_printer.send_raw_command:
+            command: !lambda "return command;"
+
 # Enable OTA updates
 ota:
   - platform: esphome
@@ -220,10 +243,13 @@ wifi:
 captive_portal:
 
 external_components:
-  # m5stack_printer debug
-  - source: github://jeroenterheerdt/esphome-components-jesse #@jesserockz-2025-036
+  # m5stack_printer debug - local development version
+  - source: components/
     components: [m5stack_printer]
-    refresh: 0s
+  # GitHub version (for production):
+  # - source: github://jeroenterheerdt/esphome-components-jesse #@jesserockz-2025-036
+  #   components: [m5stack_printer]
+  #   refresh: 0s
 
 uart:
   tx_pin: GPIO17

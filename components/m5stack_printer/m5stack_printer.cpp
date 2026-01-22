@@ -104,17 +104,105 @@ void M5StackPrinterDisplay::print_text(std::string text, uint8_t font_size) {
   // Font size range validation according to datasheet
   font_size = clamp<uint8_t>(font_size, 0, 7);
 
-  // Set font size using GS ! n command format
-  // Bits 0-3: character width (0=normal, 1=double width, etc.)
-  // Bits 4-7: character height (0=normal, 1=double height, etc.)
-  this->write_array(FONT_SIZE_CMD, sizeof(FONT_SIZE_CMD));
-  this->write_byte(font_size | (font_size << 4));
+  ESP_LOGD(TAG, "=== print_text called with: '%s', font_size=%d ===", text.c_str(), font_size);
 
-  // Print the text
-  this->write_str(text.c_str());
+  // Build complete command sequence for line-buffered printer
+  std::vector<uint8_t> command_line;
 
-  // Reset to default print mode
-  this->write_array(PRINT_MODE_RESET_CMD, sizeof(PRINT_MODE_RESET_CMD));
+  // Add formatting commands prefix
+  ESP_LOGD(TAG, "Building formatting prefix...");
+  this->build_formatting_prefix_(command_line);
+  ESP_LOGD(TAG, "Formatting prefix complete, %d bytes", command_line.size());
+
+  // Skip font size command completely for now to avoid @ character issue
+  // TODO: Re-enable font size command after debugging
+  // if (font_size > 1) {
+  //   uint8_t font_cmd = static_cast<uint8_t>(font_size | (font_size << 4));
+  //   command_line.insert(command_line.end(), {GS, 0x21, font_cmd});
+  // }
+
+  // Add text content
+  ESP_LOGD(TAG, "Adding text content: '%s'", text.c_str());
+  for (char c : text) {
+    command_line.push_back(static_cast<uint8_t>(c));
+  }
+
+  // Add line termination
+  command_line.push_back(0x0A);  // LF
+
+  // Log the complete command sequence
+  ESP_LOGD(TAG, "Complete command sequence (%d bytes):", command_line.size());
+  std::string hex_dump;
+  for (size_t i = 0; i < command_line.size(); i++) {
+    char hex_str[4];
+    snprintf(hex_str, sizeof(hex_str), "%02X ", command_line[i]);
+    hex_dump += hex_str;
+  }
+  ESP_LOGD(TAG, "Hex dump: %s", hex_dump.c_str());
+
+  // Send complete line
+  this->write_array(command_line.data(), command_line.size());
+
+  ESP_LOGD(TAG, "=== print_text complete ===");
+}
+
+void M5StackPrinterDisplay::build_formatting_prefix_(std::vector<uint8_t> &prefix) {
+  // Build ESC/POS command sequence based on current formatting state
+
+  ESP_LOGD(TAG, "Building format prefix - states: align=%d bold=%d underline=%d dw=%d ud=%d strike=%d inv=%d rot=%d",
+           this->alignment_state_, this->bold_state_, this->underline_state_,
+           this->double_width_state_, this->upside_down_state_, this->strikethrough_state_,
+           this->inverse_state_, this->rotation_state_);
+
+  // Text alignment (must come first)
+  if (this->alignment_state_ != 0) {
+    prefix.insert(prefix.end(), {0x1B, 0x61, this->alignment_state_}); // ESC a n
+    ESP_LOGD(TAG, "Added alignment command: ESC a %d", this->alignment_state_);
+  }
+
+  // Bold/emphasized text
+  if (this->bold_state_) {
+    prefix.insert(prefix.end(), {0x1B, 0x45, 0x01}); // ESC E 1
+    ESP_LOGD(TAG, "Added bold command: ESC E 1");
+  }
+
+  // Underline
+  if (this->underline_state_ > 0) {
+    prefix.insert(prefix.end(), {0x1B, 0x2D, this->underline_state_}); // ESC - n
+    ESP_LOGD(TAG, "Added underline command: ESC - %d", this->underline_state_);
+  }
+
+  // Double width/height (character style)
+  if (this->double_width_state_) {
+    prefix.insert(prefix.end(), {0x1B, 0x21, 0x20}); // ESC ! with double width bit
+    ESP_LOGD(TAG, "Added double width command: ESC ! 0x20");
+  }
+
+  // Upside down (character rotation)
+  if (this->upside_down_state_) {
+    prefix.insert(prefix.end(), {0x1B, 0x7B, 0x01}); // ESC { 1
+    ESP_LOGD(TAG, "Added upside down command: ESC { 1");
+  }
+
+  // Strikethrough (double-strike)
+  if (this->strikethrough_state_) {
+    prefix.insert(prefix.end(), {0x1B, 0x47, 0x01}); // ESC G 1
+    ESP_LOGD(TAG, "Added strikethrough command: ESC G 1");
+  }
+
+  // Inverse printing
+  if (this->inverse_state_) {
+    prefix.insert(prefix.end(), {0x1D, 0x42, 0x01}); // GS B 1
+    ESP_LOGD(TAG, "Added inverse command: GS B 1");
+  }
+
+  // 90-degree rotation
+  if (this->rotation_state_) {
+    prefix.insert(prefix.end(), {0x1B, 0x56, 0x01}); // ESC V 1
+    ESP_LOGD(TAG, "Added rotation command: ESC V 1");
+  }
+
+  ESP_LOGD(TAG, "Format prefix complete, %d bytes added", prefix.size());
 }
 
 void M5StackPrinterDisplay::new_line(uint8_t lines) {
@@ -249,15 +337,9 @@ void M5StackPrinterDisplay::set_text_alignment(uint8_t alignment) {
     alignment = 2;
   }
 
-  ESP_LOGD(TAG, "Setting text alignment to %d (0=left, 1=center, 2=right)", alignment);
-
-  // Send alignment command immediately
-  this->write_array(TEXT_ALIGN_CMD, sizeof(TEXT_ALIGN_CMD));
-  this->write_byte(alignment);
-
-  // Also try alternative alignment command for some printer models
-  uint8_t alt_align_cmd[] = {0x1B, 0x61, alignment};
-  this->write_array(alt_align_cmd, sizeof(alt_align_cmd));
+  // Track alignment state for next text print (line-buffered printer)
+  this->alignment_state_ = alignment;
+  ESP_LOGD(TAG, "Set text alignment: %d (0=left, 1=center, 2=right)", alignment);
 }
 
 void M5StackPrinterDisplay::set_line_spacing(uint8_t spacing) {
@@ -379,38 +461,21 @@ void M5StackPrinterDisplay::draw_absolute_pixel_internal(int x, int y, Color col
 }
 
 void M5StackPrinterDisplay::set_90_degree_rotation(bool enable) {
-  ESP_LOGD(TAG, "Setting 90-degree rotation: %s", enable ? "enabled" : "disabled");
-
-  // Try different rotation commands for better compatibility
-  // Method 1: ESC R n - Character rotation
-  uint8_t rotate_cmd[] = {0x1B, 0x52, enable ? 1 : 0};
-  this->write_array(rotate_cmd, sizeof(rotate_cmd));
-
-  // Method 2: Also try GS V n format
-  uint8_t rotate_cmd2[] = {0x1D, 0x56, enable ? 1 : 0};
-  this->write_array(rotate_cmd2, sizeof(rotate_cmd2));
+  // Track rotation state for next text print (line-buffered printer)
+  this->rotation_state_ = enable;
+  ESP_LOGD(TAG, "Set 90-degree rotation: %s", enable ? "enabled" : "disabled");
 }
 
 void M5StackPrinterDisplay::set_inverse_printing(bool enable) {
-  ESP_LOGD(TAG, "Setting inverse printing: %s", enable ? "enabled" : "disabled");
+  // Track inverse state for next text print (line-buffered printer)
+  this->inverse_state_ = enable;
+  ESP_LOGD(TAG, "Set inverse printing: %s", enable ? "enabled" : "disabled");
+}
 
-  // Try multiple inverse printing commands for compatibility
-  // Method 1: ESC B n - Character color inversion
-  uint8_t inverse_cmd1[] = {0x1B, 0x42, enable ? 1 : 0};
-  this->write_array(inverse_cmd1, sizeof(inverse_cmd1));
-
-  // Method 2: GS B n - Black/white reverse printing
-  uint8_t inverse_cmd2[] = {0x1D, 0x42, enable ? 1 : 0};
-  this->write_array(inverse_cmd2, sizeof(inverse_cmd2));
-
-  // Method 3: DC2 # n for some printers
-  if (enable) {
-    uint8_t inverse_cmd3[] = {0x12, 0x23, 0x01};
-    this->write_array(inverse_cmd3, sizeof(inverse_cmd3));
-  } else {
-    uint8_t inverse_cmd3[] = {0x12, 0x23, 0x00};
-    this->write_array(inverse_cmd3, sizeof(inverse_cmd3));
-  }
+void M5StackPrinterDisplay::set_strikethrough(bool enable) {
+  // Track strikethrough state for next text print (line-buffered printer)
+  this->strikethrough_state_ = enable;
+  ESP_LOGD(TAG, "Set double-strike (strikethrough): %s", enable ? "enabled" : "disabled");
 }
 
 void M5StackPrinterDisplay::set_chinese_mode(bool enable) {
@@ -420,6 +485,23 @@ void M5StackPrinterDisplay::set_chinese_mode(bool enable) {
     this->write_array(CHINESE_MODE_ON_CMD, sizeof(CHINESE_MODE_ON_CMD));
   } else {
     this->write_array(CHINESE_MODE_OFF_CMD, sizeof(CHINESE_MODE_OFF_CMD));
+  }
+}
+
+void M5StackPrinterDisplay::send_raw_command(const std::vector<uint8_t> &command) {
+  if (!command.empty()) {
+    this->write_array(command.data(), command.size());
+    ESP_LOGD(TAG, "Sent raw command: %d bytes", command.size());
+
+    // Log the command bytes for debugging
+    std::string cmd_str = "Command bytes: ";
+    for (size_t i = 0; i < command.size(); i++) {
+      cmd_str += std::to_string(command[i]);
+      if (i < command.size() - 1) cmd_str += ", ";
+    }
+    ESP_LOGD(TAG, "%s", cmd_str.c_str());
+  } else {
+    ESP_LOGW(TAG, "Attempted to send empty raw command");
   }
 }
 
@@ -660,30 +742,14 @@ void M5StackPrinterDisplay::run_demo(bool show_qr_code, bool show_barcode,
 }
 
 void M5StackPrinterDisplay::set_text_style(bool bold, uint8_t underline, bool double_width, bool upside_down) {
-  // Use individual commands for better compatibility
+  // Track formatting state for next text print (line-buffered printer)
+  this->bold_state_ = bold;
+  this->underline_state_ = underline;
+  this->double_width_state_ = double_width;
+  this->upside_down_state_ = upside_down;
 
-  // Bold: ESC E n (0=off, 1=on)
-  if (bold) {
-    this->write_array(BOLD_ON_CMD, sizeof(BOLD_ON_CMD));
-  } else {
-    this->write_array(BOLD_OFF_CMD, sizeof(BOLD_OFF_CMD));
-  }
-
-  // Underline: ESC - n (0=off, 1=single, 2=double)
-  uint8_t underline_mode = (underline > 2) ? 2 : underline;
-  this->write_array(UNDERLINE_CMD, sizeof(UNDERLINE_CMD));
-  this->write_byte(underline_mode);
-
-  // Double width: ESC SO (on) / ESC DC4 (off)
-  if (double_width) {
-    this->write_array(DOUBLE_WIDTH_ON_CMD, sizeof(DOUBLE_WIDTH_ON_CMD));
-  } else {
-    this->write_array(DOUBLE_WIDTH_OFF_CMD, sizeof(DOUBLE_WIDTH_OFF_CMD));
-  }
-
-  // Upside down (character rotation 180°): ESC { n
-  this->write_array(UPSIDE_DOWN_CMD, sizeof(UPSIDE_DOWN_CMD));
-  this->write_byte(upside_down ? 1 : 0);
+  ESP_LOGD(TAG, "Set text style - bold:%s, underline:%d, double_width:%s, upside_down:%s",
+           bold ? "true" : "false", underline, double_width ? "true" : "false", upside_down ? "true" : "false");
 }
 
 void M5StackPrinterDisplay::print_test_page() {
