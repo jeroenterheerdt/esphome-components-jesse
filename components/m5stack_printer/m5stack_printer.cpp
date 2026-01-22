@@ -143,7 +143,17 @@ void M5StackPrinterDisplay::print_text(std::string text, uint8_t font_size) {
   // Send complete line
   this->write_array(command_line.data(), command_line.size());
 
-  ESP_LOGD(TAG, "=== print_text complete ===");
+  // Reset formatting states after printing to prevent duplicates on next print
+  this->alignment_state_ = 0;
+  this->bold_state_ = false;
+  this->underline_state_ = 0;
+  this->double_width_state_ = false;
+  this->upside_down_state_ = false;
+  this->strikethrough_state_ = false;
+  this->inverse_state_ = false;
+  this->rotation_state_ = false;
+
+  ESP_LOGD(TAG, "=== print_text complete, formatting states reset ===");
 }
 
 void M5StackPrinterDisplay::build_formatting_prefix_(std::vector<uint8_t> &prefix) {
