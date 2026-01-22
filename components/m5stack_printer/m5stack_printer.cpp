@@ -99,7 +99,7 @@ void M5StackPrinterDisplay::init_() {
 }
 
 void M5StackPrinterDisplay::print_text(std::string text, uint8_t font_size) {
-  this->init_();
+  // this->init_(); // TEMPORARILY DISABLED FOR DEBUGGING
 
   // Font size range validation according to datasheet
   font_size = clamp<uint8_t>(font_size, 0, 7);
