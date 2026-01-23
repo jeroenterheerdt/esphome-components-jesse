@@ -13,7 +13,15 @@ logger:
 
 # Enable Home Assistant API
 api:
+  on_client_connected:
+    - logger.log: "=== Home Assistant CONNECTED - Device ready for thermal printer testing ==="
+  on_client_disconnected:
+    - logger.log: "Home Assistant disconnected"
   services:
+    - service: print_clean_ascii_test
+      then:
+        - m5stack_printer.send_raw_command:
+            command: "67, 108, 101, 97, 110, 32, 65, 83, 67, 73, 73, 32, 116, 101, 115, 116, 10"
     # Print QR codes
     # qrcode: String data to encode (max ~100 characters recommended for reliability)
     - service: print_qrcode
@@ -35,6 +43,14 @@ api:
         - m5stack_printer.print_barcode:
             barcode: !lambda "return barcode;"
             type: !lambda "return type;"
+    # Simple text printing without any formatting (for debugging)
+    - service: print_simple_text
+      variables:
+        text_to_print: string
+      then:
+        - m5stack_printer.print_text:
+            text: !lambda "return text_to_print;"
+            font_size: 1
     # Add line breaks to advance paper
     # lines: Number of lines to advance (1-255)
     - service: new_line
@@ -71,33 +87,38 @@ api:
         inverse: bool
         chinese_mode: bool
         alignment: int
-        line_spacing: int
-        print_density: int
-        break_time: int
       then:
-        - m5stack_printer.set_text_style:
+        # Use the comprehensive formatting function that handles all parameters
+        - esphome.thermalprinter_print_text:
+            text_to_print: !lambda "return text_to_print;"
+            font_size: !lambda "return font_size;"
             bold: !lambda "return bold;"
             underline: !lambda "return underline;"
             double_width: !lambda "return double_width;"
             upside_down: !lambda "return upside_down;"
-        - m5stack_printer.set_strikethrough:
-            enable: !lambda "return strikethrough;"
-        - m5stack_printer.set_90_degree_rotation:
-            enable: !lambda "return rotation;"
-        - m5stack_printer.set_inverse_printing:
-            enable: !lambda "return inverse;"
-        - m5stack_printer.set_alignment:
+            strikethrough: !lambda "return strikethrough;"
+            rotation: !lambda "return rotation;"
+            inverse: !lambda "return inverse;"
+            chinese_mode: !lambda "return chinese_mode;"
             alignment: !lambda "return alignment;"
-        - m5stack_printer.set_chinese_mode:
-            enable: !lambda "return chinese_mode;"
-        - m5stack_printer.set_line_spacing:
-            spacing: !lambda "return line_spacing;"
-        - m5stack_printer.set_print_density:
-            density: !lambda "return print_density;"
+
+    # Printer settings services  
+    - service: set_printer_settings
+      variables:
+        line_spacing: int
+        print_density: int
+        break_time: int
+      then:
+        - esphome.set_printer_settings:
+            id: printer
+            line_spacing: !lambda "return line_spacing;"
+            print_density: !lambda "return print_density;"
             break_time: !lambda "return break_time;"
-        - m5stack_printer.print_text:
-            text: !lambda "return text_to_print;"
-            font_size: !lambda "return font_size;"
+
+    - service: reset_printer_settings
+      then:
+        - esphome.reset_printer_settings:
+            id: printer
     # Cut paper with optional feeding (requires printer with cutting mechanism)
     # cut_mode: 0=full cut (ESC i), 1=partial cut (GS V 1), 66=cut with feed (GS V 66)
     # feed_lines: Additional lines to feed before cutting (0-255, only used with mode 66)

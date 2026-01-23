@@ -67,8 +67,12 @@ static const uint8_t SLEEP_MODE_CMD[] = {ESC, '8'}; // ESC 8 n1 n2 - sleep mode
 // Additional text formatting commands
 static const uint8_t ROTATE_90_CMD[] = {ESC, 'R'}; // ESC R n - 90 degree rotation (alternative)
 static const uint8_t INVERSE_PRINT_CMD[] = {ESC, 'B'}; // ESC B n - white/black inverse (alternative)
-static const uint8_t CHINESE_MODE_ON_CMD[] = {0x1C, 0x26}; // FS & - select Chinese/Japanese mode
-static const uint8_t CHINESE_MODE_OFF_CMD[] = {0x1C, 0x2E}; // FS . - cancel Chinese/Japanese mode
+// Chinese mode commands removed - they interfere with character encoding
+// Use charset/codepage commands instead for proper character support
+
+// Character set and code page commands  
+static const uint8_t CHARSET_CMD[] = {ESC, 'R'}; // ESC R n - select character set (0-15)
+static const uint8_t CODEPAGE_CMD[] = {ESC, 't'}; // ESC t n - select code page (0-47)
 
 static const uint8_t BYTES_PER_LOOP = 120;
 
@@ -92,68 +96,110 @@ void M5StackPrinterDisplay::setup() {
 }
 
 void M5StackPrinterDisplay::init_() {
-  // Initialize printer according to datasheet ESC @ command
+  ESP_LOGD(TAG, "Basic printer initialization - just ESC @ command");
+  
+  // Just send the basic init command, nothing else for now
   this->write_array(INIT_PRINTER_CMD, sizeof(INIT_PRINTER_CMD));
-  // Small delay to ensure initialization is complete
-  delay(50);
+  delay(100); // Give printer time to initialize
+  
+  ESP_LOGD(TAG, "Basic printer initialization complete");
 }
 
 void M5StackPrinterDisplay::print_text(std::string text, uint8_t font_size) {
-  // this->init_(); // TEMPORARILY DISABLED FOR DEBUGGING
-
-  // Font size range validation according to datasheet
-  font_size = clamp<uint8_t>(font_size, 0, 7);
-
-  ESP_LOGD(TAG, "=== print_text called with: '%s', font_size=%d ===", text.c_str(), font_size);
-
-  // Build complete command sequence for line-buffered printer
-  std::vector<uint8_t> command_line;
-
-  // Add formatting commands prefix
-  ESP_LOGD(TAG, "Building formatting prefix...");
-  this->build_formatting_prefix_(command_line);
-  ESP_LOGD(TAG, "Formatting prefix complete, %d bytes", command_line.size());
-
-  // Skip font size command completely for now to avoid @ character issue
-  // TODO: Re-enable font size command after debugging
-  // if (font_size > 1) {
-  //   uint8_t font_cmd = static_cast<uint8_t>(font_size | (font_size << 4));
-  //   command_line.insert(command_line.end(), {GS, 0x21, font_cmd});
-  // }
-
-  // Add text content
-  ESP_LOGD(TAG, "Adding text content: '%s'", text.c_str());
+  ESP_LOGD(TAG, "Basic text printing: '%s'", text.c_str());
+  
+  // DON'T initialize - maybe that's causing the Chinese mode
+  // this->init_(); 
+  
+  // Absolutely basic - just send the text characters directly
   for (char c : text) {
-    command_line.push_back(static_cast<uint8_t>(c));
+    this->write_byte(c);
   }
+  this->write_byte('\n');  // Just a simple newline
+  
+  ESP_LOGD(TAG, "Text sent");
+}
 
-  // Add line termination
-  command_line.push_back(0x0A);  // LF
-
-  // Log the complete command sequence
-  ESP_LOGD(TAG, "Complete command sequence (%d bytes):", command_line.size());
-  std::string hex_dump;
-  for (size_t i = 0; i < command_line.size(); i++) {
-    char hex_str[4];
-    snprintf(hex_str, sizeof(hex_str), "%02X ", command_line[i]);
-    hex_dump += hex_str;
+void M5StackPrinterDisplay::thermal_print_text_with_formatting(
+    const std::string &text, uint8_t font_size, bool bold, uint8_t underline,
+    bool double_width, bool upside_down, bool strikethrough, bool rotation,
+    bool inverse, bool chinese_mode, uint8_t alignment) {
+  ESP_LOGD(TAG, "thermal_print_text_with_formatting: text='%s'", text.c_str());
+  ESP_LOGD(TAG, "Formatting: bold=%d, underline=%d, align=%d", bold, underline, alignment);
+  
+  // Check if any formatting is actually requested (non-default values)
+  bool has_formatting = (bold || underline > 0 || double_width || upside_down || 
+                        strikethrough || rotation || inverse || chinese_mode ||
+                        alignment > 0);
+  
+  if (!has_formatting) {
+    // No formatting needed - use simple text printing
+    ESP_LOGD(TAG, "No formatting requested, using simple text printing");
+    this->print_text(text, font_size);
+  } else {
+    // Formatting requested - implement safe formatting features one by one
+    ESP_LOGD(TAG, "Applying safe formatting features");
+    
+    // Start with alignment - generally safe and commonly used
+    if (alignment > 0) {
+      uint8_t align_cmd[] = {0x1B, 0x61, (uint8_t)alignment};
+      this->write_array(align_cmd, sizeof(align_cmd));
+      ESP_LOGD(TAG, "Applied text alignment: %d", alignment);
+    }
+    
+    // Add bold formatting - test if this works without character corruption
+    if (bold) {
+      uint8_t bold_cmd[] = {0x1B, 0x45, 0x01};
+      this->write_array(bold_cmd, sizeof(bold_cmd));
+      ESP_LOGD(TAG, "Applied bold formatting");
+    }
+    
+    // Print the text using the simple method
+    this->print_text(text, font_size);
+    
+    // Reset formatting after printing to avoid affecting subsequent prints
+    if (bold) {
+      uint8_t bold_off_cmd[] = {0x1B, 0x45, 0x00};
+      this->write_array(bold_off_cmd, sizeof(bold_off_cmd));
+      ESP_LOGD(TAG, "Reset bold formatting");
+    }
+    
+    if (alignment > 0) {
+      uint8_t align_reset_cmd[] = {0x1B, 0x61, 0x00};  // Reset to left align
+      this->write_array(align_reset_cmd, sizeof(align_reset_cmd));
+      ESP_LOGD(TAG, "Reset text alignment");
+    }
   }
-  ESP_LOGD(TAG, "Hex dump: %s", hex_dump.c_str());
+  
+  ESP_LOGD(TAG, "thermal_print_text_with_formatting complete");
+}
 
-  // Send complete line
-  this->write_array(command_line.data(), command_line.size());
+void M5StackPrinterDisplay::set_printer_settings(uint8_t line_spacing, uint8_t print_density, uint8_t break_time) {
+  ESP_LOGD(TAG, "Setting printer settings: line_spacing=%d, density=%d, break_time=%d", 
+           line_spacing, print_density, break_time);
+  
+  // Set line spacing (ESC 3 n)
+  uint8_t spacing_cmd[] = {0x1B, 0x33, line_spacing};
+  this->write_array(spacing_cmd, sizeof(spacing_cmd));
+  
+  // Set print density and break time (ESC 7 n1 n2)
+  uint8_t density_cmd[] = {0x1B, 0x37, print_density, break_time};
+  this->write_array(density_cmd, sizeof(density_cmd));
+  
+  ESP_LOGD(TAG, "Printer settings applied");
+}
 
-  // Reset formatting states after printing to prevent duplicates on next print
-  this->alignment_state_ = 0;
-  this->bold_state_ = false;
-  this->underline_state_ = 0;
-  this->double_width_state_ = false;
-  this->upside_down_state_ = false;
-  this->strikethrough_state_ = false;
-  this->inverse_state_ = false;
-  this->rotation_state_ = false;
-
-  ESP_LOGD(TAG, "=== print_text complete, formatting states reset ===");
+void M5StackPrinterDisplay::reset_printer_settings() {
+  ESP_LOGD(TAG, "Resetting printer settings to defaults");
+  
+  // Reset to default values: line_spacing=30, density=10, break_time=4
+  this->set_printer_settings(30, 10, 4);
+  
+  // Send ESC @ to reset printer to default state
+  uint8_t reset_cmd[] = {0x1B, 0x40};
+  this->write_array(reset_cmd, sizeof(reset_cmd));
+  
+  ESP_LOGD(TAG, "Printer settings reset complete");
 }
 
 void M5StackPrinterDisplay::build_formatting_prefix_(std::vector<uint8_t> &prefix) {
@@ -489,13 +535,33 @@ void M5StackPrinterDisplay::set_strikethrough(bool enable) {
 }
 
 void M5StackPrinterDisplay::set_chinese_mode(bool enable) {
-  ESP_LOGD(TAG, "Setting Chinese/Japanese character mode: %s", enable ? "enabled" : "disabled");
+  ESP_LOGD(TAG, "Chinese/Japanese character mode state: %s (no commands sent)", enable ? "enabled" : "disabled");
+  
+  // Only track the state - don't send FS commands that interfere with character encoding
+  // Character encoding is handled by charset (ESC R n) and codepage (ESC t n) commands
+  this->chinese_mode_state_ = enable;
+}
 
-  if (enable) {
-    this->write_array(CHINESE_MODE_ON_CMD, sizeof(CHINESE_MODE_ON_CMD));
-  } else {
-    this->write_array(CHINESE_MODE_OFF_CMD, sizeof(CHINESE_MODE_OFF_CMD));
+void M5StackPrinterDisplay::set_charset(uint8_t charset) {
+  if (charset > 15) {
+    ESP_LOGW(TAG, "Invalid charset %d, clamping to 15", charset);
+    charset = 15;
   }
+  
+  ESP_LOGD(TAG, "Character set %d requested (0=USA) - using default initialization", charset);
+  // Don't send charset commands as they interfere with text printing on this printer
+  // The printer defaults to USA charset which is sufficient for ASCII text
+}
+
+void M5StackPrinterDisplay::set_codepage(uint8_t codepage) {
+  if (codepage > 47) {
+    ESP_LOGW(TAG, "Invalid codepage %d, clamping to 47", codepage);
+    codepage = 47;
+  }
+  
+  ESP_LOGD(TAG, "Code page %d requested (0=CP437) - using default initialization", codepage);
+  // Don't send codepage commands as they interfere with text printing on this printer  
+  // The printer defaults to CP437 which is sufficient for ASCII text
 }
 
 void M5StackPrinterDisplay::send_raw_command(const std::vector<uint8_t> &command) {

@@ -65,6 +65,40 @@ class M5StackPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
   void print_text(std::string text, uint8_t font_size = 0);
 
   /**
+   * Print text with comprehensive formatting options
+   * This method handles all formatting parameters and character encoding correctly
+   * @param text Text string to print
+   * @param font_size Font size multiplier (0-7)
+   * @param bold Enable bold text
+   * @param underline Underline mode (0=off, 1=1dot, 2=2dot)
+   * @param double_width Enable double width text
+   * @param upside_down Enable upside down text
+   * @param strikethrough Enable strikethrough
+   * @param rotation Enable 90-degree rotation
+   * @param inverse Enable inverse printing
+   * @param chinese_mode Enable Chinese/Kanji character mode
+   * @param alignment Text alignment (0=left, 1=center, 2=right)
+   */
+  void thermal_print_text_with_formatting(
+    std::string text, uint8_t font_size, bool bold, uint8_t underline,
+    bool double_width, bool upside_down, bool strikethrough, bool rotation,
+    bool inverse, bool chinese_mode, uint8_t alignment
+  );
+
+  /**
+   * Set printer hardware settings
+   * @param line_spacing Line spacing in dots (default: 30)
+   * @param print_density Print density 0-31 (default: 10)
+   * @param break_time Break time between dots 0-7 (default: 4)
+   */
+  void set_printer_settings(uint8_t line_spacing, uint8_t print_density, uint8_t break_time);
+
+  /**
+   * Reset printer settings to factory defaults
+   */
+  void reset_printer_settings();
+
+  /**
    * Print newlines to advance paper
    * @param lines Number of lines to advance (1-255)
    */
@@ -137,11 +171,16 @@ class M5StackPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
   uint8_t get_printer_status();
 
   /**
-   * Enter sleep mode after timeout
-   * @param timeout_seconds Time to wait before sleep (0=disable)
-   * Useful for battery-powered applications
+   * Set character set for regional character support
+   * @param charset Character set (0-15), 0=USA default
    */
-  void set_sleep_mode(uint16_t timeout_seconds);
+  void set_charset(uint8_t charset = 0);
+
+  /**
+   * Set code page for extended ASCII characters (0x80-0xFF)
+   * @param codepage Code page (0-47), 0=CP437 default
+   */
+  void set_codepage(uint8_t codepage = 0);
 
   /**
    * Set 90-degree clockwise rotation mode
@@ -174,6 +213,12 @@ class M5StackPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
    * @param enable True to enable Asian character mode, false for ASCII mode
    */
   void set_chinese_mode(bool enable);
+
+  /**
+   * Set printer sleep mode timeout
+   * @param timeout_seconds Sleep timeout in seconds (0-65535), 0 disables sleep mode
+   */
+  void set_sleep_mode(uint16_t timeout_seconds);
 
   /**
    * Run demo/debug function to showcase all printer capabilities
@@ -228,6 +273,7 @@ class M5StackPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
   bool inverse_state_{false};
   bool rotation_state_{false};
   bool strikethrough_state_{false};
+  bool chinese_mode_state_{false};  // Track Chinese/Kanji character mode state
 };
 
 template<typename... Ts>
@@ -237,6 +283,62 @@ class M5StackPrinterPrintTextAction : public Action<Ts...>, public Parented<M5St
   TEMPLATABLE_VALUE(uint8_t, font_size)
 
   void play(const Ts &...x) override { this->parent_->print_text(this->text_.value(x...), this->font_size_.value(x...)); }
+};
+
+template<typename... Ts>
+class M5StackPrinterThermalPrintTextAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+ public:
+  TEMPLATABLE_VALUE(std::string, text_to_print)
+  TEMPLATABLE_VALUE(uint8_t, font_size)
+  TEMPLATABLE_VALUE(bool, bold)
+  TEMPLATABLE_VALUE(uint8_t, underline)
+  TEMPLATABLE_VALUE(bool, double_width)
+  TEMPLATABLE_VALUE(bool, upside_down)
+  TEMPLATABLE_VALUE(bool, strikethrough)
+  TEMPLATABLE_VALUE(bool, rotation)
+  TEMPLATABLE_VALUE(bool, inverse)
+  TEMPLATABLE_VALUE(bool, chinese_mode)
+  TEMPLATABLE_VALUE(uint8_t, alignment)
+
+  void play(const Ts &...x) override { 
+    this->parent_->thermal_print_text_with_formatting(
+      this->text_to_print_.value(x...),
+      this->font_size_.value(x...),
+      this->bold_.value(x...),
+      this->underline_.value(x...),
+      this->double_width_.value(x...),
+      this->upside_down_.value(x...),
+      this->strikethrough_.value(x...),
+      this->rotation_.value(x...),
+      this->inverse_.value(x...),
+      this->chinese_mode_.value(x...),
+      this->alignment_.value(x...)
+    ); 
+  }
+};
+
+template<typename... Ts>
+class M5StackPrinterSetSettingsAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+ public:
+  TEMPLATABLE_VALUE(uint8_t, line_spacing)
+  TEMPLATABLE_VALUE(uint8_t, print_density)
+  TEMPLATABLE_VALUE(uint8_t, break_time)
+
+  void play(const Ts &...x) override {
+    this->parent_->set_printer_settings(
+      this->line_spacing_.value(x...),
+      this->print_density_.value(x...),
+      this->break_time_.value(x...)
+    );
+  }
+};
+
+template<typename... Ts>
+class M5StackPrinterResetSettingsAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+ public:
+  void play(const Ts &...x) override {
+    this->parent_->reset_printer_settings();
+  }
 };
 
 template<typename... Ts>

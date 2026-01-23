@@ -89,8 +89,13 @@ M5StackPrinterSendRawCommandAction = m5stack_printer_ns.class_(
     "M5StackPrinterSendRawCommandAction", automation.Action
 )
 
+M5StackPrinterThermalPrintTextAction = m5stack_printer_ns.class_(
+    "M5StackPrinterThermalPrintTextAction", automation.Action
+)
+
 CONF_FONT_SIZE = "font_size"
 CONF_TEXT = "text"
+CONF_TEXT_TO_PRINT = "text_to_print"
 CONF_QRCODE = "qrcode"
 CONF_BARCODE = "barcode"
 CONF_TYPE = "type"
@@ -102,6 +107,12 @@ CONF_BOLD = "bold"
 CONF_UNDERLINE = "underline"
 CONF_DOUBLE_WIDTH = "double_width"
 CONF_UPSIDE_DOWN = "upside_down"
+CONF_STRIKETHROUGH = "strikethrough"
+CONF_ROTATION = "rotation"
+CONF_INVERSE = "inverse"
+CONF_CHINESE_MODE = "chinese_mode"
+CONF_LINE_SPACING = "line_spacing"
+CONF_PRINT_DENSITY = "print_density"
 CONF_ENABLE = "enable"
 CONF_SPACING = "spacing"
 CONF_DENSITY = "density"
@@ -167,6 +178,65 @@ async def m5stack_printer_print_text_action_to_code(
     cg.add(var.set_text(templ))
     templ = await cg.templatable(config[CONF_FONT_SIZE], args, cg.uint8)
     cg.add(var.set_font_size(templ))
+    return var
+
+
+@automation.register_action(
+    "esphome.thermalprinter_print_text",
+    M5StackPrinterThermalPrintTextAction,
+    cv.Schema(
+        {
+            cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
+            cv.Required(CONF_TEXT_TO_PRINT): cv.templatable(cv.string),
+            cv.Optional(CONF_FONT_SIZE, default=1): cv.templatable(
+                cv.int_range(min=0, max=7)
+            ),
+            cv.Optional(CONF_BOLD, default=False): cv.templatable(cv.boolean),
+            cv.Optional(CONF_UNDERLINE, default=0): cv.templatable(
+                cv.int_range(min=0, max=2)
+            ),
+            cv.Optional(CONF_DOUBLE_WIDTH, default=False): cv.templatable(cv.boolean),
+            cv.Optional(CONF_UPSIDE_DOWN, default=False): cv.templatable(cv.boolean),
+            cv.Optional(CONF_STRIKETHROUGH, default=False): cv.templatable(cv.boolean),
+            cv.Optional(CONF_ROTATION, default=False): cv.templatable(cv.boolean),
+            cv.Optional(CONF_INVERSE, default=False): cv.templatable(cv.boolean),
+            cv.Optional(CONF_CHINESE_MODE, default=False): cv.templatable(cv.boolean),
+            cv.Optional(CONF_ALIGNMENT, default=0): cv.templatable(
+                cv.int_range(min=0, max=2)
+            ),
+        }
+    ),
+)
+async def thermalprinter_print_text_action_to_code(
+    config, action_id, template_arg, args
+):
+    var = cg.new_Pvariable(action_id, template_arg)
+    await cg.register_parented(var, config[CONF_ID])
+    
+    # Set all templatable values
+    templ = await cg.templatable(config[CONF_TEXT_TO_PRINT], args, cg.std_string)
+    cg.add(var.set_text_to_print(templ))
+    templ = await cg.templatable(config[CONF_FONT_SIZE], args, cg.uint8)
+    cg.add(var.set_font_size(templ))
+    templ = await cg.templatable(config[CONF_BOLD], args, cg.bool_)
+    cg.add(var.set_bold(templ))
+    templ = await cg.templatable(config[CONF_UNDERLINE], args, cg.uint8)
+    cg.add(var.set_underline(templ))
+    templ = await cg.templatable(config[CONF_DOUBLE_WIDTH], args, cg.bool_)
+    cg.add(var.set_double_width(templ))
+    templ = await cg.templatable(config[CONF_UPSIDE_DOWN], args, cg.bool_)
+    cg.add(var.set_upside_down(templ))
+    templ = await cg.templatable(config[CONF_STRIKETHROUGH], args, cg.bool_)
+    cg.add(var.set_strikethrough(templ))
+    templ = await cg.templatable(config[CONF_ROTATION], args, cg.bool_)
+    cg.add(var.set_rotation(templ))
+    templ = await cg.templatable(config[CONF_INVERSE], args, cg.bool_)
+    cg.add(var.set_inverse(templ))
+    templ = await cg.templatable(config[CONF_CHINESE_MODE], args, cg.bool_)
+    cg.add(var.set_chinese_mode(templ))
+    templ = await cg.templatable(config[CONF_ALIGNMENT], args, cg.uint8)
+    cg.add(var.set_alignment(templ))
+    
     return var
 
 
@@ -580,4 +650,60 @@ async def m5stack_printer_run_demo_action_to_code(
     templ = await cg.templatable(config[CONF_SHOW_ROTATION], args, cg.bool_)
     cg.add(var.set_show_rotation(templ))
 
+    return var
+
+
+# Printer Settings Actions
+M5StackPrinterSetSettingsAction = m5stack_printer_ns.class_(
+    "M5StackPrinterSetSettingsAction", automation.Action
+)
+
+@automation.register_action(
+    "esphome.set_printer_settings",
+    M5StackPrinterSetSettingsAction,
+    cv.Schema(
+        {
+            cv.Required(CONF_ID): cv.use_id(M5StackPrinterDisplay),
+            cv.Optional(CONF_LINE_SPACING, default=30): cv.templatable(
+                cv.int_range(min=0, max=255)
+            ),
+            cv.Optional(CONF_PRINT_DENSITY, default=10): cv.templatable(
+                cv.int_range(min=0, max=31)
+            ),
+            cv.Optional(CONF_BREAK_TIME, default=4): cv.templatable(
+                cv.int_range(min=0, max=7)
+            ),
+        }
+    ),
+)
+async def set_printer_settings_action_to_code(config, action_id, template_arg, args):
+    var = cg.new_Pvariable(action_id, template_arg)
+    await cg.register_parented(var, config[CONF_ID])
+    
+    templ = await cg.templatable(config[CONF_LINE_SPACING], args, cg.uint8)
+    cg.add(var.set_line_spacing(templ))
+    templ = await cg.templatable(config[CONF_PRINT_DENSITY], args, cg.uint8)
+    cg.add(var.set_print_density(templ))
+    templ = await cg.templatable(config[CONF_BREAK_TIME], args, cg.uint8)
+    cg.add(var.set_break_time(templ))
+    
+    return var
+
+
+M5StackPrinterResetSettingsAction = m5stack_printer_ns.class_(
+    "M5StackPrinterResetSettingsAction", automation.Action
+)
+
+@automation.register_action(
+    "esphome.reset_printer_settings",
+    M5StackPrinterResetSettingsAction,
+    cv.Schema(
+        {
+            cv.Required(CONF_ID): cv.use_id(M5StackPrinterDisplay),
+        }
+    ),
+)
+async def reset_printer_settings_action_to_code(config, action_id, template_arg, args):
+    var = cg.new_Pvariable(action_id, template_arg)
+    await cg.register_parented(var, config[CONF_ID])
     return var
