@@ -63,6 +63,7 @@ I think we should focus on:
 
 | Item | Status | Notes |
 |------|--------|-------|
+| **Optional service parameters** | 🎯 **High Priority** | Allow Home Assistant calls with only needed params |
 | Demo expansion | 🚧 **Planned** | Add Hitchhiker's Guide references for each working feature |
 | Component rename | 🚧 **Final** | m5stack_printer → thermal_printer (after functionality complete) |
 | Datasheet review | 🔍 **Ongoing** | Check for additional features |
