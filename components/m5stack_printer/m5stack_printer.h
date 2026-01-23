@@ -58,31 +58,37 @@ class M5StackPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
   display::DisplayType get_display_type() override { return display::DisplayType::DISPLAY_TYPE_BINARY; }
 
   /**
-   * Print text with specified font size
+   * Print text with specified font width and height
    * @param text Text string to print
-   * @param font_size Font size multiplier (0-7), affects both width and height
+   * @param font_width Font width multiplier (1-8), 1=normal width
+   * @param font_height Font height multiplier (1-8), 1=normal height
+   * @param font_type Font type (0=Font A 12x24, 1=Font B 9x17)
    */
-  void print_text(std::string text, uint8_t font_size = 0);
+  void print_text(std::string text, uint8_t font_width = 1, uint8_t font_height = 1, uint8_t font_type = 0);
 
   /**
    * Print text with comprehensive formatting options
    * This method handles all formatting parameters and character encoding correctly
    * @param text Text string to print
-   * @param font_size Font size multiplier (0-7)
+   * @param font_width Font width multiplier (1-8)
+   * @param font_height Font height multiplier (1-8)
+   * @param font_type Font type (0=Font A 12x24, 1=Font B 9x17)
    * @param bold Enable bold text
+   * @param double_strike Enable double-strike mode (overlapping dots)
    * @param underline Underline mode (0=off, 1=1dot, 2=2dot)
-   * @param double_width Enable double width text
    * @param upside_down Enable upside down text
-   * @param strikethrough Enable strikethrough
    * @param rotation Enable 90-degree rotation
    * @param inverse Enable inverse printing
    * @param chinese_mode Enable Chinese/Kanji character mode
    * @param alignment Text alignment (0=left, 1=center, 2=right)
+   * @param charset International character set (0=USA, 1=France, 2=Germany, etc. 0-15)
+   * @param codepage Character code table (0=CP437, 1=Katakana, 2=CP850, etc. 0-47)
+   * @param character_spacing Right-side character spacing (0-255, units of 0.125mm)
    */
   void thermal_print_text_with_formatting(
-    const std::string &text, uint8_t font_size, bool bold, uint8_t underline,
-    bool double_width, bool upside_down, bool strikethrough, bool rotation,
-    bool inverse, bool chinese_mode, uint8_t alignment
+    const std::string &text, uint8_t font_width, uint8_t font_height, uint8_t font_type, bool bold, bool double_strike, uint8_t underline,
+    bool upside_down, bool rotation,
+    bool inverse, bool chinese_mode, uint8_t alignment, uint8_t charset = 0, uint8_t codepage = 0, uint8_t character_spacing = 0
   );
 
   /**
@@ -159,10 +165,10 @@ class M5StackPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
    * Set text style modes
    * @param bold Enable bold/emphasized text
    * @param underline Underline mode (0=off, 1=1dot, 2=2dot)
-   * @param double_width Enable double width text
    * @param upside_down Enable upside down text
+   * @param font_type Font type (0=Font A 12x24, 1=Font B 9x17)
    */
-  void set_text_style(bool bold = false, uint8_t underline = 0, bool double_width = false, bool upside_down = false);
+  void set_text_style(bool bold = false, uint8_t underline = 0, bool upside_down = false, uint8_t font_type = 0);
 
   /**
    * Print test page
@@ -201,17 +207,13 @@ class M5StackPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
   void set_inverse_printing(bool enable);
 
   /**
-   * Set double-strike (strikethrough) mode
-   * @param enable True to enable double-strike printing, false to disable
-   */
-  void set_strikethrough(bool enable);
-
-  /**
    * Send raw ESC/POS command bytes
    * @param command Vector of bytes to send to the printer
    * Useful for debugging and testing specific ESC/POS sequences
    */
   void send_raw_command(const std::vector<uint8_t> &command);
+
+
 
   /**
    * Enable Chinese/Japanese character mode
@@ -259,6 +261,19 @@ class M5StackPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
    */
   void set_horizontal_position(uint16_t position);
 
+  /**
+   * Set left spacing for all subsequent text
+   * @param spacing_dots Left spacing in dots (0-47)
+   * Adds spacing to the left side of each line
+   */
+  void set_left_spacing(uint8_t spacing_dots);
+
+  /**
+   * Reset left spacing to default (no spacing)
+   * Clears left spacing setting
+   */
+  void reset_left_spacing();
+
  protected:
   void draw_absolute_pixel_internal(int x, int y, Color color) override;
   size_t get_buffer_length_() { return size_t(this->get_width_internal()) * size_t(this->get_height_internal()) / 8; }
@@ -273,12 +288,11 @@ class M5StackPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
   // Formatting state variables (line-buffered printer requires bundled commands)
   bool bold_state_{false};
   uint8_t underline_state_{0};
-  bool double_width_state_{false};
   bool upside_down_state_{false};
+  uint8_t font_type_state_{0};  // 0=Font A, 1=Font B
   uint8_t alignment_state_{0};  // 0=left, 1=center, 2=right
   bool inverse_state_{false};
   bool rotation_state_{false};
-  bool strikethrough_state_{false};
   bool chinese_mode_state_{false};  // Track Chinese/Kanji character mode state
   bool send_wakeup_{false};  // Whether to send init commands to printer
 };
@@ -287,39 +301,54 @@ template<typename... Ts>
 class M5StackPrinterPrintTextAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
  public:
   TEMPLATABLE_VALUE(std::string, text)
-  TEMPLATABLE_VALUE(uint8_t, font_size)
+  TEMPLATABLE_VALUE(uint8_t, font_width)
+  TEMPLATABLE_VALUE(uint8_t, font_height)
+  TEMPLATABLE_VALUE(uint8_t, font_type)
 
-  void play(const Ts &...x) override { this->parent_->print_text(this->text_.value(x...), this->font_size_.value(x...)); }
+  void play(const Ts &...x) override { 
+    this->parent_->print_text(
+      this->text_.value(x...), 
+      this->font_width_.value(x...), 
+      this->font_height_.value(x...),
+      this->font_type_.value(x...)
+    ); 
+  }
 };
 
 template<typename... Ts>
 class M5StackPrinterThermalPrintTextAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
  public:
   TEMPLATABLE_VALUE(std::string, text_to_print)
-  TEMPLATABLE_VALUE(uint8_t, font_size)
+  TEMPLATABLE_VALUE(uint8_t, font_width)
+  TEMPLATABLE_VALUE(uint8_t, font_height)
+  TEMPLATABLE_VALUE(uint8_t, font_type)
   TEMPLATABLE_VALUE(bool, bold)
+  TEMPLATABLE_VALUE(bool, double_strike)
   TEMPLATABLE_VALUE(uint8_t, underline)
-  TEMPLATABLE_VALUE(bool, double_width)
   TEMPLATABLE_VALUE(bool, upside_down)
-  TEMPLATABLE_VALUE(bool, strikethrough)
   TEMPLATABLE_VALUE(bool, rotation)
   TEMPLATABLE_VALUE(bool, inverse)
   TEMPLATABLE_VALUE(bool, chinese_mode)
   TEMPLATABLE_VALUE(uint8_t, alignment)
+  TEMPLATABLE_VALUE(uint8_t, charset)
+  TEMPLATABLE_VALUE(uint8_t, codepage)
+  TEMPLATABLE_VALUE(uint8_t, character_spacing)
 
   void play(const Ts &...x) override { 
     this->parent_->thermal_print_text_with_formatting(
       this->text_to_print_.value(x...),
-      this->font_size_.value(x...),
-      this->bold_.value(x...),
-      this->underline_.value(x...),
-      this->double_width_.value(x...),
+      this->font_width_.value(x...),
+      this->font_height_.value(x...),
+      this->font_type_.value(x...),
+      this->bold_.value(x...),      this->double_strike_.value(x...),      this->underline_.value(x...),
       this->upside_down_.value(x...),
-      this->strikethrough_.value(x...),
       this->rotation_.value(x...),
       this->inverse_.value(x...),
       this->chinese_mode_.value(x...),
-      this->alignment_.value(x...)
+      this->alignment_.value(x...),
+      this->charset_.value(x...),
+      this->codepage_.value(x...),
+      this->character_spacing_.value(x...)
     ); 
   }
 };
@@ -416,15 +445,15 @@ class M5StackPrinterSetStyleAction : public Action<Ts...>, public Parented<M5Sta
  public:
   TEMPLATABLE_VALUE(bool, bold)
   TEMPLATABLE_VALUE(uint8_t, underline)
-  TEMPLATABLE_VALUE(bool, double_width)
   TEMPLATABLE_VALUE(bool, upside_down)
+  TEMPLATABLE_VALUE(uint8_t, font_type)
 
   void play(const Ts &...x) override {
     this->parent_->set_text_style(
       this->bold_.value(x...),
       this->underline_.value(x...),
-      this->double_width_.value(x...),
-      this->upside_down_.value(x...)
+      this->upside_down_.value(x...),
+      this->font_type_.value(x...)
     );
   }
 };
@@ -443,14 +472,6 @@ class M5StackPrinterSetInversePrintingAction : public Action<Ts...>, public Pare
   TEMPLATABLE_VALUE(bool, enable)
 
   void play(const Ts &...x) override { this->parent_->set_inverse_printing(this->enable_.value(x...)); }
-};
-
-template<typename... Ts>
-class M5StackPrinterSetStrikethroughAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
- public:
-  TEMPLATABLE_VALUE(bool, enable)
-
-  void play(const Ts &...x) override { this->parent_->set_strikethrough(this->enable_.value(x...)); }
 };
 
 template<typename... Ts>
@@ -584,6 +605,26 @@ class M5StackPrinterSendRawCommandAction : public Action<Ts...>, public Parented
     this->parent_->send_raw_command(command_bytes);
   }
 };
+
+template<typename... Ts>
+class M5StackPrinterSetLeftSpacingAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+ public:
+  TEMPLATABLE_VALUE(uint8_t, spacing_dots)
+
+  void play(const Ts &...x) override {
+    this->parent_->set_left_spacing(this->spacing_dots_.value(x...));
+  }
+};
+
+template<typename... Ts>
+class M5StackPrinterResetLeftSpacingAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+ public:
+  void play(const Ts &...x) override {
+    this->parent_->reset_left_spacing();
+  }
+};
+
+
 
 }  // namespace m5stack_printer
 }  // namespace esphome

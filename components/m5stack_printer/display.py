@@ -49,10 +49,6 @@ M5StackPrinterSetInversePrintingAction = m5stack_printer_ns.class_(
     "M5StackPrinterSetInversePrintingAction", automation.Action
 )
 
-M5StackPrinterSetStrikethroughAction = m5stack_printer_ns.class_(
-    "M5StackPrinterSetStrikethroughAction", automation.Action
-)
-
 M5StackPrinterSetChineseModeAction = m5stack_printer_ns.class_(
     "M5StackPrinterSetChineseModeAction", automation.Action
 )
@@ -93,7 +89,22 @@ M5StackPrinterThermalPrintTextAction = m5stack_printer_ns.class_(
     "M5StackPrinterThermalPrintTextAction", automation.Action
 )
 
-CONF_FONT_SIZE = "font_size"
+M5StackPrinterSetLeftSpacingAction = m5stack_printer_ns.class_(
+    "M5StackPrinterSetLeftSpacingAction", automation.Action
+)
+
+M5StackPrinterResetLeftSpacingAction = m5stack_printer_ns.class_(
+    "M5StackPrinterResetLeftSpacingAction", automation.Action
+)
+
+CONF_FONT_SIZE = "font_size"  # Deprecated, use font_width/font_height
+CONF_FONT_WIDTH = "font_width"
+CONF_FONT_HEIGHT = "font_height"
+CONF_FONT_TYPE = "font_type"
+CONF_CHARSET = "charset"
+CONF_CODEPAGE = "codepage"
+CONF_CHARACTER_SPACING = "character_spacing"
+CONF_DOUBLE_STRIKE = "double_strike"
 CONF_TEXT = "text"
 CONF_TEXT_TO_PRINT = "text_to_print"
 CONF_QRCODE = "qrcode"
@@ -105,9 +116,7 @@ CONF_FEED_LINES = "feed_lines"
 CONF_ALIGNMENT = "alignment"
 CONF_BOLD = "bold"
 CONF_UNDERLINE = "underline"
-CONF_DOUBLE_WIDTH = "double_width"
 CONF_UPSIDE_DOWN = "upside_down"
-CONF_STRIKETHROUGH = "strikethrough"
 CONF_ROTATION = "rotation"
 CONF_INVERSE = "inverse"
 CONF_CHINESE_MODE = "chinese_mode"
@@ -125,6 +134,8 @@ CONF_SHOW_TEXT_STYLES = "show_text_styles"
 CONF_SHOW_INVERSE = "show_inverse"
 CONF_SHOW_ROTATION = "show_rotation"
 CONF_SEND_WAKEUP = "send_wakeup"
+CONF_COMMAND = "command"
+CONF_SPACING_DOTS = "spacing_dots"
 
 CONFIG_SCHEMA = (
     display.FULL_DISPLAY_SCHEMA.extend(
@@ -164,9 +175,9 @@ async def to_code(config):
             {
                 cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
                 cv.Required(CONF_TEXT): cv.templatable(cv.string),
-                cv.Optional(CONF_FONT_SIZE, default=0): cv.templatable(
-                    cv.int_range(min=0, max=7)  # Font size range according to datasheet
-                ),
+                cv.Optional(CONF_FONT_WIDTH, default=1): cv.templatable(cv.int_),
+                cv.Optional(CONF_FONT_HEIGHT, default=1): cv.templatable(cv.int_),
+                cv.Optional(CONF_FONT_TYPE, default=0): cv.templatable(cv.int_range(min=0, max=1)),
             }
         ),
         key=CONF_TEXT,
@@ -179,8 +190,12 @@ async def m5stack_printer_print_text_action_to_code(
     await cg.register_parented(var, config[CONF_ID])
     templ = await cg.templatable(config[CONF_TEXT], args, cg.std_string)
     cg.add(var.set_text(templ))
-    templ = await cg.templatable(config[CONF_FONT_SIZE], args, cg.uint8)
-    cg.add(var.set_font_size(templ))
+    templ = await cg.templatable(config[CONF_FONT_WIDTH], args, cg.uint8)
+    cg.add(var.set_font_width(templ))
+    templ = await cg.templatable(config[CONF_FONT_HEIGHT], args, cg.uint8)
+    cg.add(var.set_font_height(templ))
+    templ = await cg.templatable(config[CONF_FONT_TYPE], args, cg.uint8)
+    cg.add(var.set_font_type(templ))
     return var
 
 
@@ -191,22 +206,24 @@ async def m5stack_printer_print_text_action_to_code(
         {
             cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
             cv.Required(CONF_TEXT_TO_PRINT): cv.templatable(cv.string),
-            cv.Optional(CONF_FONT_SIZE, default=1): cv.templatable(
-                cv.int_range(min=0, max=7)
-            ),
+            cv.Optional(CONF_FONT_WIDTH, default=1): cv.templatable(cv.int_),
+            cv.Optional(CONF_FONT_HEIGHT, default=1): cv.templatable(cv.int_),
+            cv.Optional(CONF_FONT_TYPE, default=0): cv.templatable(cv.int_range(min=0, max=1)),
             cv.Optional(CONF_BOLD, default=False): cv.templatable(cv.boolean),
+            cv.Optional(CONF_DOUBLE_STRIKE, default=False): cv.templatable(cv.boolean),
             cv.Optional(CONF_UNDERLINE, default=0): cv.templatable(
                 cv.int_range(min=0, max=2)
             ),
-            cv.Optional(CONF_DOUBLE_WIDTH, default=False): cv.templatable(cv.boolean),
             cv.Optional(CONF_UPSIDE_DOWN, default=False): cv.templatable(cv.boolean),
-            cv.Optional(CONF_STRIKETHROUGH, default=False): cv.templatable(cv.boolean),
             cv.Optional(CONF_ROTATION, default=False): cv.templatable(cv.boolean),
             cv.Optional(CONF_INVERSE, default=False): cv.templatable(cv.boolean),
             cv.Optional(CONF_CHINESE_MODE, default=False): cv.templatable(cv.boolean),
             cv.Optional(CONF_ALIGNMENT, default=0): cv.templatable(
                 cv.int_range(min=0, max=2)
             ),
+            cv.Optional(CONF_CHARSET, default=0): cv.templatable(cv.int_range(min=0, max=15)),
+            cv.Optional(CONF_CODEPAGE, default=0): cv.templatable(cv.int_range(min=0, max=47)),
+            cv.Optional(CONF_CHARACTER_SPACING, default=0): cv.templatable(cv.int_range(min=0, max=255)),
         }
     ),
 )
@@ -219,18 +236,20 @@ async def thermalprinter_print_text_action_to_code(
     # Set all templatable values
     templ = await cg.templatable(config[CONF_TEXT_TO_PRINT], args, cg.std_string)
     cg.add(var.set_text_to_print(templ))
-    templ = await cg.templatable(config[CONF_FONT_SIZE], args, cg.uint8)
-    cg.add(var.set_font_size(templ))
+    templ = await cg.templatable(config[CONF_FONT_WIDTH], args, cg.uint8)
+    cg.add(var.set_font_width(templ))
+    templ = await cg.templatable(config[CONF_FONT_HEIGHT], args, cg.uint8)
+    cg.add(var.set_font_height(templ))
+    templ = await cg.templatable(config[CONF_FONT_TYPE], args, cg.uint8)
+    cg.add(var.set_font_type(templ))
     templ = await cg.templatable(config[CONF_BOLD], args, cg.bool_)
     cg.add(var.set_bold(templ))
+    templ = await cg.templatable(config[CONF_DOUBLE_STRIKE], args, cg.bool_)
+    cg.add(var.set_double_strike(templ))
     templ = await cg.templatable(config[CONF_UNDERLINE], args, cg.uint8)
     cg.add(var.set_underline(templ))
-    templ = await cg.templatable(config[CONF_DOUBLE_WIDTH], args, cg.bool_)
-    cg.add(var.set_double_width(templ))
     templ = await cg.templatable(config[CONF_UPSIDE_DOWN], args, cg.bool_)
     cg.add(var.set_upside_down(templ))
-    templ = await cg.templatable(config[CONF_STRIKETHROUGH], args, cg.bool_)
-    cg.add(var.set_strikethrough(templ))
     templ = await cg.templatable(config[CONF_ROTATION], args, cg.bool_)
     cg.add(var.set_rotation(templ))
     templ = await cg.templatable(config[CONF_INVERSE], args, cg.bool_)
@@ -239,6 +258,12 @@ async def thermalprinter_print_text_action_to_code(
     cg.add(var.set_chinese_mode(templ))
     templ = await cg.templatable(config[CONF_ALIGNMENT], args, cg.uint8)
     cg.add(var.set_alignment(templ))
+    templ = await cg.templatable(config[CONF_CHARSET], args, cg.uint8)
+    cg.add(var.set_charset(templ))
+    templ = await cg.templatable(config[CONF_CODEPAGE], args, cg.uint8)
+    cg.add(var.set_codepage(templ))
+    templ = await cg.templatable(config[CONF_CHARACTER_SPACING], args, cg.uint8)
+    cg.add(var.set_character_spacing(templ))
     
     return var
 
@@ -343,26 +368,6 @@ async def m5stack_printer_set_90_degree_rotation_action_to_code(
     ),
 )
 async def m5stack_printer_set_inverse_printing_action_to_code(
-    config, action_id, template_arg, args
-):
-    var = cg.new_Pvariable(action_id, template_arg)
-    await cg.register_parented(var, config[CONF_ID])
-    templ = await cg.templatable(config[CONF_ENABLE], args, cg.bool_)
-    cg.add(var.set_enable(templ))
-    return var
-
-
-@automation.register_action(
-    "m5stack_printer.set_strikethrough",
-    M5StackPrinterSetStrikethroughAction,
-    cv.Schema(
-        {
-            cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
-            cv.Required(CONF_ENABLE): cv.templatable(cv.boolean),
-        }
-    ),
-)
-async def m5stack_printer_set_strikethrough_to_code(
     config, action_id, template_arg, args
 ):
     var = cg.new_Pvariable(action_id, template_arg)
@@ -582,8 +587,8 @@ async def m5stack_printer_set_alignment_action_to_code(
             cv.Optional(CONF_UNDERLINE, default=0): cv.templatable(
                 cv.int_range(min=0, max=2)
             ),
-            cv.Optional(CONF_DOUBLE_WIDTH, default=False): cv.templatable(cv.boolean),
             cv.Optional(CONF_UPSIDE_DOWN, default=False): cv.templatable(cv.boolean),
+            cv.Optional(CONF_FONT_TYPE, default=0): cv.templatable(cv.int_range(min=0, max=1)),
         }
     ),
 )
@@ -596,10 +601,10 @@ async def m5stack_printer_set_style_action_to_code(
     cg.add(var.set_bold(templ))
     templ = await cg.templatable(config[CONF_UNDERLINE], args, cg.uint8)
     cg.add(var.set_underline(templ))
-    templ = await cg.templatable(config[CONF_DOUBLE_WIDTH], args, cg.bool_)
-    cg.add(var.set_double_width(templ))
     templ = await cg.templatable(config[CONF_UPSIDE_DOWN], args, cg.bool_)
     cg.add(var.set_upside_down(templ))
+    templ = await cg.templatable(config[CONF_FONT_TYPE], args, cg.uint8)
+    cg.add(var.set_font_type(templ))
     return var
 
 
@@ -710,3 +715,43 @@ async def reset_printer_settings_action_to_code(config, action_id, template_arg,
     var = cg.new_Pvariable(action_id, template_arg)
     await cg.register_parented(var, config[CONF_ID])
     return var
+
+
+# Left spacing control automation actions
+@automation.register_action(
+    "m5stack_printer.set_left_spacing",
+    M5StackPrinterSetLeftSpacingAction,
+    cv.Schema(
+        {
+            cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
+            cv.Required(CONF_SPACING_DOTS): cv.templatable(cv.int_range(min=0, max=47)),
+        }
+    ),
+)
+async def set_left_spacing_action_to_code(config, action_id, template_arg, args):
+    var = cg.new_Pvariable(action_id, template_arg)
+    await cg.register_parented(var, config[CONF_ID])
+    
+    templ = await cg.templatable(config[CONF_SPACING_DOTS], args, cg.uint8)
+    cg.add(var.set_spacing_dots(templ))
+    
+    return var
+
+
+@automation.register_action(
+    "m5stack_printer.reset_left_spacing",
+    M5StackPrinterResetLeftSpacingAction,
+    cv.Schema(
+        {
+            cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
+        }
+    ),
+)
+async def reset_left_spacing_action_to_code(config, action_id, template_arg, args):
+    var = cg.new_Pvariable(action_id, template_arg)
+    await cg.register_parented(var, config[CONF_ID])
+    
+    return var
+
+
+

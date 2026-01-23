@@ -18,11 +18,6 @@ api:
   on_client_disconnected:
     - logger.log: "Home Assistant disconnected"
   services:
-    - service: print_clean_ascii_test
-      then:
-        - m5stack_printer.send_raw_command:
-            command: "67, 108, 101, 97, 110, 32, 65, 83, 67, 73, 73, 32, 116, 101, 115, 116, 10"
-    # Print QR codes
     # qrcode: String data to encode (max ~100 characters recommended for reliability)
     - service: print_qrcode
       variables:
@@ -50,7 +45,8 @@ api:
       then:
         - m5stack_printer.print_text:
             text: !lambda "return text_to_print;"
-            font_size: 1
+            font_width: 1
+            font_height: 1
     # Add line breaks to advance paper
     # lines: Number of lines to advance (1-255)
     - service: new_line
@@ -61,46 +57,162 @@ api:
             lines: !lambda "return lines;"
     # Print text with comprehensive styling control (applies styles then prints)
     # text: String to print
-    # font_size: Font size multiplier (0-7), affects both width and height
+    # font_width: Font width multiplier (1-8)
+    # font_height: Font height multiplier (1-8)  
     # bold: Enable bold/emphasized text (true/false)
+    # double_strike: Enable double-strike mode - overlapping dots for darker text (true/false)
     # underline: Underline mode (0=off, 1=single line, 2=double line)
-    # double_width: Enable double width characters (true/false)
     # upside_down: Rotate text 180 degrees (true/false)
-    # strikethrough: Enable strikethrough line through text (true/false)
     # rotation: Enable 90-degree clockwise rotation (true/false)
     # inverse: Enable white text on black background (true/false)
     # chinese_mode: Enable Chinese/Japanese multi-byte character support (true/false)
     # alignment: Text alignment (0=left, 1=center, 2=right)
+    # charset: International character set (0-15: 0=USA, 1=France, 2=Germany, etc.)
+    # codepage: Character code table (0-47: 0=CP437, 1=Katakana, 2=CP850, etc.)
+    # character_spacing: Right-side character spacing (0-255, in 0.125mm units)
     # line_spacing: Custom line spacing in dots (0-255, default ~30)
     # print_density: Print darkness level (0-31, higher=darker, default ~15)
     # break_time: Break time between dots in μs (0-7, affects print speed vs quality)
     - service: print_text
       variables:
         text_to_print: string
-        font_size: int
+        font_width: int
+        font_height: int
+        font_type: int
         bold: bool
+        double_strike: bool
         underline: int
-        double_width: bool
         upside_down: bool
-        strikethrough: bool
         rotation: bool
         inverse: bool
         chinese_mode: bool
         alignment: int
+        charset: int
+        codepage: int
+        character_spacing: int
       then:
         # Use the comprehensive formatting function that handles all parameters
         - esphome.thermalprinter_print_text:
             text_to_print: !lambda "return text_to_print;"
-            font_size: !lambda "return font_size;"
+            font_width: !lambda "return font_width;"
+            font_height: !lambda "return font_height;"
+            font_type: !lambda "return font_type;"
             bold: !lambda "return bold;"
+            double_strike: !lambda "return double_strike;"
             underline: !lambda "return underline;"
-            double_width: !lambda "return double_width;"
             upside_down: !lambda "return upside_down;"
-            strikethrough: !lambda "return strikethrough;"
             rotation: !lambda "return rotation;"
             inverse: !lambda "return inverse;"
             chinese_mode: !lambda "return chinese_mode;"
             alignment: !lambda "return alignment;"
+            charset: !lambda "return charset;"
+            codepage: !lambda "return codepage;"
+            character_spacing: !lambda "return character_spacing;"
+
+    # Character set and code page test service
+    # charset: 0=USA, 1=France, 2=Germany, 3=UK, 4=Denmark, 5=Sweden, 6=Italy, 7=Spain, 8=Japan, 9=Norway, etc. (0-15)
+    # codepage: 0=CP437, 1=Katakana, 2=CP850, 3=CP860, 4=CP863, 5=CP865, etc. (0-47)
+    - service: test_character_sets
+      then:
+        - esphome.thermalprinter_print_text:
+            text_to_print: "=== Character Set Test ==="
+            alignment: 1
+        - esphome.thermalprinter_print_text:
+            text_to_print: "USA charset: Hello [@#$%]"
+            charset: 0
+        - esphome.thermalprinter_print_text:
+            text_to_print: "France charset: Bonjour [@#$%]"
+            charset: 1
+        - esphome.thermalprinter_print_text:
+            text_to_print: "Germany charset: Hallo [@#$%]"
+            charset: 2
+        - esphome.thermalprinter_print_text:
+            text_to_print: "CP437 codepage: └┴┐│┤"
+            codepage: 0
+        - esphome.thermalprinter_print_text:
+            text_to_print: "CP850 codepage: çüéâä"
+            codepage: 2
+
+    # Character spacing test service
+    # Tests different character spacing levels from 0 (normal) to maximum
+    # character_spacing: 0-255 units, each unit = 0.125mm extra spacing between characters
+    - service: test_character_spacing
+      then:
+        - esphome.thermalprinter_print_text:
+            text_to_print: "=== Character Spacing Test ==="
+            alignment: 1
+        - esphome.thermalprinter_print_text:
+            text_to_print: "Normal spacing (0): HELLO WORLD"
+            character_spacing: 0
+        - esphome.thermalprinter_print_text:
+            text_to_print: "Small spacing (8): H E L L O  W O R L D"
+            character_spacing: 8
+        - esphome.thermalprinter_print_text:
+            text_to_print: "Medium spacing (16): H  E  L  L  O"
+            character_spacing: 16
+        - esphome.thermalprinter_print_text:
+            text_to_print: "Large spacing (32): H   E   L   L   O"
+            character_spacing: 32
+        - esphome.thermalprinter_print_text:
+            text_to_print: "Max spacing (255): A          B"
+            character_spacing: 255
+        - esphome.thermalprinter_print_text:
+            text_to_print: "Test complete - spacing reset to 0"
+            character_spacing: 0
+
+    # Double-strike test service  
+    # Tests double-strike mode (ESC G n) - overlapping dots for darker text
+    # Double-strike is different from bold - produces overlapping character dots
+    - service: test_double_strike
+      then:
+        - esphome.thermalprinter_print_text:
+            text_to_print: "=== Double-Strike Test ==="
+            alignment: 1
+        - esphome.thermalprinter_print_text:
+            text_to_print: "Normal text: HELLO WORLD"
+            double_strike: false
+        - esphome.thermalprinter_print_text:
+            text_to_print: "Double-strike: HELLO WORLD"
+            double_strike: true
+        - esphome.thermalprinter_print_text:
+            text_to_print: "Bold text: HELLO WORLD"
+            bold: true
+        - esphome.thermalprinter_print_text:
+            text_to_print: "Bold + Double-strike: HELLO WORLD"
+            bold: true
+            double_strike: true
+        - esphome.thermalprinter_print_text:
+            text_to_print: "Test complete - formatting reset"
+
+    # Left spacing test service
+    # Tests left spacing control (ESC B command) - adds spacing to left side
+    - service: test_left_spacing
+      then:
+        - esphome.thermalprinter_print_text:
+            text_to_print: "=== Left Spacing Test ==="
+            alignment: 1
+        # Print without spacing (default)
+        - esphome.thermalprinter_print_text:
+            text_to_print: "No spacing: This text starts at the normal left position."
+        # Set left spacing to 10 dots
+        - m5stack_printer.set_left_spacing:
+            spacing_dots: 10
+        - esphome.thermalprinter_print_text:
+            text_to_print: "Left spacing 10: This text should be indented 10 dots from the left."
+        # Set larger left spacing (30 dots)
+        - m5stack_printer.set_left_spacing:
+            spacing_dots: 30
+        - esphome.thermalprinter_print_text:
+            text_to_print: "Left spacing 30: This text should be significantly indented from the left."
+        # Test maximum spacing (47 dots)
+        - m5stack_printer.set_left_spacing:
+            spacing_dots: 47
+        - esphome.thermalprinter_print_text:
+            text_to_print: "Max spacing 47: This shows the maximum left spacing supported."
+        # Reset spacing to default
+        - m5stack_printer.reset_left_spacing:
+        - esphome.thermalprinter_print_text:
+            text_to_print: "Spacing reset: Back to normal left position."
 
     # Printer settings services  
     - service: set_printer_settings
@@ -141,9 +253,7 @@ api:
     # Set text styling modes without printing (styles persist until changed)
     # bold: Enable bold/emphasized text (true/false)
     # underline: Underline mode (0=off, 1=single 1-dot line, 2=double 2-dot line)
-    # double_width: Enable double width characters (true/false)
     # upside_down: Rotate individual characters 180 degrees (true/false)
-    # strikethrough: Enable line through middle of text (true/false)
     # rotation: Enable 90-degree clockwise rotation of entire text (true/false)
     # inverse: Enable white text on black background printing (true/false)
     # chinese_mode: Enable processing of multi-byte Asian characters (true/false)
@@ -154,9 +264,8 @@ api:
       variables:
         bold: bool
         underline: int
-        double_width: bool
         upside_down: bool
-        strikethrough: bool
+        font_type: int
         rotation: bool
         inverse: bool
         chinese_mode: bool
@@ -167,10 +276,8 @@ api:
         - m5stack_printer.set_text_style:
             bold: !lambda "return bold;"
             underline: !lambda "return underline;"
-            double_width: !lambda "return double_width;"
             upside_down: !lambda "return upside_down;"
-        - m5stack_printer.set_strikethrough:
-            enable: !lambda "return strikethrough;"
+            font_type: !lambda "return font_type;"
         - m5stack_printer.set_90_degree_rotation:
             enable: !lambda "return rotation;"
         - m5stack_printer.set_inverse_printing:

@@ -55,8 +55,6 @@ static const uint8_t PRINT_DENSITY_CMD[] = {0x12, '#'}; // DC2 # n - print densi
 static const uint8_t BOLD_ON_CMD[] = {ESC, 'E', 1}; // ESC E 1 - bold on
 static const uint8_t BOLD_OFF_CMD[] = {ESC, 'E', 0}; // ESC E 0 - bold off
 static const uint8_t UNDERLINE_CMD[] = {ESC, '-'}; // ESC - n - underline
-static const uint8_t DOUBLE_WIDTH_ON_CMD[] = {ESC, 0x0E}; // ESC SO - double width on
-static const uint8_t DOUBLE_WIDTH_OFF_CMD[] = {ESC, 0x14}; // ESC DC4 - double width off
 static const uint8_t UPSIDE_DOWN_CMD[] = {ESC, '{'}; // ESC { n - upside down mode
 
 // Printer control commands
@@ -106,42 +104,126 @@ void M5StackPrinterDisplay::init_() {
   }
 }
 
-void M5StackPrinterDisplay::print_text(std::string text, uint8_t font_size) {
-  ESP_LOGD(TAG, "Basic text printing: '%s'", text.c_str());
+void M5StackPrinterDisplay::print_text(std::string text, uint8_t font_width, uint8_t font_height, uint8_t font_type) {
+  ESP_LOGD(TAG, "Text printing: '%s' with font_width=%d, font_height=%d, font_type=%d", text.c_str(), font_width, font_height, font_type);
   
-  // DON'T initialize - maybe that's causing the Chinese mode
-  // this->init_(); 
+  // Apply font size if not default (1x1)
+  if (font_width > 1 || font_height > 1) {
+    // Clamp values to valid range (1-8)
+    font_width = clamp<uint8_t>(font_width, 1, 8);
+    font_height = clamp<uint8_t>(font_height, 1, 8);
+    
+    // Convert to ESC/POS format: width bits 0-2, height bits 4-6
+    // Subtract 1 because ESC/POS uses 0-7 for 1x-8x
+    uint8_t escpos_value = (font_width - 1) | ((font_height - 1) << 4);
+    
+    uint8_t size_cmd[] = {0x1D, 0x21, escpos_value};
+    this->write_array(size_cmd, sizeof(size_cmd));
+    ESP_LOGD(TAG, "Applied font size: %dx%d (ESC/POS value: %d)", font_width, font_height, escpos_value);
+  }
+
+  // Apply font type selection (Font A/B) if not default (Font A)
+  if (font_type > 0) {
+    uint8_t clamped_font_type = clamp<uint8_t>(font_type, 0, 1);
+    uint8_t font_type_cmd[] = {0x1B, 0x21, clamped_font_type}; // ESC ! n
+    this->write_array(font_type_cmd, sizeof(font_type_cmd));
+    ESP_LOGD(TAG, "Applied font type: %s (%d)", (clamped_font_type == 0) ? "Font A (12x24)" : "Font B (9x17)", clamped_font_type);
+  }
   
-  // Absolutely basic - just send the text characters directly
+  // Send the text characters directly
   for (char c : text) {
     this->write_byte(c);
   }
-  this->write_byte('\n');  // Just a simple newline
+  this->write_byte('\n');  // Simple newline
   
-  ESP_LOGD(TAG, "Text sent");
+  // Reset font size to default after printing if it was changed
+  if (font_width > 1 || font_height > 1) {
+    uint8_t reset_cmd[] = {0x1D, 0x21, 0x00};
+    this->write_array(reset_cmd, sizeof(reset_cmd));
+    ESP_LOGD(TAG, "Reset font size to default (1x1)");
+  }
+
+  // Reset font type to Font A if it was changed
+  if (font_type > 0) {
+    uint8_t font_type_reset_cmd[] = {0x1B, 0x21, 0x00}; // ESC ! 0 (Font A)
+    this->write_array(font_type_reset_cmd, sizeof(font_type_reset_cmd));
+    ESP_LOGD(TAG, "Reset font type to Font A (12x24)");
+  }
+  
+  ESP_LOGD(TAG, "Text printing complete");
 }
 
 void M5StackPrinterDisplay::thermal_print_text_with_formatting(
-    const std::string &text, uint8_t font_size, bool bold, uint8_t underline,
-    bool double_width, bool upside_down, bool strikethrough, bool rotation,
-    bool inverse, bool chinese_mode, uint8_t alignment) {
+    const std::string &text, uint8_t font_width, uint8_t font_height, uint8_t font_type, bool bold, bool double_strike, uint8_t underline,
+    bool upside_down, bool rotation,
+    bool inverse, bool chinese_mode, uint8_t alignment, uint8_t charset, uint8_t codepage, uint8_t character_spacing) {
   ESP_LOGD(TAG, "thermal_print_text_with_formatting: text='%s'", text.c_str());
-  ESP_LOGD(TAG, "Formatting: bold=%d, underline=%d, align=%d", bold, underline, alignment);
+  ESP_LOGD(TAG, "Formatting: font=%dx%d, type=%d, bold=%d, double_strike=%d, underline=%d, align=%d, charset=%d, codepage=%d, spacing=%d", font_width, font_height, font_type, bold, double_strike, underline, alignment, charset, codepage, character_spacing);
   
   // Check if any formatting is actually requested (non-default values)
-  bool has_formatting = (bold || underline > 0 || double_width || upside_down || 
-                        strikethrough || rotation || inverse || chinese_mode ||
-                        alignment > 0);
+  bool has_formatting = (font_width > 1 || font_height > 1 || font_type > 0 || bold || double_strike || underline > 0 || upside_down || 
+                        rotation || inverse || chinese_mode ||
+                        alignment > 0 || charset > 0 || codepage > 0 || character_spacing > 0);
   
   if (!has_formatting) {
-    // No formatting needed - use simple text printing
+    // No formatting needed - use simple text printing with default font size
     ESP_LOGD(TAG, "No formatting requested, using simple text printing");
-    this->print_text(text, font_size);
+    this->print_text(text, 1, 1);  // 1x1 = default font size
   } else {
     // Formatting requested - implement safe formatting features one by one
     ESP_LOGD(TAG, "Applying safe formatting features");
     
-    // Start with alignment - generally safe and commonly used
+    // Apply font size first if specified
+    if (font_width > 1 || font_height > 1) {
+      // Clamp values to valid range (1-8)
+      uint8_t clamped_width = clamp<uint8_t>(font_width, 1, 8);
+      uint8_t clamped_height = clamp<uint8_t>(font_height, 1, 8);
+      
+      // Convert to ESC/POS format
+      uint8_t escpos_value = (clamped_width - 1) | ((clamped_height - 1) << 4);
+      
+      uint8_t size_cmd[] = {0x1D, 0x21, escpos_value};
+      this->write_array(size_cmd, sizeof(size_cmd));
+      ESP_LOGD(TAG, "Applied font size: %dx%d (ESC/POS: %d)", clamped_width, clamped_height, escpos_value);
+    }
+
+    // Apply font type selection (Font A/B) if specified
+    if (font_type > 0) {
+      // Clamp to valid range (0=Font A, 1=Font B)
+      uint8_t clamped_font_type = clamp<uint8_t>(font_type, 0, 1);
+      
+      // ESC ! n command - bit 0 controls font type
+      // 0 = Font A (12x24), 1 = Font B (9x17)
+      uint8_t font_type_cmd[] = {0x1B, 0x21, clamped_font_type};
+      this->write_array(font_type_cmd, sizeof(font_type_cmd));
+      ESP_LOGD(TAG, "Applied font type: %s (%d)", (clamped_font_type == 0) ? "Font A (12x24)" : "Font B (9x17)", clamped_font_type);
+    }
+
+    // Apply character set (ESC R n) if specified
+    if (charset > 0) {
+      uint8_t clamped_charset = clamp<uint8_t>(charset, 0, 15);
+      uint8_t charset_cmd[] = {0x1B, 0x52, clamped_charset}; // ESC R n
+      this->write_array(charset_cmd, sizeof(charset_cmd));
+      ESP_LOGD(TAG, "Applied character set: %d (0=USA, 1=France, 2=Germany, etc.)", clamped_charset);
+    }
+
+    // Apply code page (ESC t n) if specified  
+    if (codepage > 0) {
+      uint8_t clamped_codepage = clamp<uint8_t>(codepage, 0, 47);
+      uint8_t codepage_cmd[] = {0x1B, 0x74, clamped_codepage}; // ESC t n
+      this->write_array(codepage_cmd, sizeof(codepage_cmd));
+      ESP_LOGD(TAG, "Applied code page: %d (0=CP437, 1=Katakana, 2=CP850, etc.)", clamped_codepage);
+    }
+
+    // Apply character spacing (ESC SP n) if specified
+    if (character_spacing > 0) {
+      uint8_t clamped_spacing = clamp<uint8_t>(character_spacing, 0, 255);
+      uint8_t spacing_cmd[] = {0x1B, 0x20, clamped_spacing}; // ESC SP n
+      this->write_array(spacing_cmd, sizeof(spacing_cmd));
+      ESP_LOGD(TAG, "Applied character spacing: %d (in 0.125mm units = %.2fmm)", clamped_spacing, clamped_spacing * 0.125f);
+    }
+    
+    // Apply alignment - generally safe and commonly used
     if (alignment > 0) {
       uint8_t align_cmd[] = {0x1B, 0x61, (uint8_t)alignment};
       this->write_array(align_cmd, sizeof(align_cmd));
@@ -155,10 +237,131 @@ void M5StackPrinterDisplay::thermal_print_text_with_formatting(
       ESP_LOGD(TAG, "Applied bold formatting");
     }
     
-    // Print the text using the simple method
-    this->print_text(text, font_size);
+    // Add double-strike formatting (ESC G n) - overlapping dots for darker text
+    if (double_strike) {
+      uint8_t double_strike_cmd[] = {0x1B, 0x47, 0x01}; // ESC G 1
+      this->write_array(double_strike_cmd, sizeof(double_strike_cmd));
+      ESP_LOGD(TAG, "Applied double-strike formatting (overlapping dots)");
+    }
+    
+    // Add underline formatting
+    if (underline > 0) {
+      uint8_t underline_cmd[] = {0x1B, 0x2D, underline};
+      this->write_array(underline_cmd, sizeof(underline_cmd));
+      ESP_LOGD(TAG, "Applied underline formatting: %d", underline);
+    }
+    
+    // Add inverse printing formatting
+    if (inverse) {
+      uint8_t inverse_cmd[] = {0x1D, 0x42, 0x01}; // GS B 1 (inverse on)
+      this->write_array(inverse_cmd, sizeof(inverse_cmd));
+      ESP_LOGD(TAG, "Applied inverse formatting");
+    }
+    
+    // Add upside down formatting
+    if (upside_down) {
+      uint8_t upside_down_cmd[] = {0x1B, 0x7B, 0x01}; // ESC { 1 (upside down on)
+      this->write_array(upside_down_cmd, sizeof(upside_down_cmd));
+      ESP_LOGD(TAG, "Applied upside down formatting");
+    }
+    
+    // Add 90-degree rotation formatting
+    if (rotation) {
+      uint8_t rotation_cmd[] = {0x1B, 0x56, 0x01}; // ESC V 1 (90-degree clockwise rotation)
+      this->write_array(rotation_cmd, sizeof(rotation_cmd));
+      ESP_LOGD(TAG, "Applied 90-degree rotation formatting");
+    }
+    
+    // Print the text directly (font size already applied above)
+    for (char c : text) {
+      this->write_byte(c);
+    }
+    this->write_byte('\n');  // Simple newline
     
     // Reset formatting after printing to avoid affecting subsequent prints
+    if (font_width > 1 || font_height > 1) {
+      uint8_t size_reset_cmd[] = {0x1D, 0x21, 0x00};
+      this->write_array(size_reset_cmd, sizeof(size_reset_cmd));
+      ESP_LOGD(TAG, "Reset font size to default (1x1)");
+    }
+
+    // Reset font type to Font A if it was changed
+    if (font_type > 0) {
+      uint8_t font_type_reset_cmd[] = {0x1B, 0x21, 0x00}; // ESC ! 0 (Font A)
+      this->write_array(font_type_reset_cmd, sizeof(font_type_reset_cmd));
+      ESP_LOGD(TAG, "Reset font type to Font A (12x24)");
+    }
+
+    // Reset character set to USA if it was changed
+    if (charset > 0) {
+      uint8_t charset_reset_cmd[] = {0x1B, 0x52, 0x00}; // ESC R 0 (USA)
+      this->write_array(charset_reset_cmd, sizeof(charset_reset_cmd));
+      ESP_LOGD(TAG, "Reset character set to USA");
+    }
+
+    // Reset code page to CP437 if it was changed
+    if (codepage > 0) {
+      uint8_t codepage_reset_cmd[] = {0x1B, 0x74, 0x00}; // ESC t 0 (CP437)
+      this->write_array(codepage_reset_cmd, sizeof(codepage_reset_cmd));
+      ESP_LOGD(TAG, "Reset code page to CP437");
+    }
+
+    // Reset character spacing to default if it was changed
+    if (character_spacing > 0) {
+      uint8_t spacing_reset_cmd[] = {0x1B, 0x20, 0x00}; // ESC SP 0
+      this->write_array(spacing_reset_cmd, sizeof(spacing_reset_cmd));
+      ESP_LOGD(TAG, "Reset character spacing to default (0)");
+    }
+    
+    // Reset bold if it was applied
+    if (bold) {
+      uint8_t bold_reset_cmd[] = {0x1B, 0x45, 0x00};
+      this->write_array(bold_reset_cmd, sizeof(bold_reset_cmd));
+      ESP_LOGD(TAG, "Reset bold formatting");
+    }
+    
+    // Reset double-strike if it was applied
+    if (double_strike) {
+      uint8_t double_strike_reset_cmd[] = {0x1B, 0x47, 0x00}; // ESC G 0
+      this->write_array(double_strike_reset_cmd, sizeof(double_strike_reset_cmd));
+      ESP_LOGD(TAG, "Reset double-strike formatting");
+    }
+    
+    // Reset underline if it was applied
+    if (underline > 0) {
+      uint8_t underline_reset_cmd[] = {0x1B, 0x2D, 0x00};
+      this->write_array(underline_reset_cmd, sizeof(underline_reset_cmd));
+      ESP_LOGD(TAG, "Reset underline formatting");
+    }
+    
+    // Reset inverse if it was applied
+    if (inverse) {
+      uint8_t inverse_reset_cmd[] = {0x1D, 0x42, 0x00}; // GS B 0 (inverse off)
+      this->write_array(inverse_reset_cmd, sizeof(inverse_reset_cmd));
+      ESP_LOGD(TAG, "Reset inverse formatting");
+    }
+    
+    // Reset upside down if it was applied
+    if (upside_down) {
+      uint8_t upside_down_reset_cmd[] = {0x1B, 0x7B, 0x00}; // ESC { 0 (upside down off)
+      this->write_array(upside_down_reset_cmd, sizeof(upside_down_reset_cmd));
+      ESP_LOGD(TAG, "Reset upside down formatting");
+    }
+    
+    // Reset rotation if it was applied
+    if (rotation) {
+      uint8_t rotation_reset_cmd[] = {0x1B, 0x56, 0x00}; // ESC V 0 (normal orientation)
+      this->write_array(rotation_reset_cmd, sizeof(rotation_reset_cmd));
+      ESP_LOGD(TAG, "Reset rotation formatting");
+    }
+    
+    // Reset alignment to left if it was changed
+    if (alignment > 0) {
+      uint8_t align_reset_cmd[] = {0x1B, 0x61, 0x00};
+      this->write_array(align_reset_cmd, sizeof(align_reset_cmd));
+      ESP_LOGD(TAG, "Reset alignment to left");
+    }
+    
     if (bold) {
       uint8_t bold_off_cmd[] = {0x1B, 0x45, 0x00};
       this->write_array(bold_off_cmd, sizeof(bold_off_cmd));
@@ -206,9 +409,9 @@ void M5StackPrinterDisplay::reset_printer_settings() {
 void M5StackPrinterDisplay::build_formatting_prefix_(std::vector<uint8_t> &prefix) {
   // Build ESC/POS command sequence based on current formatting state
 
-  ESP_LOGD(TAG, "Building format prefix - states: align=%d bold=%d underline=%d dw=%d ud=%d strike=%d inv=%d rot=%d",
+  ESP_LOGD(TAG, "Building format prefix - states: align=%d bold=%d underline=%d ud=%d inv=%d rot=%d",
            this->alignment_state_, this->bold_state_, this->underline_state_,
-           this->double_width_state_, this->upside_down_state_, this->strikethrough_state_,
+           this->upside_down_state_,
            this->inverse_state_, this->rotation_state_);
 
   // Text alignment (must come first)
@@ -229,22 +432,10 @@ void M5StackPrinterDisplay::build_formatting_prefix_(std::vector<uint8_t> &prefi
     ESP_LOGD(TAG, "Added underline command: ESC - %d", this->underline_state_);
   }
 
-  // Double width/height (character style)
-  if (this->double_width_state_) {
-    prefix.insert(prefix.end(), {0x1B, 0x21, 0x20}); // ESC ! with double width bit
-    ESP_LOGD(TAG, "Added double width command: ESC ! 0x20");
-  }
-
   // Upside down (character rotation)
   if (this->upside_down_state_) {
     prefix.insert(prefix.end(), {0x1B, 0x7B, 0x01}); // ESC { 1
     ESP_LOGD(TAG, "Added upside down command: ESC { 1");
-  }
-
-  // Strikethrough (double-strike)
-  if (this->strikethrough_state_) {
-    prefix.insert(prefix.end(), {0x1B, 0x47, 0x01}); // ESC G 1
-    ESP_LOGD(TAG, "Added strikethrough command: ESC G 1");
   }
 
   // Inverse printing
@@ -529,12 +720,6 @@ void M5StackPrinterDisplay::set_inverse_printing(bool enable) {
   ESP_LOGD(TAG, "Set inverse printing: %s", enable ? "enabled" : "disabled");
 }
 
-void M5StackPrinterDisplay::set_strikethrough(bool enable) {
-  // Track strikethrough state for next text print (line-buffered printer)
-  this->strikethrough_state_ = enable;
-  ESP_LOGD(TAG, "Set double-strike (strikethrough): %s", enable ? "enabled" : "disabled");
-}
-
 void M5StackPrinterDisplay::set_chinese_mode(bool enable) {
   ESP_LOGD(TAG, "Chinese/Japanese character mode state: %s (no commands sent)", enable ? "enabled" : "disabled");
   
@@ -596,15 +781,15 @@ void M5StackPrinterDisplay::run_demo(bool show_qr_code, bool show_barcode,
   this->new_line(1);
 
   // Header with title
-  this->set_text_style(true, 0, true, false); // Bold, double width
+  this->set_text_style(true, 0, false); // Bold
   this->print_text("DON'T PANIC", 1);  // Reduced from 2 to 1
   this->new_line(1);
-  this->set_text_style(false, 1, false, false); // Normal, underlined
+  this->set_text_style(false, 1, false); // Normal, underlined
   this->print_text("M5Stack Printer Demo", 0);  // Reduced from 1 to 0
   this->new_line(2);
 
   // Reset formatting and left align
-  this->set_text_style(false, 0, false, false);
+  this->set_text_style(false, 0, false);
   this->set_text_alignment(0);
 
   // Display what features will be tested
@@ -612,18 +797,18 @@ void M5StackPrinterDisplay::run_demo(bool show_qr_code, bool show_barcode,
   this->new_line(1);
   this->print_text("Question of Thermal Printing:");
   this->new_line(1);
-  this->set_text_style(true, 0, false, false); // Bold
+  this->set_text_style(true, 0, false); // Bold
   this->print_text("42 functions tested below", 0);  // Reduced from 1 to 0
-  this->set_text_style(false, 0, false, false); // Reset
+  this->set_text_style(false, 0, false); // Reset
   this->new_line(2);
 
   if (show_text_styles) {
     ESP_LOGD(TAG, "Demo: Text styles");
 
     this->set_text_alignment(1); // Center
-    this->set_text_style(true, 0, false, false); // Bold
+    this->set_text_style(true, 0, false); // Bold
     this->print_text("=== TEXT STYLES ===", 0);  // Reduced from 1 to 0
-    this->set_text_style(false, 0, false, false);
+    this->set_text_style(false, 0, false);
     this->set_text_alignment(0); // Left
     this->new_line(1);
 
@@ -642,23 +827,22 @@ void M5StackPrinterDisplay::run_demo(bool show_qr_code, bool show_barcode,
     this->print_text("Text styles:");
     this->new_line(1);
 
-    this->set_text_style(true, 0, false, false); // Bold
+    this->set_text_style(true, 0, false); // Bold
     this->print_text("Bold: Vogon poetry");
     this->new_line(1);
 
-    this->set_text_style(false, 2, false, false); // Underlined (2 dots)
+    this->set_text_style(false, 2, false); // Underlined (2 dots)
     this->print_text("Underlined: Babel fish");
     this->new_line(1);
 
-    this->set_text_style(false, 0, true, false); // Double width
-    this->print_text("Wide: Heart of Gold");
+    this->print_text("Wide: Heart of Gold", 2, 1); // Use font_width instead
     this->new_line(1);
 
-    this->set_text_style(true, 1, true, false); // Bold + underline + wide
-    this->print_text("All styles: Infinite");
+    this->set_text_style(true, 1, false); // Bold + underline
+    this->print_text("All styles: Infinite", 2, 1); // Wide using font_width
     this->new_line(1);
 
-    this->set_text_style(false, 0, false, false); // Reset
+    this->set_text_style(false, 0, false); // Reset
     this->new_line(1);
 
     // Alignment demo
@@ -685,9 +869,9 @@ void M5StackPrinterDisplay::run_demo(bool show_qr_code, bool show_barcode,
     ESP_LOGD(TAG, "Demo: Inverse printing");
 
     this->set_text_alignment(1); // Center
-    this->set_text_style(true, 0, false, false);
+    this->set_text_style(true, 0, false);
     this->print_text("=== INVERSE MODE ===", 0);  // Reduced from 1 to 0
-    this->set_text_style(false, 0, false, false);
+    this->set_text_style(false, 0, false);
     this->set_text_alignment(0);
     this->new_line(1);
 
@@ -709,9 +893,9 @@ void M5StackPrinterDisplay::run_demo(bool show_qr_code, bool show_barcode,
     ESP_LOGD(TAG, "Demo: 90-degree rotation");
 
     this->set_text_alignment(1); // Center
-    this->set_text_style(true, 0, false, false);
+    this->set_text_style(true, 0, false);
     this->print_text("=== ROTATION ===", 0);  // Reduced from 1 to 0
-    this->set_text_style(false, 0, false, false);
+    this->set_text_style(false, 0, false);
     this->set_text_alignment(0);
     this->new_line(1);
 
@@ -735,9 +919,9 @@ void M5StackPrinterDisplay::run_demo(bool show_qr_code, bool show_barcode,
     ESP_LOGD(TAG, "Demo: QR codes");
 
     this->set_text_alignment(1); // Center
-    this->set_text_style(true, 0, false, false);
+    this->set_text_style(true, 0, false);
     this->print_text("=== QR CODES ===", 0);  // Reduced from 1 to 0
-    this->set_text_style(false, 0, false, false);
+    this->set_text_style(false, 0, false);
     this->new_line(1);
 
     this->print_text("The Ultimate Answer:");
@@ -764,9 +948,9 @@ void M5StackPrinterDisplay::run_demo(bool show_qr_code, bool show_barcode,
     ESP_LOGD(TAG, "Demo: Barcodes");
 
     this->set_text_alignment(1); // Center
-    this->set_text_style(true, 0, false, false);
+    this->set_text_style(true, 0, false);
     this->print_text("=== BARCODES ===", 0);  // Reduced from 1 to 0
-    this->set_text_style(false, 0, false, false);
+    this->set_text_style(false, 0, false);
     this->new_line(1);
 
     this->print_text("Universal Product Codes:");
@@ -793,24 +977,24 @@ void M5StackPrinterDisplay::run_demo(bool show_qr_code, bool show_barcode,
 
   // Footer with completion message
   this->set_text_alignment(1); // Center
-  this->set_text_style(true, 0, true, false); // Bold + double width
-  this->print_text("Demo Complete!", 1);  // Reduced from 2 to 1
+  this->set_text_style(true, 0, false); // Bold
+  this->print_text("Demo Complete!", 2, 1);  // Bold + wide using font_width
   this->new_line(1);
-  this->set_text_style(false, 0, false, false);
+  this->set_text_style(false, 0, false);
 
   this->print_text("Thank you for printing");
   this->new_line(1);
   this->print_text("with M5Stack Printer!");
   this->new_line(1);
 
-  this->set_text_style(false, 1, false, false); // Underlined
+  this->set_text_style(false, 1, false); // Underlined
   this->print_text("github.com/jesserockz/");
   this->new_line(1);
   this->print_text("esphome-components");
   this->new_line(3);
 
   // Reset all settings to defaults
-  this->set_text_style(false, 0, false, false);
+  this->set_text_style(false, 0, false);
   this->set_text_alignment(0);
   this->set_inverse_printing(false);
   this->set_90_degree_rotation(false);
@@ -818,24 +1002,24 @@ void M5StackPrinterDisplay::run_demo(bool show_qr_code, bool show_barcode,
   ESP_LOGD(TAG, "Demo completed successfully");
 }
 
-void M5StackPrinterDisplay::set_text_style(bool bold, uint8_t underline, bool double_width, bool upside_down) {
+void M5StackPrinterDisplay::set_text_style(bool bold, uint8_t underline, bool upside_down, uint8_t font_type) {
   // Track formatting state for next text print (line-buffered printer)
   this->bold_state_ = bold;
   this->underline_state_ = underline;
-  this->double_width_state_ = double_width;
   this->upside_down_state_ = upside_down;
+  this->font_type_state_ = font_type;
 
-  ESP_LOGD(TAG, "Set text style - bold:%s, underline:%d, double_width:%s, upside_down:%s",
-           bold ? "true" : "false", underline, double_width ? "true" : "false", upside_down ? "true" : "false");
+  ESP_LOGD(TAG, "Set text style - bold:%s, underline:%d, upside_down:%s, font_type:%d",
+           bold ? "true" : "false", underline, upside_down ? "true" : "false", font_type);
 }
 
 void M5StackPrinterDisplay::print_test_page() {
   ESP_LOGD(TAG, "Printing test page");
 
   // Print header
-  this->set_text_style(true, 0, true, false); // Bold + double width
+  this->set_text_style(true, 0, false); // Bold
   this->print_text("=== TEST PAGE ===\n", 0);
-  this->set_text_style(false, 0, false, false); // Reset
+  this->set_text_style(false, 0, false); // Reset
 
   // Test basic text
   this->print_text("Basic text printing test\n", 0);
@@ -846,20 +1030,19 @@ void M5StackPrinterDisplay::print_test_page() {
   }
 
   // Test text styles
-  this->set_text_style(true, 0, false, false); // Bold
+  this->set_text_style(true, 0, false); // Bold
   this->print_text("Bold text\n", 0);
 
-  this->set_text_style(false, 1, false, false); // Underline
+  this->set_text_style(false, 1, false); // Underline
   this->print_text("Underlined text\n", 0);
 
-  this->set_text_style(false, 0, true, false); // Double width
-  this->print_text("Double width\n", 0);
+  this->print_text("Double width\n", 2, 1); // Use font_width instead
 
-  this->set_text_style(true, 1, true, false); // All styles
-  this->print_text("Bold+Under+Wide\n", 0);
+  this->set_text_style(true, 1, false); // Bold + underline
+  this->print_text("Bold+Under+Wide\n", 2, 1); // Wide using font_width
 
   // Reset styles
-  this->set_text_style(false, 0, false, false);
+  this->set_text_style(false, 0, false);
 
   // Test alignment
   this->set_text_alignment(0); // Left
@@ -986,6 +1169,27 @@ void M5StackPrinterDisplay::set_horizontal_position(uint16_t position) {
 
   ESP_LOGD(TAG, "Set horizontal position to %d", position);
 }
+
+void M5StackPrinterDisplay::set_left_spacing(uint8_t spacing_dots) {
+  // ESC B n - Set left spacing
+  // n = spacing in dots (0-47)
+  if (spacing_dots > 47) {
+    ESP_LOGE(TAG, "Invalid left spacing %d, must be 0-47", spacing_dots);
+    return;
+  }
+  
+  uint8_t cmd[] = {0x1B, 0x42, spacing_dots};  // ESC B n
+  this->write_array(cmd, sizeof(cmd));
+  ESP_LOGD(TAG, "Set left spacing to %d dots", spacing_dots);
+}
+
+void M5StackPrinterDisplay::reset_left_spacing() {
+  // Reset left spacing to default (0)
+  this->set_left_spacing(0);
+  ESP_LOGD(TAG, "Reset left spacing to default");
+}
+
+
 
 }  // namespace m5stack_printer
 }  // namespace esphome
