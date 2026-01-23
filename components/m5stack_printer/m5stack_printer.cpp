@@ -96,13 +96,14 @@ void M5StackPrinterDisplay::setup() {
 }
 
 void M5StackPrinterDisplay::init_() {
-  ESP_LOGD(TAG, "Basic printer initialization - just ESC @ command");
-  
-  // Just send the basic init command, nothing else for now
-  this->write_array(INIT_PRINTER_CMD, sizeof(INIT_PRINTER_CMD));
-  delay(100); // Give printer time to initialize
-  
-  ESP_LOGD(TAG, "Basic printer initialization complete");
+  if (this->send_wakeup_) {
+    ESP_LOGD(TAG, "Sending printer initialization command (ESC @)");
+    this->write_array(INIT_PRINTER_CMD, sizeof(INIT_PRINTER_CMD));
+    delay(100); // Give printer time to initialize
+    ESP_LOGD(TAG, "Printer initialization command sent");
+  } else {
+    ESP_LOGD(TAG, "Skipping printer initialization (send_wakeup: false)");
+  }
 }
 
 void M5StackPrinterDisplay::print_text(std::string text, uint8_t font_size) {

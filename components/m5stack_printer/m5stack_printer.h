@@ -80,7 +80,7 @@ class M5StackPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
    * @param alignment Text alignment (0=left, 1=center, 2=right)
    */
   void thermal_print_text_with_formatting(
-    std::string text, uint8_t font_size, bool bold, uint8_t underline,
+    const std::string &text, uint8_t font_size, bool bold, uint8_t underline,
     bool double_width, bool upside_down, bool strikethrough, bool rotation,
     bool inverse, bool chinese_mode, uint8_t alignment
   );
@@ -97,6 +97,12 @@ class M5StackPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
    * Reset printer settings to factory defaults
    */
   void reset_printer_settings();
+
+  /**
+   * Set whether to send wakeup/init commands to printer
+   * @param send_wakeup If true, sends ESC @ command during initialization
+   */
+  void set_send_wakeup(bool send_wakeup) { this->send_wakeup_ = send_wakeup; }
 
   /**
    * Print newlines to advance paper
@@ -274,6 +280,7 @@ class M5StackPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
   bool rotation_state_{false};
   bool strikethrough_state_{false};
   bool chinese_mode_state_{false};  // Track Chinese/Kanji character mode state
+  bool send_wakeup_{false};  // Whether to send init commands to printer
 };
 
 template<typename... Ts>

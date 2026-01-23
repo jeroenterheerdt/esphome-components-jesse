@@ -124,12 +124,14 @@ CONF_SHOW_BARCODE = "show_barcode"
 CONF_SHOW_TEXT_STYLES = "show_text_styles"
 CONF_SHOW_INVERSE = "show_inverse"
 CONF_SHOW_ROTATION = "show_rotation"
+CONF_SEND_WAKEUP = "send_wakeup"
 
 CONFIG_SCHEMA = (
     display.FULL_DISPLAY_SCHEMA.extend(
         {
             cv.GenerateID(): cv.declare_id(M5StackPrinterDisplay),
             cv.Required(CONF_HEIGHT): cv.uint16_t,
+            cv.Optional(CONF_SEND_WAKEUP, default=False): cv.boolean,
         }
     )
     .extend(
@@ -145,6 +147,7 @@ async def to_code(config):
     await uart.register_uart_device(var, config)
 
     cg.add(var.set_height(config[CONF_HEIGHT]))
+    cg.add(var.set_send_wakeup(config[CONF_SEND_WAKEUP]))
 
     if lambda_config := config.get(CONF_LAMBDA):
         lambda_ = await cg.process_lambda(
