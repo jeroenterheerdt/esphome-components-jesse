@@ -177,12 +177,6 @@ class M5StackPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
   void print_test_page();
 
   /**
-   * Check printer status
-   * @return Status byte with paper/voltage/temperature flags
-   */
-  uint8_t get_printer_status();
-
-  /**
    * Set character set for regional character support
    * @param charset Character set (0-15), 0=USA default
    */
@@ -213,8 +207,6 @@ class M5StackPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
    */
   void send_raw_command(const std::vector<uint8_t> &command);
 
-
-
   /**
    * Enable Chinese/Japanese character mode
    * When enabled, processes multi-byte characters for Asian text
@@ -227,6 +219,12 @@ class M5StackPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
    * @param timeout_seconds Sleep timeout in seconds (0-65535), 0 disables sleep mode
    */
   void set_sleep_mode(uint16_t timeout_seconds);
+
+  /**
+   * Wake up printer from sleep mode
+   * Sends any character to wake the printer, followed by initialization
+   */
+  void wake_up();
 
   /**
    * Run demo/debug function to showcase all printer capabilities
@@ -262,17 +260,31 @@ class M5StackPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
   void set_horizontal_position(uint16_t position);
 
   /**
-   * Set left spacing for all subsequent text
-   * @param spacing_dots Left spacing in dots (0-47)
-   * Adds spacing to the left side of each line
+   * Set text indentation for subsequent prints
+   * @param spaces Number of spaces to add at the beginning of each print (0-50)
+   * This adds actual space characters, not printer spacing commands
    */
-  void set_left_spacing(uint8_t spacing_dots);
+  void set_text_indentation(uint8_t spaces);
 
   /**
-   * Reset left spacing to default (no spacing)
-   * Clears left spacing setting
+   * Feed paper by specified number of dots (ESC J n)
+   * @param dots Number of dots to feed (0-255), where each dot = 0.125mm
+   * Use for precise vertical positioning without printing
    */
-  void reset_left_spacing();
+  void feed_paper_dots(uint8_t dots);
+
+  /**
+   * Print buffer and feed lines (ESC d n) 
+   * @param lines Number of lines to feed after printing buffer (0-255)
+   * Prints any buffered content, then advances paper by specified lines
+   */
+  void print_and_feed_lines(uint8_t lines);
+
+  /**
+   * Reset text indentation to default (no indentation)
+   * Clears text indentation setting
+   */
+  void reset_text_indentation();
 
  protected:
   void draw_absolute_pixel_internal(int x, int y, Color color) override;
@@ -294,7 +306,8 @@ class M5StackPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
   bool inverse_state_{false};
   bool rotation_state_{false};
   bool chinese_mode_state_{false};  // Track Chinese/Kanji character mode state
-  bool send_wakeup_{false};  // Whether to send init commands to printer
+  bool send_wakeup_{false};
+  uint8_t text_indentation_{0};  // Number of spaces to add for indentation
 };
 
 template<typename... Ts>
@@ -607,23 +620,60 @@ class M5StackPrinterSendRawCommandAction : public Action<Ts...>, public Parented
 };
 
 template<typename... Ts>
-class M5StackPrinterSetLeftSpacingAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+class M5StackPrinterSetTextIndentationAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
  public:
-  TEMPLATABLE_VALUE(uint8_t, spacing_dots)
+  TEMPLATABLE_VALUE(uint8_t, spaces)
 
   void play(const Ts &...x) override {
-    this->parent_->set_left_spacing(this->spacing_dots_.value(x...));
+    this->parent_->set_text_indentation(this->spaces_.value(x...));
   }
 };
 
 template<typename... Ts>
-class M5StackPrinterResetLeftSpacingAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+class M5StackPrinterResetTextIndentationAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
  public:
   void play(const Ts &...x) override {
-    this->parent_->reset_left_spacing();
+    this->parent_->reset_text_indentation();
   }
 };
 
+template<typename... Ts>
+class M5StackPrinterFeedPaperDotsAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+ public:
+  TEMPLATABLE_VALUE(uint8_t, dots)
+
+  void play(const Ts &...x) override {
+    this->parent_->feed_paper_dots(this->dots_.value(x...));
+  }
+};
+
+template<typename... Ts>
+class M5StackPrinterPrintAndFeedLinesAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+ public:
+  TEMPLATABLE_VALUE(uint8_t, lines)
+
+  void play(const Ts &...x) override {
+    this->parent_->print_and_feed_lines(this->lines_.value(x...));
+  }
+};
+
+template<typename... Ts>
+class M5StackPrinterSetSleepModeAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+ public:
+  TEMPLATABLE_VALUE(uint16_t, timeout_seconds)
+
+  void play(const Ts &...x) override {
+    this->parent_->set_sleep_mode(this->timeout_seconds_.value(x...));
+  }
+};
+
+template<typename... Ts>
+class M5StackPrinterWakeUpAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+ public:
+  void play(const Ts &...x) override {
+    this->parent_->wake_up();
+  }
+};
 
 
 }  // namespace m5stack_printer

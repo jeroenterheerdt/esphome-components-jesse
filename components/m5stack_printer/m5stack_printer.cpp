@@ -130,6 +130,11 @@ void M5StackPrinterDisplay::print_text(std::string text, uint8_t font_width, uin
     ESP_LOGD(TAG, "Applied font type: %s (%d)", (clamped_font_type == 0) ? "Font A (12x24)" : "Font B (9x17)", clamped_font_type);
   }
   
+  // Add indentation spaces if configured
+  for (uint8_t i = 0; i < this->text_indentation_; i++) {
+    this->write_byte(' ');
+  }
+  
   // Send the text characters directly
   for (char c : text) {
     this->write_byte(c);
@@ -630,16 +635,18 @@ void M5StackPrinterDisplay::queue_data_(const uint8_t *data, size_t size) {
 }
 
 void M5StackPrinterDisplay::loop() {
-  if (this->queue_.empty()) {
-    return;
+  // Process print queue
+  if (!this->queue_.empty()) {
+    std::vector<uint8_t> data = this->queue_.front();
+    this->queue_.pop();
+
+    ESP_LOGV(TAG, "Writing %d bytes from queue (%d items remaining)",
+             data.size(), this->queue_.size());
+    this->write_array(data.data(), data.size());
   }
-
-  std::vector<uint8_t> data = this->queue_.front();
-  this->queue_.pop();
-
-  ESP_LOGV(TAG, "Writing %d bytes from queue (%d items remaining)",
-           data.size(), this->queue_.size());
-  this->write_array(data.data(), data.size());
+  
+  // Status polling completely disabled - this printer hardware doesn't support
+  // reliable ESC/POS status commands (both DLE EOT and ESC v return random data)
 }
 
 static uint16_t count = 0;
@@ -1067,18 +1074,8 @@ void M5StackPrinterDisplay::print_test_page() {
   ESP_LOGD(TAG, "Test page completed");
 }
 
-uint8_t M5StackPrinterDisplay::get_printer_status() {
-  // Send real-time status request command (DLE EOT n)
-  uint8_t cmd[] = {0x10, 0x04, 1};  // Request status
-  this->write_array(cmd, sizeof(cmd));
-
-  // Wait for response (in a real implementation, this would need async handling)
-  uint8_t status = 0;
-  // For now, return a default "ready" status
-  // In a full implementation, you'd read from UART here
-  ESP_LOGD(TAG, "Printer status requested (async response expected)");
-  return status;
-}
+// Status functions completely removed - hardware doesn't support reliable status reporting
+// Both DLE EOT and ESC v commands return random/garbage values instead of actual status
 
 void M5StackPrinterDisplay::set_sleep_mode(uint16_t timeout_seconds) {
   // ESC 8 n m - Set sleep mode timeout
@@ -1090,6 +1087,20 @@ void M5StackPrinterDisplay::set_sleep_mode(uint16_t timeout_seconds) {
   this->write_array(cmd, sizeof(cmd));
 
   ESP_LOGD(TAG, "Sleep mode set to %d seconds", timeout_seconds);
+}
+
+void M5StackPrinterDisplay::wake_up() {
+  ESP_LOGD(TAG, "Waking up printer from sleep mode");
+  
+  // Send any character to wake the printer (space character is common)
+  this->write_byte(0x20);  // Space character
+  delay(100);  // Give printer time to wake up
+  
+  // Send initialization command to ensure printer is ready
+  this->write_array(INIT_PRINTER_CMD, sizeof(INIT_PRINTER_CMD));
+  delay(100);  // Give printer time to initialize
+  
+  ESP_LOGD(TAG, "Printer wake-up complete");
 }
 
 void M5StackPrinterDisplay::set_tab_positions(const std::string &positions) {
@@ -1170,23 +1181,37 @@ void M5StackPrinterDisplay::set_horizontal_position(uint16_t position) {
   ESP_LOGD(TAG, "Set horizontal position to %d", position);
 }
 
-void M5StackPrinterDisplay::set_left_spacing(uint8_t spacing_dots) {
-  // ESC B n - Set left spacing
-  // n = spacing in dots (0-47)
-  if (spacing_dots > 47) {
-    ESP_LOGE(TAG, "Invalid left spacing %d, must be 0-47", spacing_dots);
+void M5StackPrinterDisplay::set_text_indentation(uint8_t spaces) {
+  // Store indentation as number of spaces to prepend to each print
+  if (spaces > 50) {
+    ESP_LOGE(TAG, "Invalid text indentation %d, must be 0-50 spaces", spaces);
     return;
   }
   
-  uint8_t cmd[] = {0x1B, 0x42, spacing_dots};  // ESC B n
-  this->write_array(cmd, sizeof(cmd));
-  ESP_LOGD(TAG, "Set left spacing to %d dots", spacing_dots);
+  this->text_indentation_ = spaces;
+  ESP_LOGD(TAG, "Set text indentation to %d spaces", spaces);
 }
 
-void M5StackPrinterDisplay::reset_left_spacing() {
-  // Reset left spacing to default (0)
-  this->set_left_spacing(0);
-  ESP_LOGD(TAG, "Reset left spacing to default");
+void M5StackPrinterDisplay::reset_text_indentation() {
+  // Reset indentation to default (0 spaces)
+  this->text_indentation_ = 0;
+  ESP_LOGD(TAG, "Reset text indentation to default");
+}
+
+void M5StackPrinterDisplay::feed_paper_dots(uint8_t dots) {
+  // ESC J n - Feed paper n dots (0.125mm units)
+  uint8_t cmd[] = {0x1B, 0x4A, dots};
+  this->write_array(cmd, sizeof(cmd));
+  
+  ESP_LOGD(TAG, "Feed paper %d dots (%.2f mm)", dots, dots * 0.125f);
+}
+
+void M5StackPrinterDisplay::print_and_feed_lines(uint8_t lines) {
+  // ESC d n - Print buffer data and feed n lines
+  uint8_t cmd[] = {0x1B, 0x64, lines};
+  this->write_array(cmd, sizeof(cmd));
+  
+  ESP_LOGD(TAG, "Print buffer and feed %d lines", lines);
 }
 
 

@@ -27,9 +27,9 @@ Test each formatting feature individually:
 
 ### Phase 3: Advanced Features 📋
 Test complex features after basics work:
-- [ ] QR codes
-- [ ] Barcodes
-- [ ] Print density/line spacing
+- [X] QR codes
+- [X] Barcodes
+- [X] Print density/line spacing
 - [ ] Paper cutting
 - [ ] Demo functions
 
@@ -66,34 +66,28 @@ Test feature combinations:
 | Line spacing | ✅ **Working** | Already implemented |
 | Print density | ✅ **Working** | Already implemented |
 | Print speed (break time) | ✅ **Working** | Already implemented |
-| **Left spacing** | 🚧 **Missing** | ESC B command with 0-47 dots precision (per datasheet) |
-| **Tab stops** | 🚧 **Missing** | Set custom tab positions |
-| **Print position** | 🚧 **Missing** | Absolute horizontal/vertical positioning |
-| **Print and feed** | 🚧 **Missing** | Print with specific paper advance |
+| **Text indentation** | ✅ **Working** | Space-based indentation (0-50 spaces) - universally compatible |
+| **Tab stops** | ✅ **Working** | ESC D (set positions) and HT (horizontal tab) - tested working with precise column alignment |
+| **Print position** | ✅ **Working** | Horizontal: ESC $ (absolute position), Paper feed: ESC J (dots), ESC d (lines) |
+| **Print and feed** | ✅ **Working** | ESC J (feed dots), ESC d (print buffer + feed lines) - tested working |
 
 ## Other Features
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| Bitmaps | ✅ **Working** | Already implemented in existing code |
+| Bitmaps | ✅ **Working** | GS v command for raster images - ESPHome display interface with pixel drawing. **Important:** Colors inverted - use `fill(Color::BLACK)` to clear, `draw_pixel_at(x,y,Color::WHITE)` for visible pixels |
 | QR codes | ✅ **Working** | Already implemented in existing code |
 | Barcodes | ✅ **Working** | Already implemented in existing code |
 | Cutting paper | ✅ **Working** | Already implemented |
 | Printer settings | ✅ **Working** | Line spacing, density, break time |
 | Send wakeup | ✅ **Working** | Configurable init command (not needed for this printer) |
-| Beep | 🔍 **Research** | Need to check if supported by printer |
-| Sleep management | 🔄 **Basic** | Basic send_wakeup system exists |
-| **Cash drawer control** | 🔍 **Research** | Common on receipt printers - check if supported |
-| **Real-time status** | 🚧 **Missing** | Check printer status (paper, cover, etc.) |
-| **Paper sensors** | 🔍 **Research** | Out of paper, cover open detection |
-| **Page length control** | 🚧 **Missing** | For form feed functionality |
-| **Image printing modes** | 🚧 **Missing** | Different raster/bitmap modes |
+| Sleep management | ✅ **Working** | Complete sleep/wake functionality with debug service |
 
 ## Polish & Final Steps
 
 | Item | Status | Notes |
 |------|--------|-------|
-| **Optional service parameters** | 🎯 **High Priority** | Allow Home Assistant calls with only needed params |
-| Demo expansion | 🚧 **Planned** | Add Hitchhiker's Guide references for each working feature |
+| introduce configuration flag for model so multiple models can be supported|Let's discuss! My model is QR204|
+| check text printing and formatting methods so it's complete with all valid options represented in the various methods| Todo|
+| Demo expansion | 🚧 **Planned** | Add Hitchhiker's Guide references for each working feature. Also call the print service for the ESPHOME logo at the start of the demo method. |
 | Component rename | 🚧 **Final** | m5stack_printer → thermal_printer (after functionality complete) |
-| Datasheet review | 🔍 **Ongoing** | Check for additional features |

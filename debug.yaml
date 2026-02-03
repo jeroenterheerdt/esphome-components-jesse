@@ -55,24 +55,181 @@ api:
       then:
         - m5stack_printer.new_line:
             lines: !lambda "return lines;"
-    # Print text with comprehensive styling control (applies styles then prints)
-    # text: String to print
-    # font_width: Font width multiplier (1-8)
-    # font_height: Font height multiplier (1-8)  
-    # bold: Enable bold/emphasized text (true/false)
-    # double_strike: Enable double-strike mode - overlapping dots for darker text (true/false)
-    # underline: Underline mode (0=off, 1=single line, 2=double line)
-    # upside_down: Rotate text 180 degrees (true/false)
-    # rotation: Enable 90-degree clockwise rotation (true/false)
-    # inverse: Enable white text on black background (true/false)
-    # chinese_mode: Enable Chinese/Japanese multi-byte character support (true/false)
-    # alignment: Text alignment (0=left, 1=center, 2=right)
-    # charset: International character set (0-15: 0=USA, 1=France, 2=Germany, etc.)
-    # codepage: Character code table (0-47: 0=CP437, 1=Katakana, 2=CP850, etc.)
-    # character_spacing: Right-side character spacing (0-255, in 0.125mm units)
-    # line_spacing: Custom line spacing in dots (0-255, default ~30)
-    # print_density: Print darkness level (0-31, higher=darker, default ~15)
-    # break_time: Break time between dots in μs (0-7, affects print speed vs quality)
+    
+    # Set printer sleep mode timeout (optional parameter)
+    # timeout_seconds: Sleep timeout in seconds (default: 60, range: 0-65535), 0 disables sleep mode
+    - service: set_sleep_mode
+      variables:
+        timeout_seconds: int
+      then:
+        - m5stack_printer.set_sleep_mode:
+            timeout_seconds: !lambda "return timeout_seconds;"
+    
+    # Set default 60-second sleep timeout (no parameters needed)
+    - service: enable_sleep
+      then:
+        - m5stack_printer.set_sleep_mode:
+            timeout_seconds: 60
+    
+    # Disable sleep mode (set to 0)
+    - service: disable_sleep
+      then:
+        - m5stack_printer.set_sleep_mode:
+            timeout_seconds: 0
+    
+    # Wake up printer from sleep mode
+    - service: wake_up
+      then:
+        - m5stack_printer.wake_up:
+    
+    # Note: Automatic printer status monitoring is disabled for this printer model
+    # Both DLE EOT (10 04 n) and ESC v (1B 76 n) status commands return random/garbage
+    # values instead of actual status data. This appears to be a hardware limitation.
+    # Manual status checking can still be done via services if needed, but sensors
+    # are not automatically updated to prevent noise in Home Assistant
+    
+    # Binary sensors are available but will not update automatically:
+    # - printer_online (would indicate connectivity status)  
+    # - printer_cover (would indicate cover position)
+    # - paper_out (would indicate paper sensor status)
+    # - printer_error (would indicate error conditions)
+    
+    # Test sleep/wake functionality
+    - service: test_sleep_management
+      then:
+        - esphome.thermalprinter_print_text:
+            text_to_print: "=== Sleep Management Test ==="
+            alignment: 1
+        - esphome.thermalprinter_print_text:
+            text_to_print: "Testing sleep/wake functionality..."
+        - m5stack_printer.new_line:
+            lines: 1
+        
+        # Test 1: Set short sleep timeout
+        - esphome.thermalprinter_print_text:
+            text_to_print: "1. Setting 5-second sleep timeout"
+        - m5stack_printer.set_sleep_mode:
+            timeout_seconds: 5
+        - m5stack_printer.new_line:
+            lines: 1
+        
+        # Test 2: Wake up printer 
+        - esphome.thermalprinter_print_text:
+            text_to_print: "2. Testing wake-up command"
+        - m5stack_printer.wake_up:
+        - m5stack_printer.new_line:
+            lines: 1
+        
+        # Test 3: Disable sleep mode
+        - esphome.thermalprinter_print_text:
+            text_to_print: "3. Disabling sleep mode (timeout=0)"
+        - m5stack_printer.set_sleep_mode:
+            timeout_seconds: 0
+        - m5stack_printer.new_line:
+            lines: 1
+        
+        # Test 4: Set normal sleep timeout  
+        - esphome.thermalprinter_print_text:
+            text_to_print: "4. Setting 60-second sleep timeout"
+        - m5stack_printer.set_sleep_mode:
+            timeout_seconds: 60
+        - m5stack_printer.new_line:
+            lines: 2
+        
+        - esphome.thermalprinter_print_text:
+            text_to_print: "Sleep management test complete!"
+            alignment: 1
+    # =========================================================================
+    # CONVENIENT QUICK SERVICES (minimal parameters required)
+    # =========================================================================
+    
+    # Quick text printing - normal size
+    - service: quick_print
+      variables:
+        text_to_print: string
+      then:
+        - esphome.thermalprinter_print_text:
+            text_to_print: !lambda "return text_to_print;"
+    
+    # Print bold text - normal size
+    - service: print_bold
+      variables:
+        text_to_print: string
+      then:
+        - esphome.thermalprinter_print_text:
+            text_to_print: !lambda "return text_to_print;"
+            bold: true
+    
+    # Print centered text - normal size
+    - service: print_center
+      variables:
+        text_to_print: string
+      then:
+        - esphome.thermalprinter_print_text:
+            text_to_print: !lambda "return text_to_print;"
+            alignment: 1
+    
+    # Print large header text (centered and bold)
+    - service: print_header
+      variables:
+        text_to_print: string
+      then:
+        - esphome.thermalprinter_print_text:
+            text_to_print: !lambda "return text_to_print;"
+            font_width: 2
+            font_height: 2
+            bold: true
+            alignment: 1
+            
+    # Additional size-specific services
+    - service: print_big
+      variables:
+        text_to_print: string
+      then:
+        - esphome.thermalprinter_print_text:
+            text_to_print: !lambda "return text_to_print;"
+            font_width: 3
+            font_height: 3
+    
+    - service: print_huge
+      variables:
+        text_to_print: string
+      then:
+        - esphome.thermalprinter_print_text:
+            text_to_print: !lambda "return text_to_print;"
+            font_width: 4
+            font_height: 4
+            
+    - service: print_big_bold
+      variables:
+        text_to_print: string
+      then:
+        - esphome.thermalprinter_print_text:
+            text_to_print: !lambda "return text_to_print;"
+            font_width: 3
+            font_height: 3
+            bold: true
+            
+    # =========================================================================
+    # FULL CONTROL SERVICES (all parameters available)
+    # =========================================================================
+
+    # Print text with comprehensive formatting control
+    # Only text_to_print is required, all others have sensible defaults
+    # font_width: Font width multiplier (default: 1, range: 1-8)
+    # font_height: Font height multiplier (default: 1, range: 1-8)
+    # font_type: Font type (default: 0, range: 0-1, 0=font A, 1=font B)
+    # bold: Bold text (default: false)
+    # double_strike: Double strike (default: false)
+    # underline: Underline mode (default: 0, range: 0-2, 0=off, 1=1-dot, 2=2-dot)
+    # upside_down: Upside down text (default: false)
+    # rotation: 90° clockwise rotation (default: false)
+    # inverse: Inverse colors (default: false)
+    # chinese_mode: Enable Chinese/Japanese multi-byte character support (default: false)
+    # alignment: Text alignment (default: 0, range: 0-2, 0=left, 1=center, 2=right)
+    # charset: International character set (default: 0, range: 0-15: 0=USA, 1=France, 2=Germany, etc.)
+    # codepage: Character code table (default: 0, range: 0-47: 0=CP437, 1=Katakana, 2=CP850, etc.)
+    # character_spacing: Right-side character spacing (default: 0, range: 0-255, in 0.125mm units)
     - service: print_text
       variables:
         text_to_print: string
@@ -91,11 +248,11 @@ api:
         codepage: int
         character_spacing: int
       then:
-        # Use the comprehensive formatting function that handles all parameters
+        # Use the comprehensive formatting function with defaults for optional parameters
         - esphome.thermalprinter_print_text:
             text_to_print: !lambda "return text_to_print;"
-            font_width: !lambda "return font_width;"
-            font_height: !lambda "return font_height;"
+            font_width: !lambda "return font_width > 0 ? font_width : 1;"
+            font_height: !lambda "return font_height > 0 ? font_height : 1;"
             font_type: !lambda "return font_type;"
             bold: !lambda "return bold;"
             double_strike: !lambda "return double_strike;"
@@ -133,86 +290,327 @@ api:
             text_to_print: "CP850 codepage: çüéâä"
             codepage: 2
 
-    # Character spacing test service
-    # Tests different character spacing levels from 0 (normal) to maximum
-    # character_spacing: 0-255 units, each unit = 0.125mm extra spacing between characters
-    - service: test_character_spacing
+    # Text indentation test service
+    # Tests text indentation using spaces (works correctly with all printers)
+    - service: test_text_indentation
       then:
         - esphome.thermalprinter_print_text:
-            text_to_print: "=== Character Spacing Test ==="
+            text_to_print: "=== Text Indentation Test ==="
             alignment: 1
+        # Print without indentation (default)
         - esphome.thermalprinter_print_text:
-            text_to_print: "Normal spacing (0): HELLO WORLD"
-            character_spacing: 0
+            text_to_print: "No indentation: This text starts at the normal left position."
+        # Set text indentation to 5 spaces
+        - m5stack_printer.set_text_indentation:
+            spaces: 5
         - esphome.thermalprinter_print_text:
-            text_to_print: "Small spacing (8): H E L L O  W O R L D"
-            character_spacing: 8
+            text_to_print: "5 spaces: This text should be indented with 5 spaces."
+        # Set larger text indentation (10 spaces)
+        - m5stack_printer.set_text_indentation:
+            spaces: 10
         - esphome.thermalprinter_print_text:
-            text_to_print: "Medium spacing (16): H  E  L  L  O"
-            character_spacing: 16
+            text_to_print: "10 spaces: This text should be indented with 10 spaces."
+        # Test even larger indentation (20 spaces)
+        - m5stack_printer.set_text_indentation:
+            spaces: 20
         - esphome.thermalprinter_print_text:
-            text_to_print: "Large spacing (32): H   E   L   L   O"
-            character_spacing: 32
+            text_to_print: "20 spaces: This shows large indentation."
+        # Reset indentation to default
+        - m5stack_printer.reset_text_indentation:
         - esphome.thermalprinter_print_text:
-            text_to_print: "Max spacing (255): A          B"
-            character_spacing: 255
-        - esphome.thermalprinter_print_text:
-            text_to_print: "Test complete - spacing reset to 0"
-            character_spacing: 0
+            text_to_print: "Indentation reset: Back to normal left position."
 
-    # Double-strike test service  
-    # Tests double-strike mode (ESC G n) - overlapping dots for darker text
-    # Double-strike is different from bold - produces overlapping character dots
-    - service: test_double_strike
+    # Tab stops test service
+    # Tests horizontal tab positions (ESC D) and horizontal tab movement (HT)
+    # Expected output: Characters should align at specific column positions
+    - service: test_tab_stops
       then:
         - esphome.thermalprinter_print_text:
-            text_to_print: "=== Double-Strike Test ==="
+            text_to_print: "=== Tab Stops Test ==="
             alignment: 1
         - esphome.thermalprinter_print_text:
-            text_to_print: "Normal text: HELLO WORLD"
-            double_strike: false
+            text_to_print: "Expected: Characters align at column positions"
+        # Print ruler for reference
         - esphome.thermalprinter_print_text:
-            text_to_print: "Double-strike: HELLO WORLD"
-            double_strike: true
+            text_to_print: "Ruler:   1         2         3"
         - esphome.thermalprinter_print_text:
-            text_to_print: "Bold text: HELLO WORLD"
-            bold: true
+            text_to_print: "      0123456789012345678901234567890"
+        # Test tabs at positions 10, 20, 30
+        - m5stack_printer.set_tab_positions:
+            positions: "10,20,30"
+        - m5stack_printer.send_raw_command:
+            command: "65,9,66,9,67,10"
+        # Test tabs at positions 5, 15, 25  
+        - m5stack_printer.set_tab_positions:
+            positions: "5,15,25"
+        - m5stack_printer.send_raw_command:
+            command: "49,9,50,9,51,10"
+        # Single tab at position 20
+        - m5stack_printer.set_tab_positions:
+            positions: "20"
+        - m5stack_printer.send_raw_command:
+            command: "88,9,89,10"
         - esphome.thermalprinter_print_text:
-            text_to_print: "Bold + Double-strike: HELLO WORLD"
-            bold: true
-            double_strike: true
-        - esphome.thermalprinter_print_text:
-            text_to_print: "Test complete - formatting reset"
+            text_to_print: "✅ Tab stops working correctly!"
 
-    # Left spacing test service
-    # Tests left spacing control (ESC B command) - adds spacing to left side
-    - service: test_left_spacing
+    # Print positioning test services
+    # Test horizontal positioning with visual markers
+    - service: test_horizontal_positioning_precise
       then:
         - esphome.thermalprinter_print_text:
-            text_to_print: "=== Left Spacing Test ==="
+            text_to_print: "=== Horizontal Positioning Test ==="
             alignment: 1
-        # Print without spacing (default)
         - esphome.thermalprinter_print_text:
-            text_to_print: "No spacing: This text starts at the normal left position."
-        # Set left spacing to 10 dots
-        - m5stack_printer.set_left_spacing:
-            spacing_dots: 10
+            text_to_print: "Reference ruler:"
         - esphome.thermalprinter_print_text:
-            text_to_print: "Left spacing 10: This text should be indented 10 dots from the left."
-        # Set larger left spacing (30 dots)
-        - m5stack_printer.set_left_spacing:
-            spacing_dots: 30
+            text_to_print: "0123456789012345678901234"  # Reference ruler
+        - m5stack_printer.set_horizontal_position:
+            position: 0
         - esphome.thermalprinter_print_text:
-            text_to_print: "Left spacing 30: This text should be significantly indented from the left."
-        # Test maximum spacing (47 dots)
-        - m5stack_printer.set_left_spacing:
-            spacing_dots: 47
+            text_to_print: "|"
+        - m5stack_printer.set_horizontal_position:
+            position: 50
         - esphome.thermalprinter_print_text:
-            text_to_print: "Max spacing 47: This shows the maximum left spacing supported."
-        # Reset spacing to default
-        - m5stack_printer.reset_left_spacing:
+            text_to_print: "|"
+        - m5stack_printer.set_horizontal_position:
+            position: 100
         - esphome.thermalprinter_print_text:
-            text_to_print: "Spacing reset: Back to normal left position."
+            text_to_print: "|"
+        - m5stack_printer.set_horizontal_position:
+            position: 150
+        - esphome.thermalprinter_print_text:
+            text_to_print: "|"
+        - esphome.thermalprinter_print_text:
+            text_to_print: "Positions: 0, 50, 100, 150 dots"
+
+    # Test paper feed precision using ESC J command
+    - service: test_paper_feed_precision
+      then:
+        - esphome.thermalprinter_print_text:
+            text_to_print: "=== Paper Feed Precision Test ==="
+            alignment: 1
+        - esphome.thermalprinter_print_text:
+            text_to_print: "Testing different dot feeds:"
+        - esphome.thermalprinter_print_text:
+            text_to_print: "START"
+        # Small feed (1.5mm)
+        - m5stack_printer.feed_paper_dots:
+            dots: 12
+        - esphome.thermalprinter_print_text:
+            text_to_print: "12 dots (1.5mm)"
+        # Medium feed (3mm)  
+        - m5stack_printer.feed_paper_dots:
+            dots: 24
+        - esphome.thermalprinter_print_text:
+            text_to_print: "24 dots (3mm)"
+        # Large feed (6mm)
+        - m5stack_printer.feed_paper_dots:
+            dots: 48
+        - esphome.thermalprinter_print_text:
+            text_to_print: "48 dots (6mm)"
+
+    # Test print and feed lines using ESC d command
+    - service: test_print_feed_combinations
+      then:
+        - esphome.thermalprinter_print_text:
+            text_to_print: "=== Print+Feed Line Test ==="
+            alignment: 1
+        - esphome.thermalprinter_print_text:
+            text_to_print: "Line 1"
+        - m5stack_printer.print_and_feed_lines:
+            lines: 1
+        - esphome.thermalprinter_print_text:
+            text_to_print: "Line 2 (+1 feed)"
+        - m5stack_printer.print_and_feed_lines:
+            lines: 3
+        - esphome.thermalprinter_print_text:
+            text_to_print: "Line 3 (+3 feed)"
+
+    # Test positioning combined with text formatting
+    - service: test_position_with_formatting
+      then:
+        - esphome.thermalprinter_print_text:
+            text_to_print: "=== Position + Formatting ==="
+            alignment: 1
+        - m5stack_printer.set_horizontal_position:
+            position: 50
+        - esphome.thermalprinter_print_text:
+            text_to_print: "BOLD"
+            bold: true
+        - m5stack_printer.set_horizontal_position:
+            position: 150
+        - esphome.thermalprinter_print_text:
+            text_to_print: "BIG"
+            font_width: 2
+            font_height: 2
+        - m5stack_printer.feed_paper_dots:
+            dots: 16
+        - m5stack_printer.set_horizontal_position:
+            position: 100
+        - esphome.thermalprinter_print_text:
+            text_to_print: "Centered?"
+
+    # Compare tab stops vs absolute positioning
+    - service: test_tab_vs_position
+      then:
+        - esphome.thermalprinter_print_text:
+            text_to_print: "=== Tab vs Position Comparison ==="
+            alignment: 1
+        # Set tab stops at 10, 20, 30
+        - m5stack_printer.set_tab_positions:
+            positions: "10,20,30"
+        # Tab method
+        - esphome.thermalprinter_print_text:
+            text_to_print: "TAB:"
+        - m5stack_printer.horizontal_tab:
+        - esphome.thermalprinter_print_text:
+            text_to_print: "A"
+        - m5stack_printer.horizontal_tab:
+        - esphome.thermalprinter_print_text:
+            text_to_print: "B"
+        - m5stack_printer.horizontal_tab:
+        - esphome.thermalprinter_print_text:
+            text_to_print: "C"
+        # Position method (convert tab columns to dots: col * 8 dots/char)
+        - esphome.thermalprinter_print_text:
+            text_to_print: "POS:"
+        - m5stack_printer.set_horizontal_position:
+            position: 80  # Column 10 * 8 dots
+        - esphome.thermalprinter_print_text:
+            text_to_print: "A"
+        - m5stack_printer.set_horizontal_position:
+            position: 160  # Column 20 * 8 dots
+        - esphome.thermalprinter_print_text:
+            text_to_print: "B"
+        - m5stack_printer.set_horizontal_position:
+            position: 240  # Column 30 * 8 dots
+        - esphome.thermalprinter_print_text:
+            text_to_print: "C"
+
+    # Comprehensive test of all positioning features
+    - service: test_all_positioning
+      then:
+        - esphome.thermalprinter_print_text:
+            text_to_print: "=== ALL POSITIONING TESTS ==="
+            alignment: 1
+        - esphome.thermalprinter_print_text:
+            text_to_print: ""
+        # Test 1: Horizontal positioning
+        - esphome.thermalprinter_print_text:
+            text_to_print: "1. Horizontal positioning:"
+        - m5stack_printer.set_horizontal_position:
+            position: 50
+        - esphome.thermalprinter_print_text:
+            text_to_print: "Left"
+        - m5stack_printer.set_horizontal_position:
+            position: 200
+        - esphome.thermalprinter_print_text:
+            text_to_print: "Right"
+        - esphome.thermalprinter_print_text:
+            text_to_print: ""
+        # Test 2: Paper feed
+        - esphome.thermalprinter_print_text:
+            text_to_print: "2. Paper feed (dots):"
+        - m5stack_printer.feed_paper_dots:
+            dots: 20
+        - esphome.thermalprinter_print_text:
+            text_to_print: "After 20-dot feed"
+        - esphome.thermalprinter_print_text:
+            text_to_print: ""
+        # Test 3: Print and feed lines
+        - esphome.thermalprinter_print_text:
+            text_to_print: "3. Print and feed lines:"
+        - m5stack_printer.print_and_feed_lines:
+            lines: 2
+        - esphome.thermalprinter_print_text:
+            text_to_print: "After 2-line feed"
+        - esphome.thermalprinter_print_text:
+            text_to_print: ""
+        # Test 4: Tab positioning  
+        - esphome.thermalprinter_print_text:
+            text_to_print: "4. Tab positioning:"
+        - m5stack_printer.set_tab_positions:
+            positions: "15,25,35"
+        - esphome.thermalprinter_print_text:
+            text_to_print: "Start"
+        - m5stack_printer.horizontal_tab:
+        - esphome.thermalprinter_print_text:
+            text_to_print: "Mid"
+        - m5stack_printer.horizontal_tab:
+        - esphome.thermalprinter_print_text:
+            text_to_print: "End"
+        - esphome.thermalprinter_print_text:
+            text_to_print: ""
+        - esphome.thermalprinter_print_text:
+            text_to_print: "=== TEST COMPLETE ==="
+
+    # Visual alignment test with rulers
+    - service: position_alignment_test
+      then:
+        - esphome.thermalprinter_print_text:
+            text_to_print: "=== ALIGNMENT TEST ==="
+            alignment: 1
+        - esphome.thermalprinter_print_text:
+            text_to_print: "0....1....2....3....4....5.."  # Ruler in 10s
+        - esphome.thermalprinter_print_text:
+            text_to_print: "01234567890123456789012345678"  # Character ruler
+        # Test specific positions
+        - m5stack_printer.set_horizontal_position:
+            position: 0
+        - esphome.thermalprinter_print_text:
+            text_to_print: "0"
+        - m5stack_printer.set_horizontal_position:
+            position: 80  # Should align with character 10
+        - esphome.thermalprinter_print_text:
+            text_to_print: "10"
+        - m5stack_printer.set_horizontal_position:
+            position: 160  # Should align with character 20
+        - esphome.thermalprinter_print_text:
+            text_to_print: "20"
+        - m5stack_printer.set_horizontal_position:
+            position: 240  # Should align with character 30
+        - esphome.thermalprinter_print_text:
+            text_to_print: "30"
+        - esphome.thermalprinter_print_text:
+            text_to_print: "(8 dots per character)"
+
+    # Dynamic test services with variables
+    - service: test_horizontal_position
+      variables:
+        position: int
+        text_content: string
+      then:
+        - m5stack_printer.set_horizontal_position:
+            position: !lambda "return position;"
+        - esphome.thermalprinter_print_text:
+            text_to_print: !lambda |
+              return text_content;
+
+    - service: test_feed_dots
+      variables:
+        dots: int
+        label: string
+      then:
+        - esphome.thermalprinter_print_text:
+            text_to_print: !lambda |
+              return "Before " + label + ":";
+        - m5stack_printer.feed_paper_dots:
+            dots: !lambda "return dots;"
+        - esphome.thermalprinter_print_text:
+            text_to_print: !lambda |
+              return "After " + to_string(dots) + " dots";
+
+    - service: test_feed_lines
+      variables:
+        lines: int
+      then:
+        - esphome.thermalprinter_print_text:
+            text_to_print: !lambda |
+              return "Feeding " + to_string(lines) + " lines";
+        - m5stack_printer.print_and_feed_lines:
+            lines: !lambda "return lines;"
+        - esphome.thermalprinter_print_text:
+            text_to_print: "Feed complete"
 
     # Printer settings services  
     - service: set_printer_settings
@@ -354,6 +752,232 @@ api:
         - m5stack_printer.send_raw_command:
             command: !lambda "return command;"
 
+    # Bitmap/Image Drawing Test Services
+    # Test basic bitmap drawing capabilities using ESPHome display functions
+    - service: test_bitmap_drawing
+      then:
+        - esphome.thermalprinter_print_text:
+            text_to_print: "=== Bitmap Drawing Test ==="
+            alignment: 1
+        # Clear display buffer and draw simple patterns
+        - lambda: |-
+            id(printer).fill(Color::BLACK);  // Use BLACK to clear the buffer
+            
+            // Draw a simple solid rectangle with WHITE (visible pixels)
+            for (int y = 10; y < 25; y++) {
+              for (int x = 10; x < 35; x++) {
+                id(printer).draw_pixel_at(x, y, Color::WHITE);
+              }
+            }
+            
+            // Print the bitmap
+            id(printer).update();
+        - esphome.thermalprinter_print_text:
+            text_to_print: "Rectangle at HI position"
+
+    # Test checkerboard pattern
+    - service: test_checkerboard_pattern
+      then:
+        - esphome.thermalprinter_print_text:
+            text_to_print: "=== Checkerboard Pattern ==="
+            alignment: 1
+        - lambda: |-
+            id(printer).fill(Color::BLACK);  // Use BLACK to clear (inverted)
+            
+            // 8x8 checkerboard pattern (fits within 384x50)
+            for (int y = 5; y < 45; y++) {
+              for (int x = 10; x < 200; x++) {
+                if (((x / 8) + (y / 8)) % 2 == 0) {
+                  id(printer).draw_pixel_at(x, y, Color::WHITE);  // Use WHITE for visible pixels
+                }
+              }
+            }
+            
+            id(printer).update();
+        - esphome.thermalprinter_print_text:
+            text_to_print: "8x8 checkerboard pattern"
+
+    # Test bitmap text rendering
+    - service: test_bitmap_text
+      then:
+        - esphome.thermalprinter_print_text:
+            text_to_print: "=== Bitmap Text Test ==="
+            alignment: 1
+        - lambda: |-
+            id(printer).fill(Color::BLACK);  // Clear background
+            
+            // Draw simple pixel text "HI" (using WHITE for visible pixels)
+            // H pattern
+            for (int y = 0; y < 15; y++) {
+              id(printer).draw_pixel_at(10, 10 + y, Color::WHITE);  // Left line
+              id(printer).draw_pixel_at(18, 10 + y, Color::WHITE);  // Right line
+            }
+            for (int x = 10; x < 19; x++) {
+              id(printer).draw_pixel_at(x, 17, Color::WHITE);  // Middle line
+            }
+            
+            // I pattern  
+            for (int x = 25; x < 35; x++) {
+              id(printer).draw_pixel_at(x, 10, Color::WHITE);  // Top line
+              id(printer).draw_pixel_at(x, 24, Color::WHITE);  // Bottom line
+            }
+            for (int y = 10; y < 25; y++) {
+              id(printer).draw_pixel_at(30, y, Color::WHITE);  // Middle line
+            }
+            
+            id(printer).update();
+        - esphome.thermalprinter_print_text:
+            text_to_print: "Bitmap pixel text: HI"
+
+    # Test complex bitmap pattern
+    - service: test_complex_bitmap
+      then:
+        - esphome.thermalprinter_print_text:
+            text_to_print: "=== Complex Bitmap Test ==="
+            alignment: 1
+        - lambda: |-
+            id(printer).fill(Color::BLACK);  // Clear background
+            
+            // Draw a simple "M5" pattern manually (using WHITE for visible pixels)
+            // Letter M
+            for (int y = 0; y < 30; y++) {
+              id(printer).draw_pixel_at(10, y, Color::WHITE);  // Left line
+              id(printer).draw_pixel_at(30, y, Color::WHITE);  // Right line
+            }
+            // M diagonal lines
+            for (int i = 0; i < 10; i++) {
+              id(printer).draw_pixel_at(10 + i, i, Color::WHITE);
+              id(printer).draw_pixel_at(30 - i, i, Color::WHITE);
+            }
+            
+            // Number 5
+            int x_offset = 50;
+            // Top horizontal
+            for (int x = 0; x < 15; x++) {
+              id(printer).draw_pixel_at(x_offset + x, 0, Color::WHITE);
+            }
+            // Left vertical (top half)
+            for (int y = 0; y < 15; y++) {
+              id(printer).draw_pixel_at(x_offset, y, Color::WHITE);
+            }
+            // Middle horizontal
+            for (int x = 0; x < 15; x++) {
+              id(printer).draw_pixel_at(x_offset + x, 15, Color::WHITE);
+            }
+            // Right vertical (bottom half)
+            for (int y = 15; y < 30; y++) {
+              id(printer).draw_pixel_at(x_offset + 14, y, Color::WHITE);
+            }
+            // Bottom horizontal
+            for (int x = 0; x < 15; x++) {
+              id(printer).draw_pixel_at(x_offset + x, 29, Color::WHITE);
+            }
+            
+            id(printer).update();
+        - esphome.thermalprinter_print_text:
+            text_to_print: "Hand-drawn M5 logo"
+
+    # Test bitmap with different densities
+    - service: test_bitmap_density
+      then:
+        - esphome.thermalprinter_print_text:
+            text_to_print: "=== Bitmap Density Test ==="
+            alignment: 1
+        - lambda: |-
+            id(printer).fill(Color::BLACK);  // Clear background
+            
+            // Draw gradients with different dot densities (using WHITE for visible pixels)
+            // Keep within 50px height limit to avoid invalid pixel errors
+            
+            // Solid area (100% density)
+            for (int y = 0; y < 12; y++) {
+              for (int x = 0; x < 80; x++) {
+                id(printer).draw_pixel_at(x, y, Color::WHITE);
+              }
+            }
+            
+            // 75% density (3 of 4 pixels)
+            for (int y = 15; y < 27; y++) {
+              for (int x = 0; x < 80; x++) {
+                if ((x + y) % 4 != 0) {
+                  id(printer).draw_pixel_at(x, y, Color::WHITE);
+                }
+              }
+            }
+            
+            // 50% density (checkerboard)
+            for (int y = 30; y < 42; y++) {
+              for (int x = 0; x < 80; x++) {
+                if ((x + y) % 2 == 0) {
+                  id(printer).draw_pixel_at(x, y, Color::WHITE);
+                }
+              }
+            }
+            
+            id(printer).update();
+        - esphome.thermalprinter_print_text:
+            text_to_print: "Density: 100%, 75%, 50%"
+
+    # Dynamic bitmap drawing with variables
+    - service: draw_custom_bitmap
+      variables:
+        width: int
+        height: int
+        pattern: int
+      then:
+        - lambda: |-
+            // Note: Thermal printer uses inverted colors:
+            // fill(Color::BLACK) = clear/background, draw_pixel_at(x,y,Color::WHITE) = visible dot
+            id(printer).fill(Color::BLACK);  // Clear background
+            
+            int w = width > 384 ? 384 : width;   // Max width limit
+            int h = height > 100 ? 100 : height; // Reasonable height limit
+            
+            for (int y = 0; y < h; y++) {
+              for (int x = 0; x < w; x++) {
+                bool pixel = false;
+                
+                switch (pattern) {
+                  case 0: // Horizontal stripes
+                    pixel = (y % 4) < 2;
+                    break;
+                  case 1: // Vertical stripes
+                    pixel = (x % 4) < 2;
+                    break;
+                  case 2: // Checkerboard
+                    pixel = ((x / 2) + (y / 2)) % 2 == 0;
+                    break;
+                  case 3: // Diagonal lines
+                    pixel = (x + y) % 8 < 2;
+                    break;
+                  case 4: // Border only
+                    pixel = (x == 0 || x == w-1 || y == 0 || y == h-1);
+                    break;
+                  default: // Solid
+                    pixel = true;
+                }
+                
+                if (pixel) {
+                  id(printer).draw_pixel_at(x, y, Color::WHITE);  // Use WHITE for visible pixels
+                }
+              }
+            }
+            
+            id(printer).update();
+
+    # Service to print ESPHome logo from image component
+    - service: print_esphome_logo
+      then:
+        - esphome.thermalprinter_print_text:
+            text_to_print: "=== ESPHome Logo (Image) ==="
+            alignment: 1
+        - lambda: |-
+            id(printer).fill(Color::BLACK);  // Clear background
+            id(printer).image(0, 0, id(esphome_logo));  // Draw image at position (0,0)
+            id(printer).update();
+        - esphome.thermalprinter_print_text:
+            text_to_print: "Logo from ESPHome image component"
+
 # Enable OTA updates
 ota:
   - platform: esphome
@@ -389,3 +1013,12 @@ display:
   id: printer
   height: 50
   auto_clear_enabled: false
+  # Status sensors removed - not supported by this printer hardware
+
+# Image components for bitmap printing
+image:
+  - file: "esphome_logo.png"
+    id: esphome_logo
+    resize: 200x40
+    type: BINARY
+

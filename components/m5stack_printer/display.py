@@ -57,6 +57,18 @@ M5StackPrinterSetLineSpacingAction = m5stack_printer_ns.class_(
     "M5StackPrinterSetLineSpacingAction", automation.Action
 )
 
+M5StackPrinterSetSleepModeAction = m5stack_printer_ns.class_(
+    "M5StackPrinterSetSleepModeAction", automation.Action
+)
+
+M5StackPrinterWakeUpAction = m5stack_printer_ns.class_(
+    "M5StackPrinterWakeUpAction", automation.Action
+)
+
+M5StackPrinterCheckStatusAction = m5stack_printer_ns.class_(
+    "M5StackPrinterCheckStatusAction", automation.Action
+)
+
 M5StackPrinterSetPrintDensityAction = m5stack_printer_ns.class_(
     "M5StackPrinterSetPrintDensityAction", automation.Action
 )
@@ -89,12 +101,20 @@ M5StackPrinterThermalPrintTextAction = m5stack_printer_ns.class_(
     "M5StackPrinterThermalPrintTextAction", automation.Action
 )
 
-M5StackPrinterSetLeftSpacingAction = m5stack_printer_ns.class_(
-    "M5StackPrinterSetLeftSpacingAction", automation.Action
+M5StackPrinterSetTextIndentationAction = m5stack_printer_ns.class_(
+    "M5StackPrinterSetTextIndentationAction", automation.Action
 )
 
-M5StackPrinterResetLeftSpacingAction = m5stack_printer_ns.class_(
-    "M5StackPrinterResetLeftSpacingAction", automation.Action
+M5StackPrinterResetTextIndentationAction = m5stack_printer_ns.class_(
+    "M5StackPrinterResetTextIndentationAction", automation.Action
+)
+
+M5StackPrinterFeedPaperDotsAction = m5stack_printer_ns.class_(
+    "M5StackPrinterFeedPaperDotsAction", automation.Action
+)
+
+M5StackPrinterPrintAndFeedLinesAction = m5stack_printer_ns.class_(
+    "M5StackPrinterPrintAndFeedLinesAction", automation.Action
 )
 
 CONF_FONT_SIZE = "font_size"  # Deprecated, use font_width/font_height
@@ -128,14 +148,17 @@ CONF_DENSITY = "density"
 CONF_BREAK_TIME = "break_time"
 CONF_POSITIONS = "positions"
 CONF_POSITION = "position"
+CONF_DOTS = "dots" 
+CONF_LINES = "lines"
 CONF_SHOW_QR_CODE = "show_qr_code"
 CONF_SHOW_BARCODE = "show_barcode"
 CONF_SHOW_TEXT_STYLES = "show_text_styles"
 CONF_SHOW_INVERSE = "show_inverse"
 CONF_SHOW_ROTATION = "show_rotation"
 CONF_SEND_WAKEUP = "send_wakeup"
+CONF_TIMEOUT_SECONDS = "timeout_seconds"
 CONF_COMMAND = "command"
-CONF_SPACING_DOTS = "spacing_dots"
+CONF_SPACES = "spaces"
 
 CONFIG_SCHEMA = (
     display.FULL_DISPLAY_SCHEMA.extend(
@@ -717,40 +740,137 @@ async def reset_printer_settings_action_to_code(config, action_id, template_arg,
     return var
 
 
-# Left spacing control automation actions
+# Text indentation control automation actions
 @automation.register_action(
-    "m5stack_printer.set_left_spacing",
-    M5StackPrinterSetLeftSpacingAction,
+    "m5stack_printer.set_text_indentation",
+    M5StackPrinterSetTextIndentationAction,
     cv.Schema(
         {
             cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
-            cv.Required(CONF_SPACING_DOTS): cv.templatable(cv.int_range(min=0, max=47)),
+            cv.Required(CONF_SPACES): cv.templatable(cv.int_range(min=0, max=50)),
         }
     ),
 )
-async def set_left_spacing_action_to_code(config, action_id, template_arg, args):
+async def set_text_indentation_action_to_code(config, action_id, template_arg, args):
     var = cg.new_Pvariable(action_id, template_arg)
     await cg.register_parented(var, config[CONF_ID])
     
-    templ = await cg.templatable(config[CONF_SPACING_DOTS], args, cg.uint8)
-    cg.add(var.set_spacing_dots(templ))
+    templ = await cg.templatable(config[CONF_SPACES], args, cg.uint8)
+    cg.add(var.set_spaces(templ))
     
     return var
 
 
 @automation.register_action(
-    "m5stack_printer.reset_left_spacing",
-    M5StackPrinterResetLeftSpacingAction,
+    "m5stack_printer.reset_text_indentation",
+    M5StackPrinterResetTextIndentationAction,
     cv.Schema(
         {
             cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
         }
     ),
 )
-async def reset_left_spacing_action_to_code(config, action_id, template_arg, args):
+async def reset_text_indentation_action_to_code(config, action_id, template_arg, args):
     var = cg.new_Pvariable(action_id, template_arg)
     await cg.register_parented(var, config[CONF_ID])
     
+    return var
+
+
+@automation.register_action(
+    "m5stack_printer.feed_paper_dots",
+    M5StackPrinterFeedPaperDotsAction,
+    cv.Schema(
+        {
+            cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
+            cv.Required(CONF_DOTS): cv.templatable(cv.int_range(min=0, max=255)),
+        }
+    ),
+)
+async def feed_paper_dots_action_to_code(config, action_id, template_arg, args):
+    var = cg.new_Pvariable(action_id, template_arg)
+    await cg.register_parented(var, config[CONF_ID])
+    
+    templ = await cg.templatable(config[CONF_DOTS], args, cg.uint8)
+    cg.add(var.set_dots(templ))
+    
+    return var
+
+
+@automation.register_action(
+    "m5stack_printer.print_and_feed_lines",
+    M5StackPrinterPrintAndFeedLinesAction,
+    cv.Schema(
+        {
+            cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
+            cv.Required(CONF_LINES): cv.templatable(cv.int_range(min=0, max=255)),
+        }
+    ),
+)
+async def print_and_feed_lines_action_to_code(config, action_id, template_arg, args):
+    var = cg.new_Pvariable(action_id, template_arg)
+    await cg.register_parented(var, config[CONF_ID])
+    
+    templ = await cg.templatable(config[CONF_LINES], args, cg.uint8)
+    cg.add(var.set_lines(templ))
+    
+    return var
+
+
+@automation.register_action(
+    "m5stack_printer.set_sleep_mode",
+    M5StackPrinterSetSleepModeAction,
+    cv.maybe_simple_value(
+        cv.Schema(
+            {
+                cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
+                cv.Required(CONF_TIMEOUT_SECONDS): cv.templatable(cv.int_range(min=0, max=65535)),
+            }
+        ),
+        key=CONF_TIMEOUT_SECONDS,
+    ),
+)
+async def m5stack_printer_set_sleep_mode_action_to_code(
+    config, action_id, template_arg, args
+):
+    var = cg.new_Pvariable(action_id, template_arg)
+    await cg.register_parented(var, config[CONF_ID])
+    templ = await cg.templatable(config[CONF_TIMEOUT_SECONDS], args, cg.uint16)
+    cg.add(var.set_timeout_seconds(templ))
+    return var
+
+
+@automation.register_action(
+    "m5stack_printer.wake_up",
+    M5StackPrinterWakeUpAction,
+    cv.Schema(
+        {
+            cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
+        }
+    ),
+)
+async def m5stack_printer_wake_up_action_to_code(
+    config, action_id, template_arg, args
+):
+    var = cg.new_Pvariable(action_id, template_arg)
+    await cg.register_parented(var, config[CONF_ID])
+    return var
+
+
+@automation.register_action(
+    "m5stack_printer.check_status",
+    M5StackPrinterCheckStatusAction,
+    cv.Schema(
+        {
+            cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
+        }
+    ),
+)
+async def m5stack_printer_check_status_action_to_code(
+    config, action_id, template_arg, args
+):
+    var = cg.new_Pvariable(action_id, template_arg)
+    await cg.register_parented(var, config[CONF_ID])
     return var
 
 
