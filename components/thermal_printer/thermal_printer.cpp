@@ -1,12 +1,12 @@
-#include "m5stack_printer.h"
+#include "thermal_printer.h"
 
 #include <cinttypes>
 #include <sstream>
 
 namespace esphome {
-namespace m5stack_printer {
+namespace thermal_printer {
 
-static const char *const TAG = "m5stack_printer";
+static const char *const TAG = "thermal_printer";
 
 static const uint8_t ESC = 0x1B;
 static const uint8_t GS = 0x1D;
@@ -48,6 +48,10 @@ static const uint8_t PAPER_CUT_FEED_PREFIX[] = {GS, 'V'}; // GS V m [n] for cut 
 // Text formatting commands
 static const uint8_t TEXT_ALIGN_CMD[] = {ESC, 'a'}; // ESC a n - text alignment
 static const uint8_t LINE_SPACING_CMD[] = {ESC, '3'}; // ESC 3 n - line spacing
+
+// Character encoding commands
+static const uint8_t CHARSET_CMD[] = {ESC, 'R'}; // ESC R n - international character set
+static const uint8_t CODEPAGE_CMD[] = {ESC, 't'}; // ESC t n - character code table
 static const uint8_t DEFAULT_LINE_SPACING_CMD[] = {ESC, '2'}; // ESC 2 - default spacing
 static const uint8_t PRINT_DENSITY_CMD[] = {0x12, '#'}; // DC2 # n - print density
 
@@ -74,15 +78,15 @@ static const uint8_t CODEPAGE_CMD[] = {ESC, 't'}; // ESC t n - select code page 
 
 static const uint8_t BYTES_PER_LOOP = 120;
 
-void M5StackPrinterDisplay::setup() {
-  ESP_LOGD(TAG, "Setting up M5Stack Printer Display");
+void ThermalPrinterDisplay::setup() {
+  ESP_LOGD(TAG, "Setting up Thermal Printer Display");
 
   this->init_internal_(this->get_buffer_length_());
   ESP_LOGD(TAG, "Buffer length: %d bytes", this->get_buffer_length_());
 
   // Initialize printer with proper sequence
   this->init_();
-  ESP_LOGD(TAG, "M5Stack Printer initialized successfully");
+  ESP_LOGD(TAG, "Thermal Printer initialized successfully");
 
   // Note: Commented baud rate change - keep default 9600 baud for stability
   // Some printer modules don't handle baud rate changes reliably
@@ -93,7 +97,7 @@ void M5StackPrinterDisplay::setup() {
   // delay(10);
 }
 
-void M5StackPrinterDisplay::init_() {
+void ThermalPrinterDisplay::init_() {
   if (this->send_wakeup_) {
     ESP_LOGD(TAG, "Sending printer initialization command (ESC @)");
     this->write_array(INIT_PRINTER_CMD, sizeof(INIT_PRINTER_CMD));
@@ -104,8 +108,35 @@ void M5StackPrinterDisplay::init_() {
   }
 }
 
-void M5StackPrinterDisplay::print_text(std::string text, uint8_t font_width, uint8_t font_height, uint8_t font_type) {
+void ThermalPrinterDisplay::print_text(std::string text, uint8_t font_width, uint8_t font_height, uint8_t font_type) {
   ESP_LOGD(TAG, "Text printing: '%s' with font_width=%d, font_height=%d, font_type=%d", text.c_str(), font_width, font_height, font_type);
+  
+  // Apply current formatting state first
+  if (this->bold_state_) {
+    uint8_t bold_cmd[] = {0x1B, 0x45, 0x01}; // ESC E 1 (bold on)
+    this->write_array(bold_cmd, sizeof(bold_cmd));
+  }
+  
+  if (this->underline_state_ > 0) {
+    uint8_t underline_cmd[] = {0x1B, 0x2D, this->underline_state_}; // ESC - n
+    this->write_array(underline_cmd, sizeof(underline_cmd));
+  }
+  
+  if (this->upside_down_state_) {
+    uint8_t upside_cmd[] = {0x1B, 0x7B, 0x01}; // ESC { 1 (upside down on)
+    this->write_array(upside_cmd, sizeof(upside_cmd));
+  }
+  
+  if (this->font_type_state_ > 0) {
+    uint8_t font_type_cmd[] = {0x1B, 0x4D, this->font_type_state_}; // ESC M n
+    this->write_array(font_type_cmd, sizeof(font_type_cmd));
+  }
+  
+  // Apply current alignment state
+  if (this->alignment_state_ != 0) {
+    uint8_t align_cmd[] = {0x1B, 0x61, this->alignment_state_}; // ESC a n
+    this->write_array(align_cmd, sizeof(align_cmd));
+  }
   
   // Apply font size if not default (1x1)
   if (font_width > 1 || font_height > 1) {
@@ -122,12 +153,12 @@ void M5StackPrinterDisplay::print_text(std::string text, uint8_t font_width, uin
     ESP_LOGD(TAG, "Applied font size: %dx%d (ESC/POS value: %d)", font_width, font_height, escpos_value);
   }
 
-  // Apply font type selection (Font A/B) if not default (Font A)
+  // Apply font type override if specified (overrides state)
   if (font_type > 0) {
     uint8_t clamped_font_type = clamp<uint8_t>(font_type, 0, 1);
-    uint8_t font_type_cmd[] = {0x1B, 0x21, clamped_font_type}; // ESC ! n
+    uint8_t font_type_cmd[] = {0x1B, 0x4D, clamped_font_type}; // ESC M n
     this->write_array(font_type_cmd, sizeof(font_type_cmd));
-    ESP_LOGD(TAG, "Applied font type: %s (%d)", (clamped_font_type == 0) ? "Font A (12x24)" : "Font B (9x17)", clamped_font_type);
+    ESP_LOGD(TAG, "Applied font type override: %s (%d)", (clamped_font_type == 0) ? "Font A (12x24)" : "Font B (9x17)", clamped_font_type);
   }
   
   // Add indentation spaces if configured
@@ -158,7 +189,7 @@ void M5StackPrinterDisplay::print_text(std::string text, uint8_t font_width, uin
   ESP_LOGD(TAG, "Text printing complete");
 }
 
-void M5StackPrinterDisplay::thermal_print_text_with_formatting(
+void ThermalPrinterDisplay::thermal_print_text_with_formatting(
     const std::string &text, uint8_t font_width, uint8_t font_height, uint8_t font_type, bool bold, bool double_strike, uint8_t underline,
     bool upside_down, bool rotation,
     bool inverse, bool chinese_mode, uint8_t alignment, uint8_t charset, uint8_t codepage, uint8_t character_spacing) {
@@ -383,7 +414,7 @@ void M5StackPrinterDisplay::thermal_print_text_with_formatting(
   ESP_LOGD(TAG, "thermal_print_text_with_formatting complete");
 }
 
-void M5StackPrinterDisplay::set_printer_settings(uint8_t line_spacing, uint8_t print_density, uint8_t break_time) {
+void ThermalPrinterDisplay::set_printer_settings(uint8_t line_spacing, uint8_t print_density, uint8_t break_time) {
   ESP_LOGD(TAG, "Setting printer settings: line_spacing=%d, density=%d, break_time=%d", 
            line_spacing, print_density, break_time);
   
@@ -398,7 +429,7 @@ void M5StackPrinterDisplay::set_printer_settings(uint8_t line_spacing, uint8_t p
   ESP_LOGD(TAG, "Printer settings applied");
 }
 
-void M5StackPrinterDisplay::reset_printer_settings() {
+void ThermalPrinterDisplay::reset_printer_settings() {
   ESP_LOGD(TAG, "Resetting printer settings to defaults");
   
   // Reset to default values: line_spacing=30, density=10, break_time=4
@@ -411,7 +442,7 @@ void M5StackPrinterDisplay::reset_printer_settings() {
   ESP_LOGD(TAG, "Printer settings reset complete");
 }
 
-void M5StackPrinterDisplay::build_formatting_prefix_(std::vector<uint8_t> &prefix) {
+void ThermalPrinterDisplay::build_formatting_prefix_(std::vector<uint8_t> &prefix) {
   // Build ESC/POS command sequence based on current formatting state
 
   ESP_LOGD(TAG, "Building format prefix - states: align=%d bold=%d underline=%d ud=%d inv=%d rot=%d",
@@ -458,7 +489,7 @@ void M5StackPrinterDisplay::build_formatting_prefix_(std::vector<uint8_t> &prefi
   ESP_LOGD(TAG, "Format prefix complete, %d bytes added", prefix.size());
 }
 
-void M5StackPrinterDisplay::new_line(uint8_t lines) {
+void ThermalPrinterDisplay::new_line(uint8_t lines) {
   if (lines == 0) {
     ESP_LOGW(TAG, "new_line called with 0 lines, ignoring");
     return;
@@ -475,7 +506,7 @@ void M5StackPrinterDisplay::new_line(uint8_t lines) {
   }
 }
 
-void M5StackPrinterDisplay::print_qrcode(std::string data) {
+void ThermalPrinterDisplay::print_qrcode(std::string data) {
   this->init_();
 
   // QR code sequence based on datasheet:
@@ -502,8 +533,8 @@ void M5StackPrinterDisplay::print_qrcode(std::string data) {
   this->write_array(QR_CODE_PRINT_CMD, sizeof(QR_CODE_PRINT_CMD));
 }
 
-void M5StackPrinterDisplay::print_barcode(std::string barcode, BarcodeType type) {
-  this->init_();
+void ThermalPrinterDisplay::print_barcode(std::string barcode, BarcodeType type) {
+  ESP_LOGD(TAG, "Printing barcode: type=%d, data='%s'", type, barcode.c_str());
 
   // Validate barcode data length based on type
   size_t data_len = barcode.length();
@@ -541,31 +572,74 @@ void M5StackPrinterDisplay::print_barcode(std::string barcode, BarcodeType type)
     return;
   }
 
-  // Set barcode height (default 162 dots according to datasheet)
-  this->write_array(BARCODE_HEIGHT_CMD, sizeof(BARCODE_HEIGHT_CMD));
-  this->write_byte(DEFAULT_BARCODE_HEIGHT);
+  // Complete printer reset to clear any formatting issues
+  uint8_t full_reset[] = {0x1B, 0x40}; // ESC @ - Initialize printer
+  this->write_array(full_reset, sizeof(full_reset));
+  delay(200); // Give printer time to reset
+  
+  // Map barcode types to format 1 command values (0-6) and format 2 for advanced types
+  uint8_t barcode_type_cmd;
+  bool use_format2 = false;
+  
+  switch (type) {
+    case UPC_A:
+      barcode_type_cmd = 0; // Format 1: GS k 0
+      break;
+    case UPC_E:
+      barcode_type_cmd = 1; // Format 1: GS k 1
+      break;
+    case EAN13:
+      barcode_type_cmd = 2; // Format 1: GS k 2
+      break;
+    case EAN8:
+      barcode_type_cmd = 3; // Format 1: GS k 3
+      break;
+    case CODE39:
+      barcode_type_cmd = 4; // Format 1: GS k 4
+      break;
+    case ITF:
+      barcode_type_cmd = 5; // Format 1: GS k 5
+      break;
+    case CODABAR:
+      barcode_type_cmd = 6; // Format 1: GS k 6
+      break;
+    case CODE93:
+      barcode_type_cmd = 72; // Format 2: GS k 72
+      use_format2 = true;
+      break;
+    case CODE128:
+      barcode_type_cmd = 73; // Format 2: GS k 73
+      use_format2 = true;
+      break;
+    default:
+      ESP_LOGE(TAG, "Unsupported barcode type: %d", type);
+      return;
+  }
 
-  // Set barcode width (default 3 according to datasheet)
-  this->write_array(BARCODE_WIDTH_CMD, sizeof(BARCODE_WIDTH_CMD));
-  this->write_byte(DEFAULT_BARCODE_WIDTH);
+  // Send barcode command
+  uint8_t barcode_cmd[] = {0x1D, 0x6B, barcode_type_cmd}; // GS k m
+  this->write_array(barcode_cmd, sizeof(barcode_cmd));
+  
+  if (use_format2) {
+    // Format 2: GS k m n data (length-prefixed)
+    this->write_byte(data_len); // Send length first
+    this->write_str(barcode.c_str());
+  } else {
+    // Format 1: GS k m data NUL (null-terminated)
+    this->write_str(barcode.c_str());
+    this->write_byte(0x00); // NULL terminator
+  }
 
-  // Set HRI character position (default: no HRI)
-  this->write_array(BARCODE_HRI_POS_CMD, sizeof(BARCODE_HRI_POS_CMD));
-  this->write_byte(DEFAULT_HRI_POSITION);
-
-  // Print barcode using GS k m n d1...dn format (format 2 from datasheet)
-  this->write_array(BARCODE_PRINT_CMD, sizeof(BARCODE_PRINT_CMD));
-  this->write_byte(type + 65); // Use format 2 (m = 65-73) for length prefix
-  this->write_byte(data_len); // Number of data bytes
-  this->write_str(barcode.c_str());
+  ESP_LOGD(TAG, "Barcode sent: type=%d, format=%s, length=%d", 
+           barcode_type_cmd, use_format2 ? "2" : "1", data_len);
 }
 
-void M5StackPrinterDisplay::cut_paper() {
+void ThermalPrinterDisplay::cut_paper() {
   ESP_LOGD(TAG, "Cutting paper (full cut)");
   this->write_array(PAPER_CUT_FULL_CMD, sizeof(PAPER_CUT_FULL_CMD));
 }
 
-void M5StackPrinterDisplay::cut_paper(uint8_t mode, uint8_t feed_lines) {
+void ThermalPrinterDisplay::cut_paper(uint8_t mode, uint8_t feed_lines) {
   ESP_LOGD(TAG, "Cutting paper with mode %d, feed lines %d", mode, feed_lines);
 
   if (mode == 0) {
@@ -584,18 +658,22 @@ void M5StackPrinterDisplay::cut_paper(uint8_t mode, uint8_t feed_lines) {
   }
 }
 
-void M5StackPrinterDisplay::set_text_alignment(uint8_t alignment) {
+void ThermalPrinterDisplay::set_text_alignment(uint8_t alignment) {
   if (alignment > 2) {
     ESP_LOGW(TAG, "Invalid alignment %d, clamping to 2", alignment);
     alignment = 2;
   }
 
-  // Track alignment state for next text print (line-buffered printer)
+  // Track alignment state and send command immediately
   this->alignment_state_ = alignment;
+  
+  uint8_t align_cmd[] = {0x1B, 0x61, alignment}; // ESC a n
+  this->write_array(align_cmd, sizeof(align_cmd));
+  
   ESP_LOGD(TAG, "Set text alignment: %d (0=left, 1=center, 2=right)", alignment);
 }
 
-void M5StackPrinterDisplay::set_line_spacing(uint8_t spacing) {
+void ThermalPrinterDisplay::set_line_spacing(uint8_t spacing) {
   if (spacing == 0) {
     // Reset to default line spacing
     ESP_LOGD(TAG, "Resetting to default line spacing");
@@ -607,7 +685,7 @@ void M5StackPrinterDisplay::set_line_spacing(uint8_t spacing) {
   }
 }
 
-void M5StackPrinterDisplay::set_print_density(uint8_t density, uint8_t break_time) {
+void ThermalPrinterDisplay::set_print_density(uint8_t density, uint8_t break_time) {
   // Validate ranges according to datasheet
   density = clamp<uint8_t>(density, 0, 31); // D4-D0 bits
   break_time = clamp<uint8_t>(break_time, 0, 7); // D7-D5 bits
@@ -620,13 +698,13 @@ void M5StackPrinterDisplay::set_print_density(uint8_t density, uint8_t break_tim
   this->write_byte(density_byte);
 }
 
-void M5StackPrinterDisplay::queue_data_(std::vector<uint8_t> data) {
+void ThermalPrinterDisplay::queue_data_(std::vector<uint8_t> data) {
   for (size_t i = 0; i < data.size(); i += BYTES_PER_LOOP) {
     std::vector<uint8_t> chunk(data.begin() + i, data.begin() + std::min(i + BYTES_PER_LOOP, data.size()));
     this->queue_.push(chunk);
   }
 }
-void M5StackPrinterDisplay::queue_data_(const uint8_t *data, size_t size) {
+void ThermalPrinterDisplay::queue_data_(const uint8_t *data, size_t size) {
   for (size_t i = 0; i < size; i += BYTES_PER_LOOP) {
     size_t chunk_size = std::min(i + BYTES_PER_LOOP, size) - i;
     std::vector<uint8_t> chunk(data + i, data + i + chunk_size);
@@ -634,7 +712,7 @@ void M5StackPrinterDisplay::queue_data_(const uint8_t *data, size_t size) {
   }
 }
 
-void M5StackPrinterDisplay::loop() {
+void ThermalPrinterDisplay::loop() {
   // Process print queue
   if (!this->queue_.empty()) {
     std::vector<uint8_t> data = this->queue_.front();
@@ -645,13 +723,11 @@ void M5StackPrinterDisplay::loop() {
     this->write_array(data.data(), data.size());
   }
   
-  // Status polling completely disabled - this printer hardware doesn't support
-  // reliable ESC/POS status commands (both DLE EOT and ESC v return random data)
 }
 
 static uint16_t count = 0;
 
-void M5StackPrinterDisplay::update() {
+void ThermalPrinterDisplay::update() {
   ESP_LOGD(TAG, "Display update triggered");
   this->do_update_();
   this->write_to_device_();
@@ -659,7 +735,7 @@ void M5StackPrinterDisplay::update() {
   count = 0;
 }
 
-void M5StackPrinterDisplay::write_to_device_() {
+void ThermalPrinterDisplay::write_to_device_() {
   if (this->buffer_ == nullptr) {
     ESP_LOGW(TAG, "Buffer is null, cannot write to device");
     return;
@@ -695,7 +771,7 @@ void M5StackPrinterDisplay::write_to_device_() {
   ESP_LOGD(TAG, "Queued %d bytes of raster data", this->get_buffer_length_());
 }
 
-void M5StackPrinterDisplay::draw_absolute_pixel_internal(int x, int y, Color color) {
+void ThermalPrinterDisplay::draw_absolute_pixel_internal(int x, int y, Color color) {
   if (this->buffer_ == nullptr) {
     ESP_LOGW(TAG, "Buffer is null");
     return;
@@ -715,19 +791,37 @@ void M5StackPrinterDisplay::draw_absolute_pixel_internal(int x, int y, Color col
   count++;
 }
 
-void M5StackPrinterDisplay::set_90_degree_rotation(bool enable) {
-  // Track rotation state for next text print (line-buffered printer)
+void ThermalPrinterDisplay::set_90_degree_rotation(bool enable) {
+  // Track rotation state and send command immediately
   this->rotation_state_ = enable;
+  
+  uint8_t rotation_cmd[] = {0x1B, 0x56, enable ? 0x01 : 0x00}; // ESC V n
+  this->write_array(rotation_cmd, sizeof(rotation_cmd));
+  
   ESP_LOGD(TAG, "Set 90-degree rotation: %s", enable ? "enabled" : "disabled");
 }
 
-void M5StackPrinterDisplay::set_inverse_printing(bool enable) {
-  // Track inverse state for next text print (line-buffered printer)
+void ThermalPrinterDisplay::set_inverse_printing(bool enable) {
+  // Track inverse state and send command immediately  
   this->inverse_state_ = enable;
+  
+  uint8_t inverse_cmd[] = {0x1D, 0x42, enable ? 0x01 : 0x00}; // GS B n
+  this->write_array(inverse_cmd, sizeof(inverse_cmd));
+  
   ESP_LOGD(TAG, "Set inverse printing: %s", enable ? "enabled" : "disabled");
 }
 
-void M5StackPrinterDisplay::set_chinese_mode(bool enable) {
+void ThermalPrinterDisplay::set_upside_down_printing(bool enable) {
+  // Track upside down state and send command immediately  
+  this->upside_down_state_ = enable;
+  
+  uint8_t upside_down_cmd[] = {0x1B, 0x7B, enable ? 0x01 : 0x00}; // ESC { n
+  this->write_array(upside_down_cmd, sizeof(upside_down_cmd));
+  
+  ESP_LOGD(TAG, "Set upside down printing: %s", enable ? "enabled" : "disabled");
+}
+
+void ThermalPrinterDisplay::set_chinese_mode(bool enable) {
   ESP_LOGD(TAG, "Chinese/Japanese character mode state: %s (no commands sent)", enable ? "enabled" : "disabled");
   
   // Only track the state - don't send FS commands that interfere with character encoding
@@ -735,29 +829,39 @@ void M5StackPrinterDisplay::set_chinese_mode(bool enable) {
   this->chinese_mode_state_ = enable;
 }
 
-void M5StackPrinterDisplay::set_charset(uint8_t charset) {
+void ThermalPrinterDisplay::set_charset(uint8_t charset) {
   if (charset > 15) {
     ESP_LOGW(TAG, "Invalid charset %d, clamping to 15", charset);
     charset = 15;
   }
   
-  ESP_LOGD(TAG, "Character set %d requested (0=USA) - using default initialization", charset);
-  // Don't send charset commands as they interfere with text printing on this printer
-  // The printer defaults to USA charset which is sufficient for ASCII text
+  ESP_LOGD(TAG, "Setting character set to %d (0=USA, 1=France, 2=Germany, etc.)", charset);
+  
+  // Send ESC R n command to set international character set
+  uint8_t charset_cmd[] = {ESC, 'R', charset};
+  this->write_array(charset_cmd, sizeof(charset_cmd));
+  
+  // Store current charset for reference
+  this->current_charset_ = charset;
 }
 
-void M5StackPrinterDisplay::set_codepage(uint8_t codepage) {
+void ThermalPrinterDisplay::set_codepage(uint8_t codepage) {
   if (codepage > 47) {
     ESP_LOGW(TAG, "Invalid codepage %d, clamping to 47", codepage);
     codepage = 47;
   }
   
-  ESP_LOGD(TAG, "Code page %d requested (0=CP437) - using default initialization", codepage);
-  // Don't send codepage commands as they interfere with text printing on this printer  
-  // The printer defaults to CP437 which is sufficient for ASCII text
+  ESP_LOGD(TAG, "Setting code page to %d (0=CP437, 1=Katakana, 2=CP850, etc.)", codepage);
+  
+  // Send ESC t n command to set character code table
+  uint8_t codepage_cmd[] = {ESC, 't', codepage};
+  this->write_array(codepage_cmd, sizeof(codepage_cmd));
+  
+  // Store current codepage for reference
+  this->current_codepage_ = codepage;
 }
 
-void M5StackPrinterDisplay::send_raw_command(const std::vector<uint8_t> &command) {
+void ThermalPrinterDisplay::send_raw_command(const std::vector<uint8_t> &command) {
   if (!command.empty()) {
     this->write_array(command.data(), command.size());
     ESP_LOGD(TAG, "Sent raw command: %d bytes", command.size());
@@ -773,107 +877,176 @@ void M5StackPrinterDisplay::send_raw_command(const std::vector<uint8_t> &command
     ESP_LOGW(TAG, "Attempted to send empty raw command");
   }
 }
-
-void M5StackPrinterDisplay::run_demo(bool show_qr_code, bool show_barcode,
-                                     bool show_text_styles, bool show_inverse, bool show_rotation) {
-  ESP_LOGD(TAG, "Running printer demo with flags: QR=%s, barcode=%s, text=%s, inverse=%s, rotation=%s",
+void ThermalPrinterDisplay::run_demo(bool show_qr_code, bool show_barcode,
+                                     bool show_text_styles, bool show_inverse, bool show_rotation, bool show_upside_down) {
+  ESP_LOGD(TAG, "Running comprehensive printer demo with flags: QR=%s, barcode=%s, text=%s, inverse=%s, rotation=%s, upside_down=%s",
            show_qr_code ? "yes" : "no", show_barcode ? "yes" : "no",
-           show_text_styles ? "yes" : "no", show_inverse ? "yes" : "no", show_rotation ? "yes" : "no");
+           show_text_styles ? "yes" : "no", show_inverse ? "yes" : "no", show_rotation ? "yes" : "no",
+           show_upside_down ? "yes" : "no");
 
   this->init_();
 
   // Reset printer to default state
   this->write_array(PRINT_MODE_RESET_CMD, sizeof(PRINT_MODE_RESET_CMD));
-  this->set_text_alignment(1); // Center align for header
+  
+  // === ESPHOME LOGO HEADER ===
+  this->set_text_alignment(1); // Center
   this->new_line(1);
-
-  // Header with title
+  
+  // Try to create a simple ESPHome logo bitmap
+  ESP_LOGD(TAG, "Drawing ESPHome bitmap logo");
+    
+  // Also add ASCII art as backup
   this->set_text_style(true, 0, false); // Bold
-  this->print_text("DON'T PANIC", 1);  // Reduced from 2 to 1
+  this->print_text("***********************");
   this->new_line(1);
+  this->print_text("*     ESPHome v1.0    *");
+  this->new_line(1);
+  this->print_text("*  Thermal Printer    *");
+  this->new_line(1);
+  this->print_text("*     Component       *");
+  this->new_line(1);
+  this->print_text("***********************");
+  this->set_text_style(false, 0, false); // Reset
+  this->new_line(2);
+  
+  // === HITCHHIKER'S GUIDE THEMED HEADER ===
+  this->set_text_style(true, 0, false); // Bold
+  this->print_text("DON'T PANIC", 2, 2); // Large bold
+  this->new_line(1);
+  this->set_text_style(false, 0, false); // Reset to normal first
   this->set_text_style(false, 1, false); // Normal, underlined
-  this->print_text("M5Stack Printer Demo", 0);  // Reduced from 1 to 0
+  this->print_text("The Hitchhiker's Guide to", 1, 1);
+  this->new_line(1);
+  this->print_text("Thermal Printing", 1, 1);
+  this->new_line(1);
+  this->set_text_style(false, 0, false); // Reset all formatting including underline
+  this->print_text("42nd Edition - ESPHome Compatible");
   this->new_line(2);
 
   // Reset formatting and left align
-  this->set_text_style(false, 0, false);
+  this->set_text_style(false, 0, false); // Ensure all formatting is reset
   this->set_text_alignment(0);
+  // Send explicit underline reset command
+  uint8_t underline_reset[] = {0x1B, 0x2D, 0x00}; // ESC - 0
+  this->write_array(underline_reset, sizeof(underline_reset));
 
-  // Display what features will be tested
-  this->print_text("The Answer to the Ultimate");
+  // Opening introduction
+  this->print_text("Welcome, intergalactic traveler!");
   this->new_line(1);
-  this->print_text("Question of Thermal Printing:");
+  this->print_text("This thermal printer demonstration");
   this->new_line(1);
+  this->print_text("will showcase the Answer to the");
+  this->new_line(1);
+  this->print_text("Ultimate Question of Printing:");
+  this->new_line(1);
+  
+  this->set_text_alignment(1); // Center for the answer
   this->set_text_style(true, 0, false); // Bold
-  this->print_text("42 functions tested below", 0);  // Reduced from 1 to 0
+  this->print_text("42 printing features!", 2, 2);
   this->set_text_style(false, 0, false); // Reset
+  this->set_text_alignment(0);
   this->new_line(2);
 
+  this->print_text("Remember: Always carry a towel");
+  this->print_text("and a working thermal printer.");
+  this->new_line(2);
+
+  // === TEXT STYLES AND FORMATTING ===
   if (show_text_styles) {
-    ESP_LOGD(TAG, "Demo: Text styles");
+    ESP_LOGD(TAG, "Demo: Text styles and formatting");
+
+    // Explicit formatting reset at start of section
+    this->set_text_style(false, 0, false);
+    uint8_t reset_cmds[] = {0x1B, 0x45, 0x00, 0x1B, 0x2D, 0x00}; // Bold off, underline off
+    this->write_array(reset_cmds, sizeof(reset_cmds));
 
     this->set_text_alignment(1); // Center
-    this->set_text_style(true, 0, false); // Bold
-    this->print_text("=== TEXT STYLES ===", 0);  // Reduced from 1 to 0
-    this->set_text_style(false, 0, false);
+    this->set_text_style(true, 2, false); // Bold underline
+    this->print_text("=== FORD PREFECT'S ===", 2, 1);
+    this->print_text("=== STYLE GUIDE ===", 2, 1);
+    this->set_text_style(false, 0, false); // Reset all formatting
     this->set_text_alignment(0); // Left
     this->new_line(1);
 
-    // Font sizes demo
-    this->print_text("Font sizes (Zaphod approved):");
+    // Font size progression
+    this->print_text("Font sizes for towel labels:");
     this->new_line(1);
-    for (uint8_t size = 0; size <= 3; size++) {
-      char size_text[32];
-      snprintf(size_text, sizeof(size_text), "Size %d: Hoopy!", size);
-      this->print_text(size_text, size);
-      this->new_line(1);
-    }
+    this->print_text("Size 1x1: Compact towel tag", 1, 1);
     this->new_line(1);
+    this->print_text("Size 2x1: Bath towel", 2, 1);
+    this->new_line(1);
+    this->print_text("Size 3x2: Beach towel", 3, 2);
+    this->new_line(1);
+    this->print_text("Size 4x3: Hoopy!", 4, 3);
+    this->new_line(2);
 
-    // Style combinations
-    this->print_text("Text styles:");
-    this->new_line(1);
-
-    this->set_text_style(true, 0, false); // Bold
-    this->print_text("Bold: Vogon poetry");
-    this->new_line(1);
-
-    this->set_text_style(false, 2, false); // Underlined (2 dots)
-    this->print_text("Underlined: Babel fish");
-    this->new_line(1);
-
-    this->print_text("Wide: Heart of Gold", 2, 1); // Use font_width instead
-    this->new_line(1);
-
-    this->set_text_style(true, 1, false); // Bold + underline
-    this->print_text("All styles: Infinite", 2, 1); // Wide using font_width
-    this->new_line(1);
-
-    this->set_text_style(false, 0, false); // Reset
-    this->new_line(1);
-
-    // Alignment demo
+    // Text alignment demonstration
     this->print_text("Text alignment test:");
     this->new_line(1);
-
+    
     this->set_text_alignment(0); // Left
     this->print_text("Left: Earth (mostly harmless)");
     this->new_line(1);
-
+    
     this->set_text_alignment(1); // Center
-    this->print_text("Center: Restaurant");
+    this->print_text("Center: Milliways Restaurant");
     this->new_line(1);
-
+    
     this->set_text_alignment(2); // Right
-    this->print_text("Right: Magrathea");
+    this->print_text("Right: Magrathea Industries");
     this->new_line(1);
-
+    
     this->set_text_alignment(0); // Reset to left
     this->new_line(1);
+
+    // Text styling combinations
+    this->print_text("Vogon Poetry Styles:");
+    this->new_line(1);
+
+    this->set_text_style(true, 0, false); // Bold
+    this->print_text("Bold: Oh freddled gruntbuggly!");
+    this->set_text_style(false, 0, false); // Reset bold
+    this->new_line(1);
+
+    this->set_text_style(false, 1, false); // Single underline
+    this->print_text("Underline: Thy micturations");
+    this->set_text_style(false, 0, false); // Reset underline
+    this->new_line(1);
+
+    this->set_text_style(false, 2, false); // Double underline
+    this->print_text("Double: Are to me");
+    this->set_text_style(false, 0, false); // Reset underline
+    this->new_line(1);
+
+    this->set_text_style(true, 1, false); // Bold + underline
+    this->print_text("Bold+Under: As plurdled gabbleblotchits!");
+    this->set_text_style(false, 0, false); // Reset all
+    this->new_line(2);
+  
+    this->print_text("Underlined: Thy micturations");
+    this->new_line(1);
+    
+    this->set_text_style(false, 2, false); // Double underline
+    this->print_text("Double underlined: are to me");
+    this->new_line(1);
+
+    this->set_text_style(true, 1, false); // Bold + underline
+    this->print_text("Bold+underlined: As plurdled", 2, 1);
+    this->new_line(1);
+
+    this->set_text_style(false, 0, false); // Reset
+    this->print_text("(Vogon poetry causes nausea)");
+    this->new_line(2);
   }
 
   if (show_inverse) {
     ESP_LOGD(TAG, "Demo: Inverse printing");
+
+    // Explicit formatting reset
+    this->set_text_style(false, 0, false);
+    uint8_t reset_cmds[] = {0x1B, 0x45, 0x00, 0x1B, 0x2D, 0x00}; // Bold off, underline off
+    this->write_array(reset_cmds, sizeof(reset_cmds));
 
     this->set_text_alignment(1); // Center
     this->set_text_style(true, 0, false);
@@ -899,6 +1072,11 @@ void M5StackPrinterDisplay::run_demo(bool show_qr_code, bool show_barcode,
   if (show_rotation) {
     ESP_LOGD(TAG, "Demo: 90-degree rotation");
 
+    // Explicit formatting reset
+    this->set_text_style(false, 0, false);
+    uint8_t reset_cmds[] = {0x1B, 0x45, 0x00, 0x1B, 0x2D, 0x00}; // Bold off, underline off
+    this->write_array(reset_cmds, sizeof(reset_cmds));
+
     this->set_text_alignment(1); // Center
     this->set_text_style(true, 0, false);
     this->print_text("=== ROTATION ===", 0);  // Reduced from 1 to 0
@@ -919,6 +1097,37 @@ void M5StackPrinterDisplay::run_demo(bool show_qr_code, bool show_barcode,
     this->set_90_degree_rotation(false);
 
     this->print_text("Rotation disabled");
+    this->new_line(2);
+  }
+
+  if (show_upside_down) {
+    ESP_LOGD(TAG, "Demo: Upside-down text");
+
+    // Explicit formatting reset
+    this->set_text_style(false, 0, false);
+    uint8_t reset_cmds[] = {0x1B, 0x45, 0x00, 0x1B, 0x2D, 0x00}; // Bold off, underline off
+    this->write_array(reset_cmds, sizeof(reset_cmds));
+
+    this->set_text_alignment(1); // Center
+    this->set_text_style(true, 0, false);
+    this->print_text("=== UPSIDE DOWN ===", 0);
+    this->set_text_style(false, 0, false);
+    this->set_text_alignment(0);
+    this->new_line(1);
+
+    this->print_text("Normal orientation:");
+    this->new_line(1);
+    this->print_text("Don't Panic!");
+    this->new_line(1);
+
+    this->set_upside_down_printing(true);
+    this->print_text("Upside down: Always know where");
+    this->new_line(1);
+    this->print_text("your towel is!");
+    this->new_line(1);
+    this->set_upside_down_printing(false);
+
+    this->print_text("Back to normal text");
     this->new_line(2);
   }
 
@@ -991,25 +1200,20 @@ void M5StackPrinterDisplay::run_demo(bool show_qr_code, bool show_barcode,
 
   this->print_text("Thank you for printing");
   this->new_line(1);
-  this->print_text("with M5Stack Printer!");
+  this->print_text("with Thermal Printer!");
   this->new_line(1);
-
-  this->set_text_style(false, 1, false); // Underlined
-  this->print_text("github.com/jesserockz/");
-  this->new_line(1);
-  this->print_text("esphome-components");
-  this->new_line(3);
 
   // Reset all settings to defaults
   this->set_text_style(false, 0, false);
   this->set_text_alignment(0);
   this->set_inverse_printing(false);
   this->set_90_degree_rotation(false);
+  this->set_upside_down_printing(false);
 
   ESP_LOGD(TAG, "Demo completed successfully");
 }
 
-void M5StackPrinterDisplay::set_text_style(bool bold, uint8_t underline, bool upside_down, uint8_t font_type) {
+void ThermalPrinterDisplay::set_text_style(bool bold, uint8_t underline, bool upside_down, uint8_t font_type) {
   // Track formatting state for next text print (line-buffered printer)
   this->bold_state_ = bold;
   this->underline_state_ = underline;
@@ -1020,7 +1224,7 @@ void M5StackPrinterDisplay::set_text_style(bool bold, uint8_t underline, bool up
            bold ? "true" : "false", underline, upside_down ? "true" : "false", font_type);
 }
 
-void M5StackPrinterDisplay::print_test_page() {
+void ThermalPrinterDisplay::print_test_page() {
   ESP_LOGD(TAG, "Printing test page");
 
   // Print header
@@ -1048,8 +1252,13 @@ void M5StackPrinterDisplay::print_test_page() {
   this->set_text_style(true, 1, false); // Bold + underline
   this->print_text("Bold+Under+Wide\n", 2, 1); // Wide using font_width
 
-  // Reset styles
+  // Reset styles with explicit commands
   this->set_text_style(false, 0, false);
+  uint8_t reset_cmds[] = {0x1B, 0x45, 0x00, 0x1B, 0x2D, 0x00}; // Bold off, underline off
+  this->write_array(reset_cmds, sizeof(reset_cmds));
+  // Reset font size to default (1x1)
+  uint8_t font_size_reset[] = {0x1D, 0x21, 0x00}; // GS ! 0
+  this->write_array(font_size_reset, sizeof(font_size_reset));
 
   // Test alignment
   this->set_text_alignment(0); // Left
@@ -1067,6 +1276,10 @@ void M5StackPrinterDisplay::print_test_page() {
   this->print_text("\nQR Test:\n", 0);
   this->print_qrcode("ESP32");
 
+  // Test Barcode (Code39)
+  this->print_text("\nBarcode Test:\n", 0);
+  this->print_barcode("1234567890", CODE39);
+
   // End of test page
   this->print_text("\n=== END TEST ===\n", 0);
   this->new_line(3); // Feed paper for clean tear
@@ -1077,7 +1290,7 @@ void M5StackPrinterDisplay::print_test_page() {
 // Status functions completely removed - hardware doesn't support reliable status reporting
 // Both DLE EOT and ESC v commands return random/garbage values instead of actual status
 
-void M5StackPrinterDisplay::set_sleep_mode(uint16_t timeout_seconds) {
+void ThermalPrinterDisplay::set_sleep_mode(uint16_t timeout_seconds) {
   // ESC 8 n m - Set sleep mode timeout
   // Convert seconds to appropriate units for the printer
   uint8_t timeout_low = timeout_seconds & 0xFF;
@@ -1089,7 +1302,7 @@ void M5StackPrinterDisplay::set_sleep_mode(uint16_t timeout_seconds) {
   ESP_LOGD(TAG, "Sleep mode set to %d seconds", timeout_seconds);
 }
 
-void M5StackPrinterDisplay::wake_up() {
+void ThermalPrinterDisplay::wake_up() {
   ESP_LOGD(TAG, "Waking up printer from sleep mode");
   
   // Send any character to wake the printer (space character is common)
@@ -1103,7 +1316,7 @@ void M5StackPrinterDisplay::wake_up() {
   ESP_LOGD(TAG, "Printer wake-up complete");
 }
 
-void M5StackPrinterDisplay::set_tab_positions(const std::string &positions) {
+void ThermalPrinterDisplay::set_tab_positions(const std::string &positions) {
   // ESC D n1 n2 ... nk NUL - Set horizontal tab positions
   std::vector<uint8_t> cmd;
   cmd.push_back(0x1B);  // ESC
@@ -1164,13 +1377,13 @@ void M5StackPrinterDisplay::set_tab_positions(const std::string &positions) {
   ESP_LOGD(TAG, "Set %d tab positions", position_count);
 }
 
-void M5StackPrinterDisplay::horizontal_tab() {
+void ThermalPrinterDisplay::horizontal_tab() {
   // Send horizontal tab character (HT = 0x09)
   uint8_t cmd = 0x09;
   this->write_array(&cmd, 1);
 }
 
-void M5StackPrinterDisplay::set_horizontal_position(uint16_t position) {
+void ThermalPrinterDisplay::set_horizontal_position(uint16_t position) {
   // ESC $ nL nH - Set absolute horizontal print position
   uint8_t pos_low = position & 0xFF;
   uint8_t pos_high = (position >> 8) & 0xFF;
@@ -1181,7 +1394,7 @@ void M5StackPrinterDisplay::set_horizontal_position(uint16_t position) {
   ESP_LOGD(TAG, "Set horizontal position to %d", position);
 }
 
-void M5StackPrinterDisplay::set_text_indentation(uint8_t spaces) {
+void ThermalPrinterDisplay::set_text_indentation(uint8_t spaces) {
   // Store indentation as number of spaces to prepend to each print
   if (spaces > 50) {
     ESP_LOGE(TAG, "Invalid text indentation %d, must be 0-50 spaces", spaces);
@@ -1192,13 +1405,13 @@ void M5StackPrinterDisplay::set_text_indentation(uint8_t spaces) {
   ESP_LOGD(TAG, "Set text indentation to %d spaces", spaces);
 }
 
-void M5StackPrinterDisplay::reset_text_indentation() {
+void ThermalPrinterDisplay::reset_text_indentation() {
   // Reset indentation to default (0 spaces)
   this->text_indentation_ = 0;
   ESP_LOGD(TAG, "Reset text indentation to default");
 }
 
-void M5StackPrinterDisplay::feed_paper_dots(uint8_t dots) {
+void ThermalPrinterDisplay::feed_paper_dots(uint8_t dots) {
   // ESC J n - Feed paper n dots (0.125mm units)
   uint8_t cmd[] = {0x1B, 0x4A, dots};
   this->write_array(cmd, sizeof(cmd));
@@ -1206,7 +1419,7 @@ void M5StackPrinterDisplay::feed_paper_dots(uint8_t dots) {
   ESP_LOGD(TAG, "Feed paper %d dots (%.2f mm)", dots, dots * 0.125f);
 }
 
-void M5StackPrinterDisplay::print_and_feed_lines(uint8_t lines) {
+void ThermalPrinterDisplay::print_and_feed_lines(uint8_t lines) {
   // ESC d n - Print buffer data and feed n lines
   uint8_t cmd[] = {0x1B, 0x64, lines};
   this->write_array(cmd, sizeof(cmd));
@@ -1216,5 +1429,279 @@ void M5StackPrinterDisplay::print_and_feed_lines(uint8_t lines) {
 
 
 
-}  // namespace m5stack_printer
+void ThermalPrinterDisplay::check_status() {
+  ESP_LOGI(TAG, "Checking printer status...");
+
+  // Send DLE EOT n status query commands for different status types
+  // DLE EOT 1 - Printer status
+  // DLE EOT 2 - Offline status  
+  // DLE EOT 3 - Error status
+  // DLE EOT 4 - Paper sensor status
+  
+  uint8_t dle_eot_cmd[] = {0x10, 0x04, 0x01}; // DLE EOT 1 for printer status
+  
+  for (uint8_t status_type = 1; status_type <= 4; status_type++) {
+    dle_eot_cmd[2] = status_type;
+    
+    ESP_LOGI(TAG, "Sending DLE EOT %d status query", status_type);
+    
+    // Clear any pending data
+    while (this->available()) {
+      this->read();
+    }
+    
+    // Send the status query
+    this->write_array(dle_eot_cmd, sizeof(dle_eot_cmd));
+    this->flush();
+    
+    // Wait for response
+    uint32_t start = millis();
+    std::vector<uint8_t> response;
+    
+    while (millis() - start < 500) { // 500ms timeout
+      if (this->available()) {
+        uint8_t byte = this->read();
+        response.push_back(byte);
+        
+        // Continue reading for a bit to get complete response
+        uint32_t read_start = millis();
+        while (millis() - read_start < 50) { // 50ms timeout for additional bytes
+          if (this->available()) {
+            response.push_back(this->read());
+            read_start = millis(); // Reset timeout if we got a byte
+          }
+        }
+        break;
+      }
+    }
+    
+    if (!response.empty()) {
+      // Log the raw response bytes in multiple formats for analysis
+      std::string hex_str = "";
+      std::string dec_str = "";
+      std::string bin_str = "";
+      
+      for (size_t i = 0; i < response.size(); i++) {
+        if (i > 0) {
+          hex_str += " ";
+          dec_str += " ";
+          bin_str += " ";
+        }
+        
+        char hex_buf[4];
+        snprintf(hex_buf, sizeof(hex_buf), "%02X", response[i]);
+        hex_str += hex_buf;
+        
+        char dec_buf[4];
+        snprintf(dec_buf, sizeof(dec_buf), "%d", response[i]);
+        dec_str += dec_buf;
+        
+        // Binary representation
+        std::string byte_bin = "";
+        for (int bit = 7; bit >= 0; bit--) {
+          byte_bin += (response[i] & (1 << bit)) ? "1" : "0";
+        }
+        bin_str += byte_bin;
+      }
+      
+      ESP_LOGI(TAG, "Status type %d response (%d bytes):", status_type, response.size());
+      ESP_LOGI(TAG, "  Hex:    %s", hex_str.c_str());
+      ESP_LOGI(TAG, "  Dec:    %s", dec_str.c_str());
+      ESP_LOGI(TAG, "  Binary: %s", bin_str.c_str());
+      
+      // Interpret common status bits if we get a single byte response
+      if (response.size() == 1) {
+        uint8_t status = response[0];
+        ESP_LOGI(TAG, "  Bit analysis for status type %d:", status_type);
+        for (int bit = 0; bit < 8; bit++) {
+          bool bit_set = status & (1 << bit);
+          ESP_LOGI(TAG, "    Bit %d: %s", bit, bit_set ? "SET (1)" : "CLEAR (0)");
+        }
+        
+        // Common interpretations based on typical thermal printer status
+        if (status_type == 1) { // Printer status
+          ESP_LOGI(TAG, "  Possible interpretations (Printer Status):");
+          if (status & 0x01) ESP_LOGI(TAG, "    - Bit 0: Drawer kick-out connector pin 3 is LOW");
+          if (status & 0x02) ESP_LOGI(TAG, "    - Bit 1: Offline");
+          if (status & 0x04) ESP_LOGI(TAG, "    - Bit 2: Cover open (varies by printer model)");
+          if (status & 0x08) ESP_LOGI(TAG, "    - Bit 3: Paper fed by paper feed button");
+        } else if (status_type == 2) { // Offline status
+          ESP_LOGI(TAG, "  Possible interpretations (Offline Status):");
+          if (status & 0x01) ESP_LOGI(TAG, "    - Bit 0: Cover open");
+          if (status & 0x02) ESP_LOGI(TAG, "    - Bit 1: Paper feed button pressed");
+          if (status & 0x04) ESP_LOGI(TAG, "    - Bit 2: Paper end");
+          if (status & 0x08) ESP_LOGI(TAG, "    - Bit 3: Error");
+        } else if (status_type == 4) { // Paper sensor status
+          ESP_LOGI(TAG, "  Possible interpretations (Paper Sensor):");
+          if (status & 0x01) ESP_LOGI(TAG, "    - Bit 0: Paper near end sensor: paper adequate");
+          if (status & 0x02) ESP_LOGI(TAG, "    - Bit 1: Paper near end sensor: paper near end");
+          if (status & 0x60) ESP_LOGI(TAG, "    - Bits 5-6: Paper roll status");
+        }
+      }
+    } else {
+      ESP_LOGW(TAG, "No response for status type %d (timeout after 500ms)", status_type);
+    }
+    
+    delay(100); // Small delay between commands
+  }
+  
+  // Also try ESC v n commands (alternative status)
+  ESP_LOGI(TAG, "Trying ESC v status commands...");
+  for (uint8_t n = 0; n <= 3; n++) {
+    uint8_t esc_v_cmd[] = {0x1B, 0x76, n};
+    
+    // Clear any pending data
+    while (this->available()) {
+      this->read();
+    }
+    
+    this->write_array(esc_v_cmd, sizeof(esc_v_cmd));
+    this->flush();
+    
+    // Wait for response
+    uint32_t start = millis();
+    std::vector<uint8_t> response;
+    
+    while (millis() - start < 500) {
+      if (this->available()) {
+        uint8_t byte = this->read();
+        response.push_back(byte);
+        
+        uint32_t read_start = millis();
+        while (millis() - read_start < 50) {
+          if (this->available()) {
+            response.push_back(this->read());
+            read_start = millis();
+          }
+        }
+        break;
+      }
+    }
+    
+    if (!response.empty()) {
+      std::string hex_str = "";
+      for (size_t i = 0; i < response.size(); i++) {
+        if (i > 0) hex_str += " ";
+        char buf[4];
+        snprintf(buf, sizeof(buf), "%02X", response[i]);
+        hex_str += buf;
+      }
+      ESP_LOGI(TAG, "ESC v %d response: %s", n, hex_str.c_str());
+    } else {
+      ESP_LOGD(TAG, "No response for ESC v %d", n);
+    }
+    
+    delay(50);
+  }
+  
+  // Add interpretation summary based on observed patterns
+  ESP_LOGI(TAG, "=== STATUS SUMMARY ===");
+  ESP_LOGI(TAG, "Based on your printer model:");
+  ESP_LOGI(TAG, "- Cover status: ESC v 3 ('00 00'=closed, '08'=open)");
+  ESP_LOGI(TAG, "- Paper status: DLE EOT 4 (0x12=paper OK, 0x72=paper out/near end)");
+  ESP_LOGI(TAG, "- Alternative cover: DLE EOT 2 (0x12=closed, 0x32=open)");
+  ESP_LOGI(TAG, "- Ready to print: DLE EOT 4=0x12 AND ESC v 3='00 00'");
+  ESP_LOGI(TAG, "Status check complete. Check logs above for raw status bytes.");
+}
+
+bool ThermalPrinterDisplay::get_paper_problem() {
+  // Send DLE EOT 4 command to check paper sensor status  
+  uint8_t status_cmd[] = {0x10, 0x04, 4};  // DLE EOT 4
+  
+  // Clear any pending data
+  while (this->available()) {
+    this->read();
+  }
+  
+  this->write_array(status_cmd, sizeof(status_cmd));
+  this->flush();
+  
+  // Wait for response
+  uint32_t start = millis();
+  uint8_t paper_response = 0xFF; // Default to error state
+  while (millis() - start < 500) {
+    if (this->available()) {
+      paper_response = this->read();
+      break;
+    }
+  }
+  
+  // If DLE EOT 4 returns 0x12, paper is definitely OK
+  if (paper_response == 0x12) {
+    return false; // No paper problem
+  }
+  
+  // If DLE EOT 4 returns 0x72, it could be paper out OR cover open
+  // We need to check cover status to differentiate
+  if (paper_response == 0x72) {
+    // Check if cover is open first
+    bool cover_is_open = get_cover_problem();
+    
+    // If cover is open, we can't reliably detect paper status
+    // So we assume paper is OK (don't report paper problem when cover is open)
+    if (cover_is_open) {
+      return false; // Don't report paper problem when cover is open
+    }
+    
+    // Cover is closed and DLE EOT 4 = 0x72, so this is a real paper problem
+    return true;
+  }
+  
+  // Any other response indicates paper problem
+  return true;
+}
+
+bool ThermalPrinterDisplay::get_cover_problem() {
+  // Send ESC v 3 command to check cover status
+  uint8_t esc_v_cmd[] = {0x1B, 0x76, 3};
+  
+  // Clear any pending data
+  while (this->available()) {
+    this->read();
+  }
+  
+  this->write_array(esc_v_cmd, sizeof(esc_v_cmd));
+  this->flush();
+  
+  // Wait for response
+  uint32_t start = millis();
+  std::vector<uint8_t> response;
+  
+  while (millis() - start < 500) {
+    if (this->available()) {
+      uint8_t byte = this->read();
+      response.push_back(byte);
+      
+      // Read additional bytes if available
+      uint32_t read_start = millis();
+      while (millis() - read_start < 50) {
+        if (this->available()) {
+          response.push_back(this->read());
+          read_start = millis();
+        }
+      }
+      break;
+    }
+  }
+  
+  // Cover closed: '00 00' or no response, Cover open: '08' 
+  if (response.empty()) {
+    return false; // No response = cover closed
+  }
+  
+  // Check if any byte is 0x08 (cover open indicator)
+  for (uint8_t byte : response) {
+    if (byte == 0x08) {
+      return true; // Cover open = problem
+    }
+  }
+  
+  return false; // Cover closed = no problem
+}
+
+bool ThermalPrinterDisplay::get_printer_problem() {
+  // Overall printer status - problem if either paper out or cover open
+  return get_paper_problem() || get_cover_problem();
+}
+} // namespace thermal_printer
 }  // namespace esphome

@@ -1,6 +1,7 @@
-# M5Stack Thermal Printer ESPHome Component
+# Thermal Printer ESPHome Component
 
-This component provides thermal printing functionality for the M5Stack thermal printer module based on the CSN-A2 thermal printer mechanism.
+This component provides thermal printing functionality for
+thermal printer modules based on the CSN-A2 thermal printer mechanism.
 
 ## Features
 
@@ -60,7 +61,7 @@ When no parameters are specified, all demo sections are enabled.
 
 ```yaml
 display:
-  - platform: m5stack_printer
+  - platform: thermal_printer
     uart_id: thermal_uart
     height: 200
     id: thermal_printer
@@ -76,7 +77,7 @@ uart:
 
 ### Text Printing
 ```yaml
-- m5stack_printer.print_text:
+- thermal_printer.print_text:
     id: thermal_printer
     text: "Hello World!"
     font_size: 2
@@ -84,7 +85,7 @@ uart:
 
 ### Run Demo
 ```yaml
-- m5stack_printer.run_demo:
+- thermal_printer.run_demo:
     id: thermal_printer
     show_qr_code: true
     show_barcode: true
@@ -95,7 +96,7 @@ uart:
 
 ### Cut Paper
 ```yaml
-- m5stack_printer.cut_paper:
+- thermal_printer.cut_paper:
     id: thermal_printer
     cut_mode: 0  # 0=full, 1=partial, 66=cut and feed
     feed_lines: 3
@@ -103,14 +104,14 @@ uart:
 
 ### Set Alignment
 ```yaml
-- m5stack_printer.set_alignment:
+- thermal_printer.set_alignment:
     id: thermal_printer
     alignment: 1  # 0=left, 1=center, 2=right
 ```
 
 ### Set Text Style
 ```yaml
-- m5stack_printer.set_text_style:
+- thermal_printer.set_text_style:
     id: thermal_printer
     bold: true
     underline: 2  # 0=off, 1=1dot, 2=2dot
@@ -120,20 +121,20 @@ uart:
 
 ### Print Test Page
 ```yaml
-- m5stack_printer.print_test_page:
+- thermal_printer.print_test_page:
     id: thermal_printer
 ```
 
 ## Hardware Requirements
 
-- M5Stack thermal printer module
+- thermal printer module
 - CSN-A2 or compatible thermal printer mechanism
 - UART connection (TTL/RS232)
 - 5-9V power supply for printer
 
 ## Compatible Printers
 
-- M5Stack thermal printer module
+- thermal printer module
 - CSN-A2 thermal printer
 - Other ESC/POS compatible thermal printers
 

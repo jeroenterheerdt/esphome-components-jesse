@@ -6,115 +6,119 @@ from esphome import automation
 
 DEPENDENCIES = ["uart"]
 
-m5stack_printer_ns = cg.esphome_ns.namespace("m5stack_printer")
+thermal_printer_ns = cg.esphome_ns.namespace("thermal_printer")
 
-M5StackPrinterDisplay = m5stack_printer_ns.class_(
-    "M5StackPrinterDisplay", display.DisplayBuffer, uart.UARTDevice
+ThermalPrinterDisplay = thermal_printer_ns.class_(
+    "ThermalPrinterDisplay", display.DisplayBuffer, uart.UARTDevice
 )
 
-M5StackPrinterPrintTextAction = m5stack_printer_ns.class_(
-    "M5StackPrinterPrintTextAction", automation.Action
+ThermalPrinterPrintTextAction = thermal_printer_ns.class_(
+    "ThermalPrinterPrintTextAction", automation.Action
 )
 
-M5StackPrinterPrintQRCodeAction = m5stack_printer_ns.class_(
-    "M5StackPrinterPrintQRCodeAction", automation.Action
+ThermalPrinterPrintQRCodeAction = thermal_printer_ns.class_(
+    "ThermalPrinterPrintQRCodeAction", automation.Action
 )
 
-M5StackPrinterPrintBarcodeAction = m5stack_printer_ns.class_(
-    "M5StackPrinterPrintBarcodeAction", automation.Action
+ThermalPrinterPrintBarcodeAction = thermal_printer_ns.class_(
+    "ThermalPrinterPrintBarcodeAction", automation.Action
 )
 
-M5StackPrinterNewLineAction = m5stack_printer_ns.class_(
-    "M5StackPrinterNewLineAction", automation.Action
+ThermalPrinterNewLineAction = thermal_printer_ns.class_(
+    "ThermalPrinterNewLineAction", automation.Action
 )
 
 # Additional action classes for new features
-M5StackPrinterCutPaperAction = m5stack_printer_ns.class_(
-    "M5StackPrinterCutPaperAction", automation.Action
+ThermalPrinterCutPaperAction = thermal_printer_ns.class_(
+    "ThermalPrinterCutPaperAction", automation.Action
 )
 
-M5StackPrinterSetAlignmentAction = m5stack_printer_ns.class_(
-    "M5StackPrinterSetAlignmentAction", automation.Action
+ThermalPrinterSetAlignmentAction = thermal_printer_ns.class_(
+    "ThermalPrinterSetAlignmentAction", automation.Action
 )
 
-M5StackPrinterSetStyleAction = m5stack_printer_ns.class_(
-    "M5StackPrinterSetStyleAction", automation.Action
+ThermalPrinterSetStyleAction = thermal_printer_ns.class_(
+    "ThermalPrinterSetStyleAction", automation.Action
 )
 
-M5StackPrinterSet90DegreeRotationAction = m5stack_printer_ns.class_(
-    "M5StackPrinterSet90DegreeRotationAction", automation.Action
+ThermalPrinterSet90DegreeRotationAction = thermal_printer_ns.class_(
+    "ThermalPrinterSet90DegreeRotationAction", automation.Action
 )
 
-M5StackPrinterSetInversePrintingAction = m5stack_printer_ns.class_(
-    "M5StackPrinterSetInversePrintingAction", automation.Action
+ThermalPrinterSetInversePrintingAction = thermal_printer_ns.class_(
+    "ThermalPrinterSetInversePrintingAction", automation.Action
 )
 
-M5StackPrinterSetChineseModeAction = m5stack_printer_ns.class_(
-    "M5StackPrinterSetChineseModeAction", automation.Action
+ThermalPrinterSetUpsideDownPrintingAction = thermal_printer_ns.class_(
+    "ThermalPrinterSetUpsideDownPrintingAction", automation.Action
 )
 
-M5StackPrinterSetLineSpacingAction = m5stack_printer_ns.class_(
-    "M5StackPrinterSetLineSpacingAction", automation.Action
+ThermalPrinterSetChineseModeAction = thermal_printer_ns.class_(
+    "ThermalPrinterSetChineseModeAction", automation.Action
 )
 
-M5StackPrinterSetSleepModeAction = m5stack_printer_ns.class_(
-    "M5StackPrinterSetSleepModeAction", automation.Action
+ThermalPrinterSetLineSpacingAction = thermal_printer_ns.class_(
+    "ThermalPrinterSetLineSpacingAction", automation.Action
 )
 
-M5StackPrinterWakeUpAction = m5stack_printer_ns.class_(
-    "M5StackPrinterWakeUpAction", automation.Action
+ThermalPrinterSetSleepModeAction = thermal_printer_ns.class_(
+    "ThermalPrinterSetSleepModeAction", automation.Action
 )
 
-M5StackPrinterCheckStatusAction = m5stack_printer_ns.class_(
-    "M5StackPrinterCheckStatusAction", automation.Action
+ThermalPrinterWakeUpAction = thermal_printer_ns.class_(
+    "ThermalPrinterWakeUpAction", automation.Action
 )
 
-M5StackPrinterSetPrintDensityAction = m5stack_printer_ns.class_(
-    "M5StackPrinterSetPrintDensityAction", automation.Action
+ThermalPrinterCheckStatusAction = thermal_printer_ns.class_(
+    "ThermalPrinterCheckStatusAction", automation.Action
 )
 
-M5StackPrinterSetTabPositionsAction = m5stack_printer_ns.class_(
-    "M5StackPrinterSetTabPositionsAction", automation.Action
+ThermalPrinterSetPrintDensityAction = thermal_printer_ns.class_(
+    "ThermalPrinterSetPrintDensityAction", automation.Action
 )
 
-M5StackPrinterHorizontalTabAction = m5stack_printer_ns.class_(
-    "M5StackPrinterHorizontalTabAction", automation.Action
+ThermalPrinterSetTabPositionsAction = thermal_printer_ns.class_(
+    "ThermalPrinterSetTabPositionsAction", automation.Action
 )
 
-M5StackPrinterSetHorizontalPositionAction = m5stack_printer_ns.class_(
-    "M5StackPrinterSetHorizontalPositionAction", automation.Action
+ThermalPrinterHorizontalTabAction = thermal_printer_ns.class_(
+    "ThermalPrinterHorizontalTabAction", automation.Action
 )
 
-M5StackPrinterPrintTestPageAction = m5stack_printer_ns.class_(
-    "M5StackPrinterPrintTestPageAction", automation.Action
+ThermalPrinterSetHorizontalPositionAction = thermal_printer_ns.class_(
+    "ThermalPrinterSetHorizontalPositionAction", automation.Action
 )
 
-M5StackPrinterRunDemoAction = m5stack_printer_ns.class_(
-    "M5StackPrinterRunDemoAction", automation.Action
+ThermalPrinterPrintTestPageAction = thermal_printer_ns.class_(
+    "ThermalPrinterPrintTestPageAction", automation.Action
 )
 
-M5StackPrinterSendRawCommandAction = m5stack_printer_ns.class_(
-    "M5StackPrinterSendRawCommandAction", automation.Action
+ThermalPrinterRunDemoAction = thermal_printer_ns.class_(
+    "ThermalPrinterRunDemoAction", automation.Action
 )
 
-M5StackPrinterThermalPrintTextAction = m5stack_printer_ns.class_(
-    "M5StackPrinterThermalPrintTextAction", automation.Action
+ThermalPrinterSendRawCommandAction = thermal_printer_ns.class_(
+    "ThermalPrinterSendRawCommandAction", automation.Action
 )
 
-M5StackPrinterSetTextIndentationAction = m5stack_printer_ns.class_(
-    "M5StackPrinterSetTextIndentationAction", automation.Action
+ThermalPrinterThermalPrintTextAction = thermal_printer_ns.class_(
+    "ThermalPrinterThermalPrintTextAction", automation.Action
 )
 
-M5StackPrinterResetTextIndentationAction = m5stack_printer_ns.class_(
-    "M5StackPrinterResetTextIndentationAction", automation.Action
+ThermalPrinterSetTextIndentationAction = thermal_printer_ns.class_(
+    "ThermalPrinterSetTextIndentationAction", automation.Action
 )
 
-M5StackPrinterFeedPaperDotsAction = m5stack_printer_ns.class_(
-    "M5StackPrinterFeedPaperDotsAction", automation.Action
+ThermalPrinterResetTextIndentationAction = thermal_printer_ns.class_(
+    "ThermalPrinterResetTextIndentationAction", automation.Action
 )
 
-M5StackPrinterPrintAndFeedLinesAction = m5stack_printer_ns.class_(
-    "M5StackPrinterPrintAndFeedLinesAction", automation.Action
+ThermalPrinterFeedPaperDotsAction = thermal_printer_ns.class_(
+    "ThermalPrinterFeedPaperDotsAction", automation.Action
+)
+
+ThermalPrinterPrintAndFeedLinesAction = thermal_printer_ns.class_(
+    "ThermalPrinterPrintAndFeedLinesAction", automation.Action
 )
 
 CONF_FONT_SIZE = "font_size"  # Deprecated, use font_width/font_height
@@ -155,16 +159,29 @@ CONF_SHOW_BARCODE = "show_barcode"
 CONF_SHOW_TEXT_STYLES = "show_text_styles"
 CONF_SHOW_INVERSE = "show_inverse"
 CONF_SHOW_ROTATION = "show_rotation"
+CONF_SHOW_UPSIDE_DOWN = "show_upside_down"
 CONF_SEND_WAKEUP = "send_wakeup"
 CONF_TIMEOUT_SECONDS = "timeout_seconds"
 CONF_COMMAND = "command"
 CONF_SPACES = "spaces"
+CONF_MODEL = "model"
+
+# Model types for different printer hardware
+ThermalPrinterModel = thermal_printer_ns.enum("ThermalPrinterModel")
+MODELS = {
+    "M5STACK_THERMAL": ThermalPrinterModel.M5STACK_THERMAL,
+    "CSN_A2": ThermalPrinterModel.CSN_A2,
+    "GENERIC_58MM": ThermalPrinterModel.GENERIC_58MM,
+    "ADAFRUIT_597": ThermalPrinterModel.ADAFRUIT_597,
+    "SPARKFUN_10438": ThermalPrinterModel.SPARKFUN_10438,
+}
 
 CONFIG_SCHEMA = (
     display.FULL_DISPLAY_SCHEMA.extend(
         {
-            cv.GenerateID(): cv.declare_id(M5StackPrinterDisplay),
+            cv.GenerateID(): cv.declare_id(ThermalPrinterDisplay),
             cv.Required(CONF_HEIGHT): cv.uint16_t,
+            cv.Optional(CONF_MODEL, default="M5STACK_THERMAL"): cv.enum(MODELS, upper=True),
             cv.Optional(CONF_SEND_WAKEUP, default=False): cv.boolean,
         }
     )
@@ -181,6 +198,7 @@ async def to_code(config):
     await uart.register_uart_device(var, config)
 
     cg.add(var.set_height(config[CONF_HEIGHT]))
+    cg.add(var.set_model(config[CONF_MODEL]))
     cg.add(var.set_send_wakeup(config[CONF_SEND_WAKEUP]))
 
     if lambda_config := config.get(CONF_LAMBDA):
@@ -191,12 +209,12 @@ async def to_code(config):
 
 
 @automation.register_action(
-    "m5stack_printer.print_text",
-    M5StackPrinterPrintTextAction,
+    "thermal_printer.print_text",
+    ThermalPrinterPrintTextAction,
     cv.maybe_simple_value(
         cv.Schema(
             {
-                cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
+                cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
                 cv.Required(CONF_TEXT): cv.templatable(cv.string),
                 cv.Optional(CONF_FONT_WIDTH, default=1): cv.templatable(cv.int_),
                 cv.Optional(CONF_FONT_HEIGHT, default=1): cv.templatable(cv.int_),
@@ -206,7 +224,7 @@ async def to_code(config):
         key=CONF_TEXT,
     ),
 )
-async def m5stack_printer_print_text_action_to_code(
+async def thermal_printer_print_text_action_to_code(
     config, action_id, template_arg, args
 ):
     var = cg.new_Pvariable(action_id, template_arg)
@@ -224,10 +242,10 @@ async def m5stack_printer_print_text_action_to_code(
 
 @automation.register_action(
     "esphome.thermalprinter_print_text",
-    M5StackPrinterThermalPrintTextAction,
+    ThermalPrinterThermalPrintTextAction,
     cv.Schema(
         {
-            cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
+            cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
             cv.Required(CONF_TEXT_TO_PRINT): cv.templatable(cv.string),
             cv.Optional(CONF_FONT_WIDTH, default=1): cv.templatable(cv.int_),
             cv.Optional(CONF_FONT_HEIGHT, default=1): cv.templatable(cv.int_),
@@ -292,19 +310,19 @@ async def thermalprinter_print_text_action_to_code(
 
 
 @automation.register_action(
-    "m5stack_printer.print_qrcode",
-    M5StackPrinterPrintQRCodeAction,
+    "thermal_printer.print_qrcode",
+    ThermalPrinterPrintQRCodeAction,
     cv.maybe_simple_value(
         cv.Schema(
             {
-                cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
+                cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
                 cv.Required(CONF_QRCODE): cv.templatable(cv.string),
             }
         ),
         key=CONF_QRCODE,
     ),
 )
-async def m5stack_printer_print_qrcode_action_to_code(
+async def thermal_printer_print_qrcode_action_to_code(
     config, action_id, template_arg, args
 ):
     var = cg.new_Pvariable(action_id, template_arg)
@@ -315,17 +333,17 @@ async def m5stack_printer_print_qrcode_action_to_code(
 
 
 @automation.register_action(
-    "m5stack_printer.print_barcode",
-    M5StackPrinterPrintBarcodeAction,
+    "thermal_printer.print_barcode",
+    ThermalPrinterPrintBarcodeAction,
     cv.Schema(
         {
-            cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
+            cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
             cv.Required(CONF_BARCODE): cv.templatable(cv.string),
             cv.Required(CONF_TYPE): cv.templatable(cv.string),
         }
     ),
 )
-async def m5stack_printer_print_barcode_action_to_code(
+async def thermal_printer_print_barcode_action_to_code(
     config, action_id, template_arg, args
 ):
     var = cg.new_Pvariable(action_id, template_arg)
@@ -338,19 +356,19 @@ async def m5stack_printer_print_barcode_action_to_code(
 
 
 @automation.register_action(
-    "m5stack_printer.new_line",
-    M5StackPrinterNewLineAction,
+    "thermal_printer.new_line",
+    ThermalPrinterNewLineAction,
     cv.maybe_simple_value(
         cv.Schema(
             {
-                cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
+                cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
                 cv.Required(CONF_LINES): cv.templatable(cv.int_range(min=1, max=255)),
             }
         ),
         key=CONF_LINES,
     ),
 )
-async def m5stack_printer_new_line_action_to_code(
+async def thermal_printer_new_line_action_to_code(
     config, action_id, template_arg, args
 ):
     var = cg.new_Pvariable(action_id, template_arg)
@@ -361,16 +379,16 @@ async def m5stack_printer_new_line_action_to_code(
 
 
 @automation.register_action(
-    "m5stack_printer.set_90_degree_rotation",
-    M5StackPrinterSet90DegreeRotationAction,
+    "thermal_printer.set_90_degree_rotation",
+    ThermalPrinterSet90DegreeRotationAction,
     cv.Schema(
         {
-            cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
+            cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
             cv.Required(CONF_ENABLE): cv.templatable(cv.boolean),
         }
     ),
 )
-async def m5stack_printer_set_90_degree_rotation_action_to_code(
+async def thermal_printer_set_90_degree_rotation_action_to_code(
     config, action_id, template_arg, args
 ):
     var = cg.new_Pvariable(action_id, template_arg)
@@ -381,16 +399,36 @@ async def m5stack_printer_set_90_degree_rotation_action_to_code(
 
 
 @automation.register_action(
-    "m5stack_printer.set_inverse_printing",
-    M5StackPrinterSetInversePrintingAction,
+    "thermal_printer.set_inverse_printing",
+    ThermalPrinterSetInversePrintingAction,
     cv.Schema(
         {
-            cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
+            cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
             cv.Required(CONF_ENABLE): cv.templatable(cv.boolean),
         }
     ),
 )
-async def m5stack_printer_set_inverse_printing_action_to_code(
+async def thermal_printer_set_inverse_printing_action_to_code(
+    config, action_id, template_arg, args
+):
+    var = cg.new_Pvariable(action_id, template_arg)
+    await cg.register_parented(var, config[CONF_ID])
+    templ = await cg.templatable(config[CONF_ENABLE], args, cg.bool_)
+    cg.add(var.set_enable(templ))
+    return var
+
+
+@automation.register_action(
+    "thermal_printer.set_upside_down_printing",
+    ThermalPrinterSetUpsideDownPrintingAction,
+    cv.Schema(
+        {
+            cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
+            cv.Required(CONF_ENABLE): cv.templatable(cv.boolean),
+        }
+    ),
+)
+async def thermal_printer_set_upside_down_printing_action_to_code(
     config, action_id, template_arg, args
 ):
     var = cg.new_Pvariable(action_id, template_arg)
@@ -401,22 +439,22 @@ async def m5stack_printer_set_inverse_printing_action_to_code(
 
 
 # Raw command action
-M5StackPrinterSendRawCommandAction = m5stack_printer_ns.class_(
-    "M5StackPrinterSendRawCommandAction", automation.Action
+ThermalPrinterSendRawCommandAction = thermal_printer_ns.class_(
+    "ThermalPrinterSendRawCommandAction", automation.Action
 )
 
 
 @automation.register_action(
-    "m5stack_printer.send_raw_command",
-    M5StackPrinterSendRawCommandAction,
+    "thermal_printer.send_raw_command",
+    ThermalPrinterSendRawCommandAction,
     cv.Schema(
         {
-            cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
+            cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
             cv.Required("command"): cv.templatable(cv.string),
         }
     ),
 )
-async def m5stack_printer_send_raw_command_to_code(
+async def thermal_printer_send_raw_command_to_code(
     config, action_id, template_arg, args
 ):
     var = cg.new_Pvariable(action_id, template_arg)
@@ -430,16 +468,16 @@ async def m5stack_printer_send_raw_command_to_code(
 
 
 @automation.register_action(
-    "m5stack_printer.set_chinese_mode",
-    M5StackPrinterSetChineseModeAction,
+    "thermal_printer.set_chinese_mode",
+    ThermalPrinterSetChineseModeAction,
     cv.Schema(
         {
-            cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
+            cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
             cv.Required(CONF_ENABLE): cv.templatable(cv.boolean),
         }
     ),
 )
-async def m5stack_printer_set_chinese_mode_action_to_code(
+async def thermal_printer_set_chinese_mode_action_to_code(
     config, action_id, template_arg, args
 ):
     var = cg.new_Pvariable(action_id, template_arg)
@@ -450,16 +488,16 @@ async def m5stack_printer_set_chinese_mode_action_to_code(
 
 
 @automation.register_action(
-    "m5stack_printer.set_line_spacing",
-    M5StackPrinterSetLineSpacingAction,
+    "thermal_printer.set_line_spacing",
+    ThermalPrinterSetLineSpacingAction,
     cv.Schema(
         {
-            cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
+            cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
             cv.Required(CONF_SPACING): cv.templatable(cv.int_range(min=0, max=255)),
         }
     ),
 )
-async def m5stack_printer_set_line_spacing_action_to_code(
+async def thermal_printer_set_line_spacing_action_to_code(
     config, action_id, template_arg, args
 ):
     var = cg.new_Pvariable(action_id, template_arg)
@@ -470,11 +508,11 @@ async def m5stack_printer_set_line_spacing_action_to_code(
 
 
 @automation.register_action(
-    "m5stack_printer.set_print_density",
-    M5StackPrinterSetPrintDensityAction,
+    "thermal_printer.set_print_density",
+    ThermalPrinterSetPrintDensityAction,
     cv.Schema(
         {
-            cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
+            cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
             cv.Required(CONF_DENSITY): cv.templatable(cv.int_range(min=0, max=31)),
             cv.Optional(CONF_BREAK_TIME, default=0): cv.templatable(
                 cv.int_range(min=0, max=7)
@@ -482,7 +520,7 @@ async def m5stack_printer_set_line_spacing_action_to_code(
         }
     ),
 )
-async def m5stack_printer_set_print_density_action_to_code(
+async def thermal_printer_set_print_density_action_to_code(
     config, action_id, template_arg, args
 ):
     var = cg.new_Pvariable(action_id, template_arg)
@@ -495,16 +533,16 @@ async def m5stack_printer_set_print_density_action_to_code(
 
 
 @automation.register_action(
-    "m5stack_printer.set_tab_positions",
-    M5StackPrinterSetTabPositionsAction,
+    "thermal_printer.set_tab_positions",
+    ThermalPrinterSetTabPositionsAction,
     cv.Schema(
         {
-            cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
+            cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
             cv.Required(CONF_POSITIONS): cv.templatable(cv.string),
         }
     ),
 )
-async def m5stack_printer_set_tab_positions_action_to_code(
+async def thermal_printer_set_tab_positions_action_to_code(
     config, action_id, template_arg, args
 ):
     var = cg.new_Pvariable(action_id, template_arg)
@@ -515,15 +553,15 @@ async def m5stack_printer_set_tab_positions_action_to_code(
 
 
 @automation.register_action(
-    "m5stack_printer.horizontal_tab",
-    M5StackPrinterHorizontalTabAction,
+    "thermal_printer.horizontal_tab",
+    ThermalPrinterHorizontalTabAction,
     cv.Schema(
         {
-            cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
+            cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
         }
     ),
 )
-async def m5stack_printer_horizontal_tab_action_to_code(
+async def thermal_printer_horizontal_tab_action_to_code(
     config, action_id, template_arg, args
 ):
     var = cg.new_Pvariable(action_id, template_arg)
@@ -532,16 +570,16 @@ async def m5stack_printer_horizontal_tab_action_to_code(
 
 
 @automation.register_action(
-    "m5stack_printer.set_horizontal_position",
-    M5StackPrinterSetHorizontalPositionAction,
+    "thermal_printer.set_horizontal_position",
+    ThermalPrinterSetHorizontalPositionAction,
     cv.Schema(
         {
-            cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
+            cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
             cv.Required(CONF_POSITION): cv.templatable(cv.int_range(min=0, max=383)),
         }
     ),
 )
-async def m5stack_printer_set_horizontal_position_action_to_code(
+async def thermal_printer_set_horizontal_position_action_to_code(
     config, action_id, template_arg, args
 ):
     var = cg.new_Pvariable(action_id, template_arg)
@@ -552,11 +590,11 @@ async def m5stack_printer_set_horizontal_position_action_to_code(
 
 
 @automation.register_action(
-    "m5stack_printer.cut_paper",
-    M5StackPrinterCutPaperAction,
+    "thermal_printer.cut_paper",
+    ThermalPrinterCutPaperAction,
     cv.Schema(
         {
-            cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
+            cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
             cv.Optional(CONF_CUT_MODE, default=0): cv.templatable(
                 cv.int_range(min=0, max=66)
             ),
@@ -566,7 +604,7 @@ async def m5stack_printer_set_horizontal_position_action_to_code(
         }
     ),
 )
-async def m5stack_printer_cut_paper_action_to_code(
+async def thermal_printer_cut_paper_action_to_code(
     config, action_id, template_arg, args
 ):
     var = cg.new_Pvariable(action_id, template_arg)
@@ -579,18 +617,18 @@ async def m5stack_printer_cut_paper_action_to_code(
 
 
 @automation.register_action(
-    "m5stack_printer.set_alignment",
-    M5StackPrinterSetAlignmentAction,
+    "thermal_printer.set_alignment",
+    ThermalPrinterSetAlignmentAction,
     cv.Schema(
         {
-            cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
+            cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
             cv.Required(CONF_ALIGNMENT): cv.templatable(
                 cv.int_range(min=0, max=2)
             ),  # 0=left, 1=center, 2=right
         }
     ),
 )
-async def m5stack_printer_set_alignment_action_to_code(
+async def thermal_printer_set_alignment_action_to_code(
     config, action_id, template_arg, args
 ):
     var = cg.new_Pvariable(action_id, template_arg)
@@ -601,11 +639,11 @@ async def m5stack_printer_set_alignment_action_to_code(
 
 
 @automation.register_action(
-    "m5stack_printer.set_text_style",
-    M5StackPrinterSetStyleAction,
+    "thermal_printer.set_text_style",
+    ThermalPrinterSetStyleAction,
     cv.Schema(
         {
-            cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
+            cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
             cv.Optional(CONF_BOLD, default=False): cv.templatable(cv.boolean),
             cv.Optional(CONF_UNDERLINE, default=0): cv.templatable(
                 cv.int_range(min=0, max=2)
@@ -615,7 +653,7 @@ async def m5stack_printer_set_alignment_action_to_code(
         }
     ),
 )
-async def m5stack_printer_set_style_action_to_code(
+async def thermal_printer_set_style_action_to_code(
     config, action_id, template_arg, args
 ):
     var = cg.new_Pvariable(action_id, template_arg)
@@ -632,15 +670,15 @@ async def m5stack_printer_set_style_action_to_code(
 
 
 @automation.register_action(
-    "m5stack_printer.print_test_page",
-    M5StackPrinterPrintTestPageAction,
+    "thermal_printer.print_test_page",
+    ThermalPrinterPrintTestPageAction,
     cv.Schema(
         {
-            cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
+            cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
         }
     ),
 )
-async def m5stack_printer_print_test_page_action_to_code(
+async def thermal_printer_print_test_page_action_to_code(
     config, action_id, template_arg, args
 ):
     var = cg.new_Pvariable(action_id, template_arg)
@@ -649,11 +687,11 @@ async def m5stack_printer_print_test_page_action_to_code(
 
 
 @automation.register_action(
-    "m5stack_printer.run_demo",
-    M5StackPrinterRunDemoAction,
+    "thermal_printer.run_demo",
+    ThermalPrinterRunDemoAction,
     cv.Schema(
         {
-            cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
+            cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
             cv.Optional(CONF_SHOW_QR_CODE, default=False): cv.templatable(cv.boolean),
             cv.Optional(CONF_SHOW_BARCODE, default=False): cv.templatable(cv.boolean),
             cv.Optional(CONF_SHOW_TEXT_STYLES, default=False): cv.templatable(
@@ -661,10 +699,11 @@ async def m5stack_printer_print_test_page_action_to_code(
             ),
             cv.Optional(CONF_SHOW_INVERSE, default=False): cv.templatable(cv.boolean),
             cv.Optional(CONF_SHOW_ROTATION, default=False): cv.templatable(cv.boolean),
+            cv.Optional(CONF_SHOW_UPSIDE_DOWN, default=False): cv.templatable(cv.boolean),
         }
     ),
 )
-async def m5stack_printer_run_demo_action_to_code(
+async def thermal_printer_run_demo_action_to_code(
     config, action_id, template_arg, args
 ):
     var = cg.new_Pvariable(action_id, template_arg)
@@ -680,21 +719,23 @@ async def m5stack_printer_run_demo_action_to_code(
     cg.add(var.set_show_inverse(templ))
     templ = await cg.templatable(config[CONF_SHOW_ROTATION], args, cg.bool_)
     cg.add(var.set_show_rotation(templ))
+    templ = await cg.templatable(config[CONF_SHOW_UPSIDE_DOWN], args, cg.bool_)
+    cg.add(var.set_show_upside_down(templ))
 
     return var
 
 
 # Printer Settings Actions
-M5StackPrinterSetSettingsAction = m5stack_printer_ns.class_(
-    "M5StackPrinterSetSettingsAction", automation.Action
+ThermalPrinterSetSettingsAction = thermal_printer_ns.class_(
+    "ThermalPrinterSetSettingsAction", automation.Action
 )
 
 @automation.register_action(
     "esphome.set_printer_settings",
-    M5StackPrinterSetSettingsAction,
+    ThermalPrinterSetSettingsAction,
     cv.Schema(
         {
-            cv.Required(CONF_ID): cv.use_id(M5StackPrinterDisplay),
+            cv.Required(CONF_ID): cv.use_id(ThermalPrinterDisplay),
             cv.Optional(CONF_LINE_SPACING, default=30): cv.templatable(
                 cv.int_range(min=0, max=255)
             ),
@@ -721,16 +762,16 @@ async def set_printer_settings_action_to_code(config, action_id, template_arg, a
     return var
 
 
-M5StackPrinterResetSettingsAction = m5stack_printer_ns.class_(
-    "M5StackPrinterResetSettingsAction", automation.Action
+ThermalPrinterResetSettingsAction = thermal_printer_ns.class_(
+    "ThermalPrinterResetSettingsAction", automation.Action
 )
 
 @automation.register_action(
     "esphome.reset_printer_settings",
-    M5StackPrinterResetSettingsAction,
+    ThermalPrinterResetSettingsAction,
     cv.Schema(
         {
-            cv.Required(CONF_ID): cv.use_id(M5StackPrinterDisplay),
+            cv.Required(CONF_ID): cv.use_id(ThermalPrinterDisplay),
         }
     ),
 )
@@ -742,11 +783,11 @@ async def reset_printer_settings_action_to_code(config, action_id, template_arg,
 
 # Text indentation control automation actions
 @automation.register_action(
-    "m5stack_printer.set_text_indentation",
-    M5StackPrinterSetTextIndentationAction,
+    "thermal_printer.set_text_indentation",
+    ThermalPrinterSetTextIndentationAction,
     cv.Schema(
         {
-            cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
+            cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
             cv.Required(CONF_SPACES): cv.templatable(cv.int_range(min=0, max=50)),
         }
     ),
@@ -762,11 +803,11 @@ async def set_text_indentation_action_to_code(config, action_id, template_arg, a
 
 
 @automation.register_action(
-    "m5stack_printer.reset_text_indentation",
-    M5StackPrinterResetTextIndentationAction,
+    "thermal_printer.reset_text_indentation",
+    ThermalPrinterResetTextIndentationAction,
     cv.Schema(
         {
-            cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
+            cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
         }
     ),
 )
@@ -778,11 +819,11 @@ async def reset_text_indentation_action_to_code(config, action_id, template_arg,
 
 
 @automation.register_action(
-    "m5stack_printer.feed_paper_dots",
-    M5StackPrinterFeedPaperDotsAction,
+    "thermal_printer.feed_paper_dots",
+    ThermalPrinterFeedPaperDotsAction,
     cv.Schema(
         {
-            cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
+            cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
             cv.Required(CONF_DOTS): cv.templatable(cv.int_range(min=0, max=255)),
         }
     ),
@@ -798,11 +839,11 @@ async def feed_paper_dots_action_to_code(config, action_id, template_arg, args):
 
 
 @automation.register_action(
-    "m5stack_printer.print_and_feed_lines",
-    M5StackPrinterPrintAndFeedLinesAction,
+    "thermal_printer.print_and_feed_lines",
+    ThermalPrinterPrintAndFeedLinesAction,
     cv.Schema(
         {
-            cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
+            cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
             cv.Required(CONF_LINES): cv.templatable(cv.int_range(min=0, max=255)),
         }
     ),
@@ -818,19 +859,19 @@ async def print_and_feed_lines_action_to_code(config, action_id, template_arg, a
 
 
 @automation.register_action(
-    "m5stack_printer.set_sleep_mode",
-    M5StackPrinterSetSleepModeAction,
+    "thermal_printer.set_sleep_mode",
+    ThermalPrinterSetSleepModeAction,
     cv.maybe_simple_value(
         cv.Schema(
             {
-                cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
+                cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
                 cv.Required(CONF_TIMEOUT_SECONDS): cv.templatable(cv.int_range(min=0, max=65535)),
             }
         ),
         key=CONF_TIMEOUT_SECONDS,
     ),
 )
-async def m5stack_printer_set_sleep_mode_action_to_code(
+async def thermal_printer_set_sleep_mode_action_to_code(
     config, action_id, template_arg, args
 ):
     var = cg.new_Pvariable(action_id, template_arg)
@@ -841,15 +882,15 @@ async def m5stack_printer_set_sleep_mode_action_to_code(
 
 
 @automation.register_action(
-    "m5stack_printer.wake_up",
-    M5StackPrinterWakeUpAction,
+    "thermal_printer.wake_up",
+    ThermalPrinterWakeUpAction,
     cv.Schema(
         {
-            cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
+            cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
         }
     ),
 )
-async def m5stack_printer_wake_up_action_to_code(
+async def thermal_printer_wake_up_action_to_code(
     config, action_id, template_arg, args
 ):
     var = cg.new_Pvariable(action_id, template_arg)
@@ -858,15 +899,15 @@ async def m5stack_printer_wake_up_action_to_code(
 
 
 @automation.register_action(
-    "m5stack_printer.check_status",
-    M5StackPrinterCheckStatusAction,
+    "thermal_printer.check_status",
+    ThermalPrinterCheckStatusAction,
     cv.Schema(
         {
-            cv.GenerateID(): cv.use_id(M5StackPrinterDisplay),
+            cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
         }
     ),
 )
-async def m5stack_printer_check_status_action_to_code(
+async def thermal_printer_check_status_action_to_code(
     config, action_id, template_arg, args
 ):
     var = cg.new_Pvariable(action_id, template_arg)

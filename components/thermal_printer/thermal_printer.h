@@ -10,7 +10,15 @@
 #include <vector>
 
 namespace esphome {
-namespace m5stack_printer {
+namespace thermal_printer {
+
+enum ThermalPrinterModel {
+  M5STACK_THERMAL = 0,
+  CSN_A2 = 1,
+  GENERIC_58MM = 2,
+  ADAFRUIT_597 = 3,
+  SPARKFUN_10438 = 4,
+};
 
 // Barcode types according to CSN-A2 datasheet GS k command table
 // These values correspond to format 1 (m=0-6) from the datasheet
@@ -27,10 +35,10 @@ enum BarcodeType {
 };
 
 /**
- * M5Stack Thermal Printer Component
+ * Thermal Printer Component
  *
  * This component provides ESC/POS compatible thermal printing functionality
- * for the M5Stack thermal printer module (CSN-A2 based).
+ * for the thermal printer s (CSN-A2 based).
  *
  * Supported features:
  * - Text printing with font size control (0-7)
@@ -41,7 +49,7 @@ enum BarcodeType {
  * Communication: UART (TTL/RS232) at 9600 baud by default
  * Print width: 58mm (384 dots), 8 dots/mm resolution
  */
-class M5StackPrinterDisplay : public display::DisplayBuffer, public uart::UARTDevice {
+class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDevice {
  public:
   void setup() override;
   void loop() override;
@@ -54,6 +62,7 @@ class M5StackPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
   int get_height_internal() override { return this->height_; };
 
   void set_height(int height) { this->height_ = height; }
+  void set_model(ThermalPrinterModel model) { this->model_ = model; }
 
   display::DisplayType get_display_type() override { return display::DisplayType::DISPLAY_TYPE_BINARY; }
 
@@ -189,6 +198,18 @@ class M5StackPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
   void set_codepage(uint8_t codepage = 0);
 
   /**
+   * Get current character set
+   * @return Current character set (0-15)
+   */
+  uint8_t get_charset() const { return this->current_charset_; }
+
+  /**
+   * Get current code page
+   * @return Current code page (0-47)
+   */
+  uint8_t get_codepage() const { return this->current_codepage_; }
+
+  /**
    * Set 90-degree clockwise rotation mode
    * @param enable True to enable rotation, false to disable
    */
@@ -199,6 +220,12 @@ class M5StackPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
    * @param enable True to enable inverse (white text on black), false for normal
    */
   void set_inverse_printing(bool enable);
+
+  /**
+   * Set upside-down printing mode (180-degree rotation)
+   * @param enable True to enable upside-down printing
+   */
+  void set_upside_down_printing(bool enable);
 
   /**
    * Send raw ESC/POS command bytes
@@ -236,7 +263,7 @@ class M5StackPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
    * @param show_rotation Print 90-degree rotated text demo (default: false, true when no params)
    */
   void run_demo(bool show_qr_code = false, bool show_barcode = false,
-                bool show_text_styles = false, bool show_inverse = false, bool show_rotation = false);
+                bool show_text_styles = false, bool show_inverse = false, bool show_rotation = false, bool show_upside_down = false);
 
   /**
    * Set horizontal tab stop positions
@@ -285,6 +312,30 @@ class M5StackPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
    * Clears text indentation setting
    */
   void reset_text_indentation();
+  
+  /**
+  * Check printer status and log raw status bytes
+  * Sends status query commands and logs the raw responses for debugging
+  */
+  void check_status();
+
+  /**
+   * Get paper status
+   * @return true if paper is out/near end (problem), false if paper is OK
+   */
+  bool get_paper_problem();
+
+  /**
+   * Get cover status  
+   * @return true if cover is open (problem), false if cover is closed
+   */
+  bool get_cover_problem();
+
+  /**
+   * Get overall printer status
+   * @return true if printer has any problems (paper out or cover open), false if ready
+   */
+  bool get_printer_problem();
 
  protected:
   void draw_absolute_pixel_internal(int x, int y, Color color) override;
@@ -293,9 +344,11 @@ class M5StackPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
   void queue_data_(const uint8_t *data, size_t size);
   void init_();
   void build_formatting_prefix_(std::vector<uint8_t> &prefix);
+  void draw_simple_esphome_logo_();
 
   std::queue<std::vector<uint8_t>> queue_{};
   int height_{0};
+  ThermalPrinterModel model_{M5STACK_THERMAL};
 
   // Formatting state variables (line-buffered printer requires bundled commands)
   bool bold_state_{false};
@@ -306,12 +359,14 @@ class M5StackPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
   bool inverse_state_{false};
   bool rotation_state_{false};
   bool chinese_mode_state_{false};  // Track Chinese/Kanji character mode state
+  uint8_t current_charset_{0};  // Current international character set (0-15)
+  uint8_t current_codepage_{0};  // Current character code table (0-47)
   bool send_wakeup_{false};
   uint8_t text_indentation_{0};  // Number of spaces to add for indentation
 };
 
 template<typename... Ts>
-class M5StackPrinterPrintTextAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+class ThermalPrinterPrintTextAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:
   TEMPLATABLE_VALUE(std::string, text)
   TEMPLATABLE_VALUE(uint8_t, font_width)
@@ -329,7 +384,7 @@ class M5StackPrinterPrintTextAction : public Action<Ts...>, public Parented<M5St
 };
 
 template<typename... Ts>
-class M5StackPrinterThermalPrintTextAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+class ThermalPrinterThermalPrintTextAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:
   TEMPLATABLE_VALUE(std::string, text_to_print)
   TEMPLATABLE_VALUE(uint8_t, font_width)
@@ -367,7 +422,7 @@ class M5StackPrinterThermalPrintTextAction : public Action<Ts...>, public Parent
 };
 
 template<typename... Ts>
-class M5StackPrinterSetSettingsAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+class ThermalPrinterSetSettingsAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:
   TEMPLATABLE_VALUE(uint8_t, line_spacing)
   TEMPLATABLE_VALUE(uint8_t, print_density)
@@ -383,7 +438,7 @@ class M5StackPrinterSetSettingsAction : public Action<Ts...>, public Parented<M5
 };
 
 template<typename... Ts>
-class M5StackPrinterResetSettingsAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+class ThermalPrinterResetSettingsAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:
   void play(const Ts &...x) override {
     this->parent_->reset_printer_settings();
@@ -391,7 +446,7 @@ class M5StackPrinterResetSettingsAction : public Action<Ts...>, public Parented<
 };
 
 template<typename... Ts>
-class M5StackPrinterPrintQRCodeAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+class ThermalPrinterPrintQRCodeAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:
   TEMPLATABLE_VALUE(std::string, qrcode)
 
@@ -399,7 +454,7 @@ class M5StackPrinterPrintQRCodeAction : public Action<Ts...>, public Parented<M5
 };
 
 template<typename... Ts>
-class M5StackPrinterPrintBarcodeAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+class ThermalPrinterPrintBarcodeAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:
   TEMPLATABLE_VALUE(std::string, barcode)
   TEMPLATABLE_VALUE(std::string, type)
@@ -423,7 +478,7 @@ class M5StackPrinterPrintBarcodeAction : public Action<Ts...>, public Parented<M
 };
 
 template<typename... Ts>
-class M5StackPrinterNewLineAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+class ThermalPrinterNewLineAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:
   TEMPLATABLE_VALUE(uint8_t, lines)
 
@@ -431,7 +486,7 @@ class M5StackPrinterNewLineAction : public Action<Ts...>, public Parented<M5Stac
 };
 
 template<typename... Ts>
-class M5StackPrinterCutPaperAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+class ThermalPrinterCutPaperAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:
   TEMPLATABLE_VALUE(uint8_t, cut_mode)
   TEMPLATABLE_VALUE(uint8_t, feed_lines)
@@ -446,7 +501,7 @@ class M5StackPrinterCutPaperAction : public Action<Ts...>, public Parented<M5Sta
 };
 
 template<typename... Ts>
-class M5StackPrinterSetAlignmentAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+class ThermalPrinterSetAlignmentAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:
   TEMPLATABLE_VALUE(uint8_t, alignment)
 
@@ -454,7 +509,7 @@ class M5StackPrinterSetAlignmentAction : public Action<Ts...>, public Parented<M
 };
 
 template<typename... Ts>
-class M5StackPrinterSetStyleAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+class ThermalPrinterSetStyleAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:
   TEMPLATABLE_VALUE(bool, bold)
   TEMPLATABLE_VALUE(uint8_t, underline)
@@ -472,7 +527,7 @@ class M5StackPrinterSetStyleAction : public Action<Ts...>, public Parented<M5Sta
 };
 
 template<typename... Ts>
-class M5StackPrinterSet90DegreeRotationAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+class ThermalPrinterSet90DegreeRotationAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:
   TEMPLATABLE_VALUE(bool, enable)
 
@@ -480,7 +535,7 @@ class M5StackPrinterSet90DegreeRotationAction : public Action<Ts...>, public Par
 };
 
 template<typename... Ts>
-class M5StackPrinterSetInversePrintingAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+class ThermalPrinterSetInversePrintingAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:
   TEMPLATABLE_VALUE(bool, enable)
 
@@ -488,7 +543,15 @@ class M5StackPrinterSetInversePrintingAction : public Action<Ts...>, public Pare
 };
 
 template<typename... Ts>
-class M5StackPrinterSetChineseModeAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+class ThermalPrinterSetUpsideDownPrintingAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
+ public:
+  TEMPLATABLE_VALUE(bool, enable)
+
+  void play(const Ts &...x) override { this->parent_->set_upside_down_printing(this->enable_.value(x...)); }
+};
+
+template<typename... Ts>
+class ThermalPrinterSetChineseModeAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:
   TEMPLATABLE_VALUE(bool, enable)
 
@@ -496,7 +559,7 @@ class M5StackPrinterSetChineseModeAction : public Action<Ts...>, public Parented
 };
 
 template<typename... Ts>
-class M5StackPrinterSetLineSpacingAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+class ThermalPrinterSetLineSpacingAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:
   TEMPLATABLE_VALUE(uint8_t, spacing)
 
@@ -504,7 +567,7 @@ class M5StackPrinterSetLineSpacingAction : public Action<Ts...>, public Parented
 };
 
 template<typename... Ts>
-class M5StackPrinterSetPrintDensityAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+class ThermalPrinterSetPrintDensityAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:
   TEMPLATABLE_VALUE(uint8_t, density)
   TEMPLATABLE_VALUE(uint8_t, break_time)
@@ -515,20 +578,20 @@ class M5StackPrinterSetPrintDensityAction : public Action<Ts...>, public Parente
 };
 
 template<typename... Ts>
-class M5StackPrinterSetTabPositionsAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+class ThermalPrinterSetTabPositionsAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:
   TEMPLATABLE_VALUE(std::string, positions)
 
   void play(const Ts &...x) override {
     // Parse comma or space separated positions and call set_tab_positions
     // For now, just log - the actual implementation would parse the string
-    ESP_LOGD("m5stack_printer", "Set tab positions: %s", this->positions_.value(x...).c_str());
+    ESP_LOGD("thermal_printer", "Set tab positions: %s", this->positions_.value(x...).c_str());
     // TODO: Implement tab position parsing and setting
   }
 };
 
 template<typename... Ts>
-class M5StackPrinterHorizontalTabAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+class ThermalPrinterHorizontalTabAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:
   void play(const Ts &...x) override {
     // Send horizontal tab character (0x09)
@@ -537,7 +600,7 @@ class M5StackPrinterHorizontalTabAction : public Action<Ts...>, public Parented<
 };
 
 template<typename... Ts>
-class M5StackPrinterSetHorizontalPositionAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+class ThermalPrinterSetHorizontalPositionAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:
   TEMPLATABLE_VALUE(uint16_t, position)
 
@@ -550,19 +613,20 @@ class M5StackPrinterSetHorizontalPositionAction : public Action<Ts...>, public P
 };
 
 template<typename... Ts>
-class M5StackPrinterPrintTestPageAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+class ThermalPrinterPrintTestPageAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:
   void play(const Ts &...x) override { this->parent_->print_test_page(); }
 };
 
 template<typename... Ts>
-class M5StackPrinterRunDemoAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+class ThermalPrinterRunDemoAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:
   TEMPLATABLE_VALUE(bool, show_qr_code)
   TEMPLATABLE_VALUE(bool, show_barcode)
   TEMPLATABLE_VALUE(bool, show_text_styles)
   TEMPLATABLE_VALUE(bool, show_inverse)
   TEMPLATABLE_VALUE(bool, show_rotation)
+  TEMPLATABLE_VALUE(bool, show_upside_down)
 
   void play(const Ts &...x) override {
     bool qr = this->show_qr_code_.value(x...);
@@ -570,18 +634,19 @@ class M5StackPrinterRunDemoAction : public Action<Ts...>, public Parented<M5Stac
     bool txt = this->show_text_styles_.value(x...);
     bool inv = this->show_inverse_.value(x...);
     bool rot = this->show_rotation_.value(x...);
+    bool upside = this->show_upside_down_.value(x...);
 
     // If no specific flags set, run full demo
-    if (!qr && !bc && !txt && !inv && !rot) {
-      this->parent_->run_demo(true, true, true, true, true);
+    if (!qr && !bc && !txt && !inv && !rot && !upside) {
+      this->parent_->run_demo(true, true, true, true, true, true);
     } else {
-      this->parent_->run_demo(qr, bc, txt, inv, rot);
+      this->parent_->run_demo(qr, bc, txt, inv, rot, upside);
     }
   }
 };
 
 template<typename... Ts>
-class M5StackPrinterSendRawCommandAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+class ThermalPrinterSendRawCommandAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:
   TEMPLATABLE_VALUE(std::string, command)
 
@@ -620,7 +685,7 @@ class M5StackPrinterSendRawCommandAction : public Action<Ts...>, public Parented
 };
 
 template<typename... Ts>
-class M5StackPrinterSetTextIndentationAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+class ThermalPrinterSetTextIndentationAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:
   TEMPLATABLE_VALUE(uint8_t, spaces)
 
@@ -630,7 +695,7 @@ class M5StackPrinterSetTextIndentationAction : public Action<Ts...>, public Pare
 };
 
 template<typename... Ts>
-class M5StackPrinterResetTextIndentationAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+class ThermalPrinterResetTextIndentationAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:
   void play(const Ts &...x) override {
     this->parent_->reset_text_indentation();
@@ -638,7 +703,7 @@ class M5StackPrinterResetTextIndentationAction : public Action<Ts...>, public Pa
 };
 
 template<typename... Ts>
-class M5StackPrinterFeedPaperDotsAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+class ThermalPrinterFeedPaperDotsAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:
   TEMPLATABLE_VALUE(uint8_t, dots)
 
@@ -648,7 +713,7 @@ class M5StackPrinterFeedPaperDotsAction : public Action<Ts...>, public Parented<
 };
 
 template<typename... Ts>
-class M5StackPrinterPrintAndFeedLinesAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+class ThermalPrinterPrintAndFeedLinesAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:
   TEMPLATABLE_VALUE(uint8_t, lines)
 
@@ -658,7 +723,7 @@ class M5StackPrinterPrintAndFeedLinesAction : public Action<Ts...>, public Paren
 };
 
 template<typename... Ts>
-class M5StackPrinterSetSleepModeAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+class ThermalPrinterSetSleepModeAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:
   TEMPLATABLE_VALUE(uint16_t, timeout_seconds)
 
@@ -668,7 +733,7 @@ class M5StackPrinterSetSleepModeAction : public Action<Ts...>, public Parented<M
 };
 
 template<typename... Ts>
-class M5StackPrinterWakeUpAction : public Action<Ts...>, public Parented<M5StackPrinterDisplay> {
+class ThermalPrinterWakeUpAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
  public:
   void play(const Ts &...x) override {
     this->parent_->wake_up();
@@ -676,5 +741,13 @@ class M5StackPrinterWakeUpAction : public Action<Ts...>, public Parented<M5Stack
 };
 
 
-}  // namespace m5stack_printer
+template<typename... Ts>
+class ThermalPrinterCheckStatusAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
+ public:
+  void play(const Ts &...x) override {
+    this->parent_->check_status();
+  }
+};
+
+}  // namespace thermal_printer
 }  // namespace esphome

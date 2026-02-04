@@ -1,7 +1,7 @@
-# M5Stack Thermal Printer ESPHome Component
+# Thermal Printer ESPHome Component
 #
-# This component provides thermal printing functionality for the M5Stack
-# thermal printer module based on the CSN-A2 thermal printer mechanism.
+# This component provides thermal printing functionality for
+# thermal printer modules based on the CSN-A2 thermal printer mechanism.
 #
 # Features:
 # - Text printing with font size control
@@ -22,5 +22,5 @@ def to_code(config):
 
 # Component schema is defined in display.py
 CONFIG_SCHEMA = cv.Schema({
-    cv.GenerateID(): cv.use_id("m5stack_printer"),
+    cv.GenerateID(): cv.use_id("thermal_printer"),
 })
