@@ -314,28 +314,10 @@ class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
   void reset_text_indentation();
   
   /**
-  * Check printer status and log raw status bytes
-  * Sends status query commands and logs the raw responses for debugging
-  */
-  void check_status();
-
-  /**
-   * Get paper status
-   * @return true if paper is out/near end (problem), false if paper is OK
-   */
-  bool get_paper_problem();
-
-  /**
    * Get cover status  
    * @return true if cover is open (problem), false if cover is closed
    */
   bool get_cover_problem();
-
-  /**
-   * Get overall printer status
-   * @return true if printer has any problems (paper out or cover open), false if ready
-   */
-  bool get_printer_problem();
 
  protected:
   void draw_absolute_pixel_internal(int x, int y, Color color) override;
@@ -741,13 +723,7 @@ class ThermalPrinterWakeUpAction : public Action<Ts...>, public Parented<Thermal
 };
 
 
-template<typename... Ts>
-class ThermalPrinterCheckStatusAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
- public:
-  void play(const Ts &...x) override {
-    this->parent_->check_status();
-  }
-};
+
 
 }  // namespace thermal_printer
 }  // namespace esphome
