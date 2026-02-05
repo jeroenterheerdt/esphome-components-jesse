@@ -71,10 +71,6 @@ static const uint8_t INVERSE_PRINT_CMD[] = {ESC, 'B'}; // ESC B n - white/black 
 // Chinese mode commands removed - they interfere with character encoding
 // Use charset/codepage commands instead for proper character support
 
-// Character set and code page commands  
-static const uint8_t CHARSET_CMD[] = {ESC, 'R'}; // ESC R n - select character set (0-15)
-static const uint8_t CODEPAGE_CMD[] = {ESC, 't'}; // ESC t n - select code page (0-47)
-
 static const uint8_t BYTES_PER_LOOP = 120;
 
 void ThermalPrinterDisplay::setup() {
@@ -194,6 +190,16 @@ void ThermalPrinterDisplay::thermal_print_text_with_formatting(
     bool inverse, bool chinese_mode, uint8_t alignment, uint8_t charset, uint8_t codepage, uint8_t character_spacing) {
   ESP_LOGD(TAG, "thermal_print_text_with_formatting: text='%s'", text.c_str());
   ESP_LOGD(TAG, "Formatting: font=%dx%d, type=%d, bold=%d, double_strike=%d, underline=%d, align=%d, charset=%d, codepage=%d, spacing=%d", font_width, font_height, font_type, bold, double_strike, underline, alignment, charset, codepage, character_spacing);
+  
+  // Save current state to restore after scoped formatting
+  bool saved_bold = this->bold_state_;
+  uint8_t saved_underline = this->underline_state_;
+  bool saved_upside_down = this->upside_down_state_;
+  bool saved_inverse = this->inverse_state_;
+  bool saved_rotation = this->rotation_state_;
+  uint8_t saved_alignment = this->alignment_state_;
+  uint8_t saved_charset = this->current_charset_;
+  uint8_t saved_codepage = this->current_codepage_;
   
   // Check if any formatting is actually requested (non-default values)
   bool has_formatting = (font_width > 1 || font_height > 1 || font_type > 0 || bold || double_strike || underline > 0 || upside_down || 
@@ -794,7 +800,7 @@ void ThermalPrinterDisplay::set_90_degree_rotation(bool enable) {
   // Track rotation state and send command immediately
   this->rotation_state_ = enable;
   
-  uint8_t rotation_cmd[] = {0x1B, 0x56, enable ? 0x01 : 0x00}; // ESC V n
+  uint8_t rotation_cmd[] = {0x1B, 0x56, static_cast<uint8_t>(enable ? 0x01 : 0x00)}; // ESC V n
   this->write_array(rotation_cmd, sizeof(rotation_cmd));
   
   ESP_LOGD(TAG, "Set 90-degree rotation: %s", enable ? "enabled" : "disabled");
@@ -804,7 +810,7 @@ void ThermalPrinterDisplay::set_inverse_printing(bool enable) {
   // Track inverse state and send command immediately  
   this->inverse_state_ = enable;
   
-  uint8_t inverse_cmd[] = {0x1D, 0x42, enable ? 0x01 : 0x00}; // GS B n
+  uint8_t inverse_cmd[] = {0x1D, 0x42, static_cast<uint8_t>(enable ? 0x01 : 0x00)}; // GS B n
   this->write_array(inverse_cmd, sizeof(inverse_cmd));
   
   ESP_LOGD(TAG, "Set inverse printing: %s", enable ? "enabled" : "disabled");
@@ -814,7 +820,7 @@ void ThermalPrinterDisplay::set_upside_down_printing(bool enable) {
   // Track upside down state and send command immediately  
   this->upside_down_state_ = enable;
   
-  uint8_t upside_down_cmd[] = {0x1B, 0x7B, enable ? 0x01 : 0x00}; // ESC { n
+  uint8_t upside_down_cmd[] = {0x1B, 0x7B, static_cast<uint8_t>(enable ? 0x01 : 0x00)}; // ESC { n
   this->write_array(upside_down_cmd, sizeof(upside_down_cmd));
   
   ESP_LOGD(TAG, "Set upside down printing: %s", enable ? "enabled" : "disabled");
@@ -858,6 +864,79 @@ void ThermalPrinterDisplay::set_codepage(uint8_t codepage) {
   
   // Store current codepage for reference
   this->current_codepage_ = codepage;
+}
+
+void ThermalPrinterDisplay::reset_all_formatting() {
+  ESP_LOGD(TAG, "Resetting all formatting to defaults");
+  
+  // Reset all state variables to defaults
+  this->bold_state_ = false;
+  this->underline_state_ = 0;
+  this->upside_down_state_ = false;
+  this->font_type_state_ = 0;
+  this->alignment_state_ = 0;
+  this->inverse_state_ = false;
+  this->rotation_state_ = false;
+  this->chinese_mode_state_ = false;
+  this->current_charset_ = 0;
+  this->current_codepage_ = 0;
+  this->text_indentation_ = 0;
+  
+  // Sync hardware to match the reset state
+  this->apply_current_formatting_state();
+  
+  ESP_LOGD(TAG, "All formatting reset to defaults - state and hardware synchronized");
+}
+
+void ThermalPrinterDisplay::apply_current_formatting_state() {
+  ESP_LOGD(TAG, "Applying current formatting state to hardware");
+  
+  // Send hardware reset first
+  this->write_array(PRINT_MODE_RESET_CMD, sizeof(PRINT_MODE_RESET_CMD));
+  delay(100);
+  
+  // Apply current state to hardware
+  if (this->alignment_state_ != 0) {
+    uint8_t align_cmd[] = {0x1B, 0x61, this->alignment_state_};
+    this->write_array(align_cmd, sizeof(align_cmd));
+  }
+  
+  if (this->bold_state_) {
+    uint8_t bold_cmd[] = {0x1B, 0x45, 0x01};
+    this->write_array(bold_cmd, sizeof(bold_cmd));
+  }
+  
+  if (this->underline_state_ > 0) {
+    uint8_t underline_cmd[] = {0x1B, 0x2D, this->underline_state_};
+    this->write_array(underline_cmd, sizeof(underline_cmd));
+  }
+  
+  if (this->upside_down_state_) {
+    uint8_t upside_cmd[] = {0x1B, 0x7B, 0x01};
+    this->write_array(upside_cmd, sizeof(upside_cmd));
+  }
+  
+  if (this->inverse_state_) {
+    uint8_t inverse_cmd[] = {0x1D, 0x42, 0x01};
+    this->write_array(inverse_cmd, sizeof(inverse_cmd));
+  }
+  
+  if (this->rotation_state_) {
+    uint8_t rotation_cmd[] = {0x1B, 0x56, 0x01};
+    this->write_array(rotation_cmd, sizeof(rotation_cmd));
+  }
+  
+  if (this->current_charset_ != 0) {
+    uint8_t charset_cmd[] = {0x1B, 0x52, this->current_charset_};
+    this->write_array(charset_cmd, sizeof(charset_cmd));
+  }
+  
+  if (this->current_codepage_ != 0) {
+    uint8_t codepage_cmd[] = {0x1B, 0x74, this->current_codepage_};
+    this->write_array(codepage_cmd, sizeof(codepage_cmd));
+  }
+  
+  ESP_LOGD(TAG, "Current formatting state applied to hardware");
 }
 
 void ThermalPrinterDisplay::send_raw_command(const std::vector<uint8_t> &command) {
@@ -1277,7 +1356,7 @@ void ThermalPrinterDisplay::print_test_page() {
 
   // Test Barcode (Code39)
   this->print_text("\nBarcode Test:\n", 0);
-  this->print_barcode("1234567890", CODE39);
+  this->print_barcode("4242424242", CODE39);
 
   // End of test page
   this->print_text("\n=== END TEST ===\n", 0);

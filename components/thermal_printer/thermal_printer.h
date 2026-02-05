@@ -210,6 +210,19 @@ class ThermalPrinterDisplay : public display::DisplayBuffer, public uart::UARTDe
   uint8_t get_codepage() const { return this->current_codepage_; }
 
   /**
+   * Reset all formatting settings to defaults
+   * Clears bold, underline, rotation, inverse, alignment, etc.
+   * Sends hardware commands to ensure printer matches internal state
+   */
+  void reset_all_formatting();
+
+  /**
+   * Apply current formatting state to hardware
+   * Internal helper for maintaining state consistency
+   */
+  void apply_current_formatting_state();
+
+  /**
    * Set 90-degree clockwise rotation mode
    * @param enable True to enable rotation, false to disable
    */
@@ -719,6 +732,14 @@ class ThermalPrinterWakeUpAction : public Action<Ts...>, public Parented<Thermal
  public:
   void play(const Ts &...x) override {
     this->parent_->wake_up();
+  }
+};
+
+template<typename... Ts>
+class ThermalPrinterResetFormattingAction : public Action<Ts...>, public Parented<ThermalPrinterDisplay> {
+ public:
+  void play(const Ts &...x) override {
+    this->parent_->reset_all_formatting();
   }
 };
 

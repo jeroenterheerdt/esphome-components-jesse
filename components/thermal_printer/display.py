@@ -69,10 +69,6 @@ ThermalPrinterWakeUpAction = thermal_printer_ns.class_(
     "ThermalPrinterWakeUpAction", automation.Action
 )
 
-ThermalPrinterCheckStatusAction = thermal_printer_ns.class_(
-    "ThermalPrinterCheckStatusAction", automation.Action
-)
-
 ThermalPrinterSetPrintDensityAction = thermal_printer_ns.class_(
     "ThermalPrinterSetPrintDensityAction", automation.Action
 )
@@ -111,6 +107,10 @@ ThermalPrinterSetTextIndentationAction = thermal_printer_ns.class_(
 
 ThermalPrinterResetTextIndentationAction = thermal_printer_ns.class_(
     "ThermalPrinterResetTextIndentationAction", automation.Action
+)
+
+ThermalPrinterResetFormattingAction = thermal_printer_ns.class_(
+    "ThermalPrinterResetFormattingAction", automation.Action
 )
 
 ThermalPrinterFeedPaperDotsAction = thermal_printer_ns.class_(
@@ -899,15 +899,15 @@ async def thermal_printer_wake_up_action_to_code(
 
 
 @automation.register_action(
-    "thermal_printer.check_status",
-    ThermalPrinterCheckStatusAction,
+    "thermal_printer.reset_all_formatting",
+    ThermalPrinterResetFormattingAction,
     cv.Schema(
         {
             cv.GenerateID(): cv.use_id(ThermalPrinterDisplay),
         }
     ),
 )
-async def thermal_printer_check_status_action_to_code(
+async def thermal_printer_reset_formatting_action_to_code(
     config, action_id, template_arg, args
 ):
     var = cg.new_Pvariable(action_id, template_arg)
