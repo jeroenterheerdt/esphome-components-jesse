@@ -82,6 +82,13 @@ api:
       then:
         - thermal_printer.wake_up:
     
+    # Reset all formatting settings to defaults
+    # Clears bold, underline, rotation, inverse, alignment, etc.
+    # Sends hardware commands to ensure printer matches internal state
+    - service: reset_formatting
+      then:
+        - thermal_printer.reset_all_formatting:
+    
     # Note: Automatic printer status monitoring is disabled for this printer model
     # Both DLE EOT (10 04 n) and ESC v (1B 76 n) status commands return random/garbage
     # values instead of actual status data. This appears to be a hardware limitation.
@@ -691,29 +698,6 @@ api:
     - service: print_test_page
       then:
         - thermal_printer.print_test_page
-    # Run comprehensive demo showcasing thermal printer capabilities with Hitchhiker's Guide to the Galaxy theme
-    # This expanded demo includes ESPHome logo printing, extensive galactic references, and comprehensive feature testing
-    # All parameters are optional and default to false - call without parameters to skip all sections and just see header
-    # show_qr_code: Include QR code examples with galactic wisdom (default: false)
-    # show_barcode: Include various barcode formats for intergalactic commerce (default: false)  
-    # show_text_styles: Include Ford Prefect's style guide with font sizes, alignment, and Vogon poetry (default: false)
-    # show_inverse: Include Total Perspective Vortex mode with inverse printing (default: false)
-    # show_rotation: Include dimensional rotation experiments with 90-degree text (default: false)
-    # Note: Demo always includes ESPHome logo, themed header, positioning demos, and comprehensive footer
-    - service: run_demo
-      variables:
-        show_qr_code: bool
-        show_barcode: bool
-        show_text_styles: bool
-        show_inverse: bool
-        show_rotation: bool
-      then:
-        - thermal_printer.run_demo:
-            show_qr_code: !lambda "return show_qr_code;"
-            show_barcode: !lambda "return show_barcode;"
-            show_text_styles: !lambda "return show_text_styles;"
-            show_inverse: !lambda "return show_inverse;"
-            show_rotation: !lambda "return show_rotation;"
     # Set horizontal tab stop positions for tabular formatting (ESC D command)
     # positions: Comma or space separated character positions (e.g., "8,16,24,32" or "10 20 30")
     # Maximum 32 tab stops, positions are in character widths from left margin
@@ -996,19 +980,27 @@ wifi:
 
 captive_portal:
 
-external_components:
-  # thermal_printer debug - local development version
-  - source: components/
-    components: [thermal_printer]
-  # GitHub version (for production):
-  # - source: github://jeroenterheerdt/esphome-components-jesse #@jesserockz-2025-036
-  #   components: [thermal_printer]
-  #   refresh: 0s
-
 uart:
   tx_pin: GPIO17
   rx_pin: GPIO16
   baud_rate: 9600
+
+# Binary sensors for printer status monitoring
+binary_sensor:
+  - platform: template
+    name: "Cover"  
+    device_class: opening
+    id: printer_cover_problem
+    lambda: |-
+      return {};
+
+# Periodic status checking to update sensors
+interval:
+  - interval: 10s
+    then:
+      - lambda: |-
+          // Update cover sensor with current status
+          id(printer_cover_problem).publish_state(id(printer).get_cover_problem());
 
 display:
   - platform: thermal_printer
